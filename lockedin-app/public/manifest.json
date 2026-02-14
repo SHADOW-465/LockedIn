@@ -1,0 +1,9 @@
+{
+    "name": "LockedIn",
+    "short_name": "LockedIn",
+    "description": "Your 24/7 AI Master",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0F1117",
+    "theme_color": "#0F1117"
+}

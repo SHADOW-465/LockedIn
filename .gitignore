@@ -1,0 +1,8 @@
+.agent/
+.env*
+node_modules/
+.next/
+*.docx
+*.pdf
+# Keep the markdown specs but ignore the binary ones if preferred.
+# Actually I'll let the user decide but I'll definitely ignore the env and agent files.
