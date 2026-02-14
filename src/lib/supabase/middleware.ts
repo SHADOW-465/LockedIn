@@ -47,7 +47,8 @@ export async function updateSession(request: NextRequest) {
             request.nextUrl.pathname.startsWith('/chat') ||
             request.nextUrl.pathname.startsWith('/calendar') ||
             request.nextUrl.pathname.startsWith('/settings') ||
-            request.nextUrl.pathname.startsWith('/onboarding'))
+            request.nextUrl.pathname.startsWith('/onboarding') ||
+            request.nextUrl.pathname.startsWith('/api/ai'))
     ) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
