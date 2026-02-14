@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Home, ListTodo, MessageSquare, Calendar, Settings, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import { useAuth } from '@/lib/contexts/auth-context'
 
 const navItems = [
     { href: '/home', icon: Home, label: 'Home' },
@@ -14,13 +15,23 @@ const navItems = [
     { href: '/settings', icon: Settings, label: 'Settings' },
 ]
 
-interface TopBarProps {
-    tier?: string
-    username?: string
+function getTierBadge(tier: string): 'tier1' | 'tier2' | 'tier3' | 'tier4' | 'tier5' {
+    switch (tier) {
+        case 'Newbie': return 'tier1'
+        case 'Slave': return 'tier2'
+        case 'Hardcore': return 'tier3'
+        case 'Extreme': return 'tier4'
+        case 'Destruction': return 'tier5'
+        default: return 'tier1'
+    }
 }
 
-export function TopBar({ tier = 'Newbie', username = 'User' }: TopBarProps) {
+export function TopBar() {
     const pathname = usePathname()
+    const { profile } = useAuth()
+
+    const tier = profile?.tier ?? 'Newbie'
+    const username = profile?.username ?? profile?.email?.split('@')[0] ?? 'User'
 
     return (
         <header className="sticky top-0 z-40 glass-strong px-4 py-3">
@@ -58,20 +69,7 @@ export function TopBar({ tier = 'Newbie', username = 'User' }: TopBarProps) {
 
                 {/* Right side */}
                 <div className="flex items-center gap-3">
-                    <Badge
-                        variant={
-                            `tier${tier === 'Newbie'
-                                ? '1'
-                                : tier === 'Slave'
-                                    ? '2'
-                                    : tier === 'Hardcore'
-                                        ? '3'
-                                        : tier === 'Extreme'
-                                            ? '4'
-                                            : '5'
-                            }` as 'tier1' | 'tier2' | 'tier3' | 'tier4' | 'tier5'
-                        }
-                    >
+                    <Badge variant={getTierBadge(tier)}>
                         {tier.toUpperCase()}
                     </Badge>
                     <div className="w-9 h-9 rounded-full bg-purple-primary/20 flex items-center justify-center text-sm font-semibold text-purple-primary border border-purple-primary/30">

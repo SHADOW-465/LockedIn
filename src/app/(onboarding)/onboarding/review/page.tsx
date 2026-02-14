@@ -41,7 +41,7 @@ export default function ReviewPage() {
                     user_id: user.id,
                     hard_limits: store.hardLimits,
                     soft_limits: store.softLimits,
-                    fetish_tags: store.fetishTags,
+                    fetish_tags: store.fetishTags.map(f => `${f.tag}:${f.intensity}`),
                     physical_details: store.physicalDetails,
                     notification_frequency: store.notificationFreq,
                     quiet_hours: null,

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { TimerCard } from '@/components/features/timer/timer-card'
 import { BentoGrid, BentoItem } from '@/components/layout/bento-grid'
 import { TopBar } from '@/components/layout/top-bar'
@@ -7,32 +8,77 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BottomNav } from '@/components/layout/bottom-nav'
-import { Flame, TrendingUp, AlertTriangle, Calendar, Target, Zap } from 'lucide-react'
-
-// Mock data — will be replaced with Firestore data
-const mockProfile = {
-    tier: 'Slave' as const,
-    username: 'slave_user',
-    willpowerScore: 67,
-    complianceStreak: 12,
-}
+import { Flame, TrendingUp, AlertTriangle, Calendar, Target, Zap, Play } from 'lucide-react'
+import { useAuth } from '@/lib/contexts/auth-context'
+import { getActiveSession, createSession } from '@/lib/supabase/sessions'
+import { getActiveTasks } from '@/lib/supabase/tasks'
+import type { Session, Task } from '@/lib/supabase/schema'
 
 export default function DashboardPage() {
-    const mockEndTime = new Date(Date.now() + 4 * 24 * 60 * 60 * 1000)
+    const { user, profile } = useAuth()
+    const [session, setSession] = useState<Session | null>(null)
+    const [currentTask, setCurrentTask] = useState<Task | null>(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        if (!user) return
+
+        async function loadDashboard() {
+            const activeSession = await getActiveSession(user!.id)
+            setSession(activeSession)
+
+            const tasks = await getActiveTasks(user!.id)
+            const active = tasks.find((t) => t.status === 'active') ?? tasks[0] ?? null
+            setCurrentTask(active)
+
+            setLoading(false)
+        }
+
+        loadDashboard()
+    }, [user])
+
+    const handleStartSession = async () => {
+        if (!user || !profile) return
+        const newSession = await createSession(
+            user.id,
+            profile.tier ?? 'Newbie',
+            168,
+            profile.ai_personality
+        )
+        if (newSession) setSession(newSession)
+    }
+
+    const tier = profile?.tier ?? 'Newbie'
+    const willpowerScore = profile?.willpower_score ?? 50
+    const complianceStreak = profile?.compliance_streak ?? 0
 
     return (
         <>
-            <TopBar tier={mockProfile.tier} username={mockProfile.username} />
+            <TopBar />
 
             <div className="min-h-screen pb-24 lg:pb-8">
                 <BentoGrid>
                     {/* Hero Timer */}
                     <BentoItem span="hero" className="!bg-transparent !shadow-none !border-none !p-0">
-                        <TimerCard
-                            endTime={mockEndTime}
-                            tier={mockProfile.tier}
-                            status="locked"
-                        />
+                        {session ? (
+                            <TimerCard
+                                endTime={new Date(session.scheduled_end_time)}
+                                tier={tier}
+                                status={session.total_punishments > 0 ? 'punishment' : 'locked'}
+                            />
+                        ) : (
+                            <Card variant="hero" className="text-center py-12">
+                                <div className="space-y-4">
+                                    <h2 className="text-2xl font-bold">No Active Session</h2>
+                                    <p className="text-text-secondary text-sm">
+                                        Start a new lock session to begin your training.
+                                    </p>
+                                    <Button variant="primary" onClick={handleStartSession} className="mx-auto">
+                                        <Play size={16} className="mr-2" /> Start Session
+                                    </Button>
+                                </div>
+                            </Card>
+                        )}
                     </BentoItem>
 
                     {/* Willpower */}
@@ -46,40 +92,26 @@ export default function DashboardPage() {
                             </div>
                             <div className="relative w-28 h-28 mx-auto">
                                 <svg className="transform -rotate-90 w-28 h-28">
+                                    <circle cx="56" cy="56" r="48" stroke="currentColor" strokeWidth="6" fill="none" className="text-bg-tertiary" />
                                     <circle
-                                        cx="56"
-                                        cy="56"
-                                        r="48"
-                                        stroke="currentColor"
-                                        strokeWidth="6"
-                                        fill="none"
-                                        className="text-bg-tertiary"
-                                    />
-                                    <circle
-                                        cx="56"
-                                        cy="56"
-                                        r="48"
-                                        stroke="currentColor"
-                                        strokeWidth="6"
-                                        fill="none"
+                                        cx="56" cy="56" r="48"
+                                        stroke="currentColor" strokeWidth="6" fill="none"
                                         strokeDasharray={2 * Math.PI * 48}
-                                        strokeDashoffset={
-                                            2 * Math.PI * 48 * (1 - mockProfile.willpowerScore / 100)
-                                        }
+                                        strokeDashoffset={2 * Math.PI * 48 * (1 - willpowerScore / 100)}
                                         className="text-purple-primary transition-all duration-1000"
                                         strokeLinecap="round"
                                     />
                                 </svg>
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <span className="text-3xl font-bold font-mono">
-                                        {mockProfile.willpowerScore}
+                                        {willpowerScore}
                                     </span>
                                 </div>
                             </div>
                             <p className="text-center text-xs text-text-tertiary">
-                                {mockProfile.willpowerScore >= 70
+                                {willpowerScore >= 70
                                     ? 'Strong resistance'
-                                    : mockProfile.willpowerScore >= 40
+                                    : willpowerScore >= 40
                                         ? 'Moderate resolve'
                                         : 'Breaking point near'}
                             </p>
@@ -96,30 +128,42 @@ export default function DashboardPage() {
                                         Current Task
                                     </h3>
                                 </div>
-                                <div className="flex gap-2">
-                                    <Badge variant="genre">JOI</Badge>
-                                    <Badge variant="genre">CEI</Badge>
-                                    <Badge variant="genre">SPH</Badge>
-                                </div>
+                                {currentTask && (
+                                    <div className="flex gap-2">
+                                        {currentTask.genres.map((g) => (
+                                            <Badge key={g} variant="genre">{g}</Badge>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                            <p className="text-text-secondary text-sm leading-relaxed">
-                                Edge 15 times slowly, then ruined orgasm. Consume all evidence.
-                                Photo verification required.
-                            </p>
-                            <div className="flex items-center gap-3">
-                                <Badge variant="uncaged">🗝️ UNCAGED TASK</Badge>
-                                <span className="text-sm text-text-tertiary font-mono">
-                                    Deadline: 2h 34m
-                                </span>
-                            </div>
-                            <div className="flex gap-3">
-                                <Button variant="primary" className="flex-1">
-                                    Submit Proof
-                                </Button>
-                                <Button variant="ghost" size="sm">
-                                    Details
-                                </Button>
-                            </div>
+                            {currentTask ? (
+                                <>
+                                    <h4 className="text-lg font-semibold">{currentTask.title}</h4>
+                                    <p className="text-text-secondary text-sm leading-relaxed line-clamp-3">
+                                        {currentTask.description}
+                                    </p>
+                                    <div className="flex items-center gap-3">
+                                        <Badge variant={currentTask.cage_status === 'uncaged' ? 'uncaged' : 'caged'}>
+                                            {currentTask.cage_status === 'uncaged' ? '🗝️' : '🔒'} {currentTask.cage_status.toUpperCase()}
+                                        </Badge>
+                                        {currentTask.deadline && (
+                                            <span className="text-sm text-text-tertiary font-mono">
+                                                Deadline: {formatTimeLeft(new Date(currentTask.deadline))}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <Button variant="primary" className="flex-1">
+                                            Submit Proof
+                                        </Button>
+                                        <Button variant="ghost" size="sm">
+                                            Details
+                                        </Button>
+                                    </div>
+                                </>
+                            ) : (
+                                <p className="text-text-tertiary text-sm">No active task. Generate one from the Tasks page.</p>
+                            )}
                         </div>
                     </BentoItem>
 
@@ -129,7 +173,7 @@ export default function DashboardPage() {
                             <Flame size={32} className="mx-auto text-tier-slave" />
                             <div>
                                 <div className="text-4xl font-bold font-mono">
-                                    {mockProfile.complianceStreak}
+                                    {complianceStreak}
                                 </div>
                                 <div className="text-sm text-text-secondary mt-1">Day Streak</div>
                             </div>
@@ -137,9 +181,9 @@ export default function DashboardPage() {
                                 {Array.from({ length: 7 }).map((_, i) => (
                                     <div
                                         key={i}
-                                        className={`w-3 h-3 rounded-full ${i < mockProfile.complianceStreak % 7
-                                                ? 'bg-tier-slave'
-                                                : 'bg-bg-tertiary'
+                                        className={`w-3 h-3 rounded-full ${i < complianceStreak % 7
+                                            ? 'bg-tier-slave'
+                                            : 'bg-bg-tertiary'
                                             }`}
                                     />
                                 ))}
@@ -156,9 +200,13 @@ export default function DashboardPage() {
                                     Next Release
                                 </h3>
                             </div>
-                            <div className="text-2xl font-bold font-mono">Feb 21</div>
+                            <div className="text-2xl font-bold font-mono">
+                                {session
+                                    ? new Date(session.scheduled_end_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                                    : '—'}
+                            </div>
                             <p className="text-xs text-text-secondary">
-                                Based on current compliance. Subject to AI adjustments.
+                                {session ? 'Based on current compliance. Subject to AI adjustments.' : 'Start a session to see your release date.'}
                             </p>
                             <Badge variant="info">Dynamic</Badge>
                         </div>
@@ -174,12 +222,16 @@ export default function DashboardPage() {
                                 </h3>
                             </div>
                             <p className="text-sm text-red-primary font-medium">
-                                Late night check-in predicted
+                                {willpowerScore < 40
+                                    ? 'High violation risk detected'
+                                    : 'Late night check-in predicted'}
                             </p>
                             <p className="text-xs text-text-tertiary">
                                 AI predicts next violation window: 11 PM – 2 AM
                             </p>
-                            <Badge variant="warning">Medium Risk</Badge>
+                            <Badge variant={willpowerScore < 40 ? 'locked' : 'warning'}>
+                                {willpowerScore < 40 ? 'High Risk' : 'Medium Risk'}
+                            </Badge>
                         </div>
                     </BentoItem>
 
@@ -194,19 +246,27 @@ export default function DashboardPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <div className="text-lg font-bold font-mono">24</div>
+                                    <div className="text-lg font-bold font-mono">
+                                        {session?.total_tasks_completed ?? profile?.total_sessions ?? 0}
+                                    </div>
                                     <div className="text-xs text-text-tertiary">Tasks Done</div>
                                 </div>
                                 <div>
-                                    <div className="text-lg font-bold font-mono">3</div>
+                                    <div className="text-lg font-bold font-mono">
+                                        {session?.total_tasks_failed ?? 0}
+                                    </div>
                                     <div className="text-xs text-text-tertiary">Violations</div>
                                 </div>
                                 <div>
-                                    <div className="text-lg font-bold font-mono">168h</div>
+                                    <div className="text-lg font-bold font-mono">
+                                        {profile?.total_denial_hours ?? 0}h
+                                    </div>
                                     <div className="text-xs text-text-tertiary">Total Denial</div>
                                 </div>
                                 <div>
-                                    <div className="text-lg font-bold font-mono">87</div>
+                                    <div className="text-lg font-bold font-mono">
+                                        {profile?.total_edges ?? 0}
+                                    </div>
                                     <div className="text-xs text-text-tertiary">Total Edges</div>
                                 </div>
                             </div>
@@ -218,4 +278,12 @@ export default function DashboardPage() {
             <BottomNav />
         </>
     )
+}
+
+function formatTimeLeft(deadline: Date) {
+    const diff = deadline.getTime() - Date.now()
+    if (diff <= 0) return 'OVERDUE'
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    return `${hours}h ${minutes}m`
 }

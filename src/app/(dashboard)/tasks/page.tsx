@@ -1,57 +1,18 @@
 'use client'
 
+import { useState, useRef, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TopBar } from '@/components/layout/top-bar'
 import { BottomNav } from '@/components/layout/bottom-nav'
-import { Clock, Camera, AlertTriangle } from 'lucide-react'
-
-// Mock tasks
-const mockTasks = [
-    {
-        taskId: '1',
-        title: 'Edge Marathon — 15 Edges',
-        description:
-            'Step 1: Remove device.\nStep 2: Edge slowly 15 times.\nStep 3: Ruin the 15th edge.\nStep 4: Consume all evidence.\nStep 5: Re-lock immediately.\nStep 6: Submit photo proof of lock.',
-        genres: ['JOI', 'CEI', 'Ruined Orgasm'],
-        cageStatus: 'uncaged' as const,
-        difficulty: 3,
-        durationMinutes: 45,
-        deadline: new Date(Date.now() + 2 * 60 * 60 * 1000),
-        status: 'active' as const,
-        verification: { type: 'photo' as const, requirement: 'Clean hand + locked device' },
-        punishmentOnFail: { type: 'time_add', hours: 8, additional: '40 ball slaps' },
-    },
-    {
-        taskId: '2',
-        title: 'Humiliation Photo Set',
-        description:
-            'Step 1: Wear assigned clothing.\nStep 2: Take 3 photos from different angles as instructed.\nStep 3: Write degrading message on body.\nStep 4: Submit all photos.',
-        genres: ['Humiliation', 'SPH', 'Sissy'],
-        cageStatus: 'caged' as const,
-        difficulty: 4,
-        durationMinutes: 20,
-        deadline: new Date(Date.now() + 4 * 60 * 60 * 1000),
-        status: 'pending' as const,
-        verification: { type: 'photo' as const, requirement: 'Multiple angle photos' },
-        punishmentOnFail: { type: 'time_add', hours: 12, additional: '24h punishment mode' },
-    },
-    {
-        taskId: '3',
-        title: 'Morning Hygiene Protocol',
-        description:
-            'Step 1: Cold shower (5 minutes max).\nStep 2: Clean device without removal.\nStep 3: Submit before/after photos.',
-        genres: ['Discipline'],
-        cageStatus: 'caged' as const,
-        difficulty: 1,
-        durationMinutes: 10,
-        deadline: new Date(Date.now() + 1 * 60 * 60 * 1000),
-        status: 'pending' as const,
-        verification: { type: 'photo' as const, requirement: 'Before/after device photos' },
-        punishmentOnFail: { type: 'time_add', hours: 4 },
-    },
-]
+import { Clock, Camera, AlertTriangle, Sparkles, Upload, Loader2 } from 'lucide-react'
+import { useAuth } from '@/lib/contexts/auth-context'
+import { useRealtimeQuery } from '@/lib/hooks/use-realtime'
+import { getActiveSession } from '@/lib/supabase/sessions'
+import { updateTaskStatus } from '@/lib/supabase/tasks'
+import type { Task, Session } from '@/lib/supabase/schema'
+import { useEffect } from 'react'
 
 function formatTimeLeft(deadline: Date) {
     const diff = deadline.getTime() - Date.now()
@@ -62,21 +23,121 @@ function formatTimeLeft(deadline: Date) {
 }
 
 export default function TasksPage() {
+    const { user, profile } = useAuth()
+    const [session, setSession] = useState<Session | null>(null)
+    const [generating, setGenerating] = useState(false)
+    const [verifying, setVerifying] = useState<string | null>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const [selectedTask, setSelectedTask] = useState<string | null>(null)
+
+    const { data: tasks, refetch } = useRealtimeQuery<Task>(
+        'tasks',
+        user ? { user_id: user.id } : {},
+        'created_at',
+        false
+    )
+
+    useEffect(() => {
+        if (user) {
+            getActiveSession(user.id).then(setSession)
+        }
+    }, [user])
+
+    const activeTasks = tasks.filter((t) => t.status === 'pending' || t.status === 'active')
+    const completedTasks = tasks.filter((t) => t.status === 'completed' || t.status === 'failed')
+
+    const handleGenerateTask = useCallback(async () => {
+        if (!user || !profile) return
+        setGenerating(true)
+        try {
+            const res = await fetch('/api/ai/generate-task', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    sessionId: session?.id,
+                    tier: profile.tier ?? 'Newbie',
+                    fetishTags: [],
+                    personality: profile.ai_personality ?? 'Cruel Mistress',
+                    hardLimits: [],
+                }),
+            })
+            if (res.ok) refetch()
+        } catch (err) {
+            console.error('Task generation failed:', err)
+        }
+        setGenerating(false)
+    }, [user, profile, session, refetch])
+
+    const handleStartTask = async (taskId: string) => {
+        await updateTaskStatus(taskId, 'active')
+        refetch()
+    }
+
+    const handlePhotoUpload = async (taskId: string, file: File) => {
+        setVerifying(taskId)
+        try {
+            const reader = new FileReader()
+            reader.onload = async () => {
+                const base64 = (reader.result as string).split(',')[1]
+                const res = await fetch('/api/ai/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        taskId,
+                        imageBase64: base64,
+                        userId: user?.id,
+                    }),
+                })
+                if (res.ok) refetch()
+                setVerifying(null)
+            }
+            reader.readAsDataURL(file)
+        } catch {
+            setVerifying(null)
+        }
+    }
+
     return (
         <>
-            <TopBar tier="Slave" username="slave_user" />
+            <TopBar />
 
             <div className="min-h-screen pb-24 lg:pb-8 p-4">
                 <div className="max-w-4xl mx-auto">
                     <div className="flex items-center justify-between mb-6">
                         <h1 className="text-3xl font-bold">Tasks</h1>
-                        <Badge variant="locked">{mockTasks.length} Active</Badge>
+                        <div className="flex items-center gap-3">
+                            <Badge variant="locked">{activeTasks.length} Active</Badge>
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={handleGenerateTask}
+                                disabled={generating}
+                            >
+                                {generating ? (
+                                    <Loader2 size={14} className="mr-1 animate-spin" />
+                                ) : (
+                                    <Sparkles size={14} className="mr-1" />
+                                )}
+                                {generating ? 'Generating...' : 'New Task'}
+                            </Button>
+                        </div>
                     </div>
 
+                    {/* Active Tasks */}
                     <div className="space-y-4">
-                        {mockTasks.map((task, index) => (
+                        {activeTasks.length === 0 && (
+                            <Card variant="flat" className="text-center py-12">
+                                <p className="text-text-tertiary mb-4">No active tasks. Generate one to begin.</p>
+                                <Button variant="primary" onClick={handleGenerateTask} disabled={generating}>
+                                    <Sparkles size={14} className="mr-1" /> Generate Task
+                                </Button>
+                            </Card>
+                        )}
+
+                        {activeTasks.map((task, index) => (
                             <Card
-                                key={task.taskId}
+                                key={task.id}
                                 variant="raised"
                                 className="space-y-4 animate-fade-in"
                                 style={{ animationDelay: `${index * 100}ms` }}
@@ -87,23 +148,12 @@ export default function TasksPage() {
                                         <h3 className="text-lg font-semibold">{task.title}</h3>
                                         <div className="flex flex-wrap gap-2">
                                             {task.genres.map((genre) => (
-                                                <Badge key={genre} variant="genre">
-                                                    {genre}
-                                                </Badge>
+                                                <Badge key={genre} variant="genre">{genre}</Badge>
                                             ))}
                                         </div>
                                     </div>
-                                    <Badge
-                                        variant={
-                                            task.cageStatus === 'caged'
-                                                ? 'caged'
-                                                : task.cageStatus === 'uncaged'
-                                                    ? 'uncaged'
-                                                    : 'genre'
-                                        }
-                                    >
-                                        {task.cageStatus === 'caged' ? '🔒' : '🗝️'}{' '}
-                                        {task.cageStatus.toUpperCase()}
+                                    <Badge variant={task.cage_status === 'caged' ? 'caged' : 'uncaged'}>
+                                        {task.cage_status === 'caged' ? '🔒' : '🗝️'} {task.cage_status.toUpperCase()}
                                     </Badge>
                                 </div>
 
@@ -116,15 +166,14 @@ export default function TasksPage() {
                                 <div className="flex items-center gap-4 text-sm text-text-tertiary">
                                     <span className="flex items-center gap-1">
                                         <Clock size={14} />
-                                        {task.durationMinutes}min
+                                        {task.duration_minutes}min
                                     </span>
                                     <span className="flex items-center gap-1">
                                         <Camera size={14} />
-                                        {task.verification.type}
+                                        {task.verification_type}
                                     </span>
                                     <span className="font-mono">
-                                        Difficulty: {'★'.repeat(task.difficulty)}
-                                        {'☆'.repeat(5 - task.difficulty)}
+                                        Difficulty: {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
                                     </span>
                                 </div>
 
@@ -132,38 +181,88 @@ export default function TasksPage() {
                                 <div className="flex items-center justify-between pt-4 border-t border-white/5">
                                     <div className="text-sm font-mono">
                                         <span className="text-text-tertiary">Deadline: </span>
-                                        <span
-                                            className={
-                                                formatTimeLeft(task.deadline) === 'OVERDUE'
-                                                    ? 'text-red-primary'
-                                                    : 'text-text-primary'
-                                            }
-                                        >
-                                            {formatTimeLeft(task.deadline)}
+                                        <span className={
+                                            task.deadline && formatTimeLeft(new Date(task.deadline)) === 'OVERDUE'
+                                                ? 'text-red-primary'
+                                                : 'text-text-primary'
+                                        }>
+                                            {task.deadline ? formatTimeLeft(new Date(task.deadline)) : '—'}
                                         </span>
                                     </div>
-                                    <Button
-                                        variant={task.status === 'active' ? 'primary' : 'ghost'}
-                                        size="sm"
-                                    >
-                                        {task.status === 'active' ? 'Submit Proof' : 'Start Task'}
-                                    </Button>
+                                    {task.status === 'pending' ? (
+                                        <Button variant="ghost" size="sm" onClick={() => handleStartTask(task.id)}>
+                                            Start Task
+                                        </Button>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                ref={selectedTask === task.id ? fileInputRef : undefined}
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0]
+                                                    if (file) handlePhotoUpload(task.id, file)
+                                                }}
+                                            />
+                                            <Button
+                                                variant="primary"
+                                                size="sm"
+                                                disabled={verifying === task.id}
+                                                onClick={() => {
+                                                    setSelectedTask(task.id)
+                                                    setTimeout(() => fileInputRef.current?.click(), 50)
+                                                }}
+                                            >
+                                                {verifying === task.id ? (
+                                                    <><Loader2 size={14} className="mr-1 animate-spin" /> Verifying...</>
+                                                ) : (
+                                                    <><Upload size={14} className="mr-1" /> Submit Proof</>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Punishment Warning */}
-                                {task.punishmentOnFail && (
+                                {task.punishment_on_fail && (
                                     <div className="bg-red-primary/5 border border-red-primary/20 rounded-[var(--radius-md)] p-3 flex items-start gap-2">
                                         <AlertTriangle size={14} className="text-red-primary shrink-0 mt-0.5" />
                                         <p className="text-xs text-red-primary">
-                                            Failure: +{task.punishmentOnFail.hours}h lock time
-                                            {task.punishmentOnFail.additional &&
-                                                ` + ${task.punishmentOnFail.additional}`}
+                                            Failure: +{(task.punishment_on_fail as { hours: number }).hours}h lock time
+                                            {(task.punishment_on_fail as { additional?: string }).additional &&
+                                                ` + ${(task.punishment_on_fail as { additional: string }).additional}`}
                                         </p>
                                     </div>
                                 )}
                             </Card>
                         ))}
                     </div>
+
+                    {/* Completed Tasks */}
+                    {completedTasks.length > 0 && (
+                        <div className="mt-8">
+                            <h2 className="text-xl font-semibold mb-4 text-text-tertiary">Completed</h2>
+                            <div className="space-y-3 opacity-70">
+                                {completedTasks.slice(0, 5).map((task) => (
+                                    <Card key={task.id} variant="flat" size="sm" className="!min-h-0">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm font-medium">{task.title}</p>
+                                                <p className="text-xs text-text-tertiary">
+                                                    {task.status === 'completed' ? '✅ Passed' : '❌ Failed'}
+                                                    {task.ai_verification_result && ` — ${task.ai_verification_result}`}
+                                                </p>
+                                            </div>
+                                            <Badge variant={task.status === 'completed' ? 'info' : 'locked'}>
+                                                {task.status.toUpperCase()}
+                                            </Badge>
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
