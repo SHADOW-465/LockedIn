@@ -26,12 +26,13 @@ export default function ReviewPage() {
         try {
             const supabase = getSupabase()
 
-            // Update profile with tier and AI personality
+            // Update profile with tier, AI personality, and mark onboarding as done
             await supabase
                 .from('profiles')
                 .update({
                     tier: store.tier,
                     ai_personality: store.aiPersonality,
+                    onboarding_completed: true,
                 })
                 .eq('id', user.id)
 

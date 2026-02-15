@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 /**
- * Auth middleware — protects dashboard routes and redirects appropriately.
+ * Auth middleware — protects dashboard routes, enforces onboarding, and redirects appropriately.
  */
 export async function middleware(request: NextRequest) {
     let response = NextResponse.next({
@@ -38,19 +38,69 @@ export async function middleware(request: NextRequest) {
     const publicRoutes = ['/', '/login', '/signup', '/auth/callback']
     const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/api/')
 
-    // Protected dashboard routes
-    const dashboardRoutes = ['/home', '/tasks', '/chat', '/calendar', '/settings', '/journal']
-    const isDashboardRoute = dashboardRoutes.some((r) => pathname.startsWith(r))
+    // Onboarding routes (need auth but not onboarding completion)
     const isOnboardingRoute = pathname.startsWith('/onboarding')
 
+    // All protected dashboard routes
+    const isDashboardRoute =
+        pathname.startsWith('/home') ||
+        pathname.startsWith('/tasks') ||
+        pathname.startsWith('/chat') ||
+        pathname.startsWith('/calendar') ||
+        pathname.startsWith('/settings') ||
+        pathname.startsWith('/journal') ||
+        pathname.startsWith('/achievements') ||
+        pathname.startsWith('/regimens') ||
+        pathname.startsWith('/feedback')
+
+    // --- No user: protect dashboard and onboarding ---
     if (!user && (isDashboardRoute || isOnboardingRoute)) {
-        // Not logged in → redirect to login
         return NextResponse.redirect(new URL('/login', request.url))
     }
 
-    if (user && (pathname === '/login' || pathname === '/signup')) {
-        // Already logged in → redirect to dashboard
-        return NextResponse.redirect(new URL('/home', request.url))
+    // --- Authenticated user ---
+    if (user) {
+        // Redirect away from login/signup
+        if (pathname === '/login' || pathname === '/signup') {
+            // Check if onboarding is done to decide where to send them
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('onboarding_completed')
+                .eq('id', user.id)
+                .single()
+
+            if (profile?.onboarding_completed) {
+                return NextResponse.redirect(new URL('/home', request.url))
+            } else {
+                return NextResponse.redirect(new URL('/onboarding/welcome', request.url))
+            }
+        }
+
+        // On dashboard routes, check if onboarding is completed
+        if (isDashboardRoute) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('onboarding_completed')
+                .eq('id', user.id)
+                .single()
+
+            if (!profile?.onboarding_completed) {
+                return NextResponse.redirect(new URL('/onboarding/welcome', request.url))
+            }
+        }
+
+        // On onboarding routes, if already completed, redirect to home
+        if (isOnboardingRoute) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('onboarding_completed')
+                .eq('id', user.id)
+                .single()
+
+            if (profile?.onboarding_completed) {
+                return NextResponse.redirect(new URL('/home', request.url))
+            }
+        }
     }
 
     return response

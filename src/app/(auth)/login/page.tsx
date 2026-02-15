@@ -30,7 +30,20 @@ export default function LoginPage() {
         }
 
         if (user) {
-            router.push('/home')
+            // Check if user has completed onboarding
+            const { getSupabase } = await import('@/lib/supabase/client')
+            const supabase = getSupabase()
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('onboarding_completed')
+                .eq('id', user.id)
+                .single()
+
+            if (profile?.onboarding_completed) {
+                router.push('/home')
+            } else {
+                router.push('/onboarding/welcome')
+            }
         }
     }
 

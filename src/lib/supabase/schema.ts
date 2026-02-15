@@ -16,6 +16,7 @@ export interface UserProfile {
     total_edges: number
     subscription_tier: string
     last_release_date: string | null
+    onboarding_completed: boolean
     created_at: string
 }
 
