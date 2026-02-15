@@ -8,8 +8,9 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BottomNav } from '@/components/layout/bottom-nav'
-import { Flame, TrendingUp, AlertTriangle, Calendar, Target, Zap, Play } from 'lucide-react'
+import { Flame, TrendingUp, AlertTriangle, Calendar, Target, Zap, Play, Trophy, Dumbbell } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
+import Link from 'next/link'
 import { getActiveSession, createSession } from '@/lib/supabase/sessions'
 import { getActiveTasks } from '@/lib/supabase/tasks'
 import type { Session, Task } from '@/lib/supabase/schema'
@@ -269,6 +270,23 @@ export default function DashboardPage() {
                                     </div>
                                     <div className="text-xs text-text-tertiary">Total Edges</div>
                                 </div>
+                            </div>
+                        </div>
+                    </BentoItem>
+
+                    {/* Quick Links */}
+                    <BentoItem>
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">Quick Access</h3>
+                            <div className="grid grid-cols-2 gap-2">
+                                <Link href="/achievements" className="p-3 bg-bg-tertiary hover:bg-bg-hover rounded-[var(--radius-md)] border border-white/5 transition-colors flex items-center gap-2">
+                                    <Trophy size={16} className="text-tier-slave" />
+                                    <span className="text-sm font-medium">Achievements</span>
+                                </Link>
+                                <Link href="/regimens" className="p-3 bg-bg-tertiary hover:bg-bg-hover rounded-[var(--radius-md)] border border-white/5 transition-colors flex items-center gap-2">
+                                    <Dumbbell size={16} className="text-purple-primary" />
+                                    <span className="text-sm font-medium">Regimens</span>
+                                </Link>
                             </div>
                         </div>
                     </BentoItem>

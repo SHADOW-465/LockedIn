@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +27,12 @@ import { useRouter } from 'next/navigation'
 
 const settingsItems = [
     {
+        icon: User,
+        label: 'Edit Profile',
+        description: 'Username, personality & limits',
+        href: '/settings/profile',
+    },
+    {
         icon: Bell,
         label: 'Notifications',
         description: 'Frequency & quiet hours',
@@ -35,7 +42,7 @@ const settingsItems = [
         icon: Shield,
         label: 'Hard Limits',
         description: 'Always editable for safety',
-        href: '#',
+        href: '/settings/profile',
     },
     {
         icon: HelpCircle,
@@ -47,7 +54,7 @@ const settingsItems = [
         icon: MessageSquare,
         label: 'Suggestions',
         description: 'Submit feedback (good suggestions earn XP)',
-        href: '#',
+        href: '/feedback',
     },
 ]
 
@@ -187,7 +194,7 @@ export default function SettingsPage() {
                     <div className="space-y-2">
                         {settingsItems.map((item) => {
                             const Icon = item.icon
-                            return (
+                            const content = (
                                 <Card
                                     key={item.label}
                                     variant="flat"
@@ -205,6 +212,11 @@ export default function SettingsPage() {
                                         <ChevronRight size={18} className="text-text-tertiary" />
                                     </div>
                                 </Card>
+                            )
+                            return item.href !== '#' ? (
+                                <Link key={item.label} href={item.href}>{content}</Link>
+                            ) : (
+                                <div key={item.label}>{content}</div>
                             )
                         })}
                     </div>

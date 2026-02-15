@@ -58,15 +58,28 @@ export default function JournalPage() {
         const supabase = getSupabase()
         const session = await getActiveSession(user.id)
 
-        const { error } = await supabase.from('journal_entries').insert({
+        const { data: inserted, error } = await supabase.from('journal_entries').insert({
             user_id: user.id,
             session_id: session?.id ?? null,
             content: content.trim(),
             mood: mood,
             obedience_rating: obedience,
-        })
+        }).select('id').single()
 
-        if (!error) {
+        if (!error && inserted) {
+            // Fire AI analysis in background
+            fetch('/api/ai/journal-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    entryId: (inserted as { id: string }).id,
+                    userId: user.id,
+                    content: content.trim(),
+                    mood,
+                    obedience,
+                }),
+            }).then(() => loadEntries()).catch(console.error)
+
             setContent('')
             setMood(null)
             setObedience(5)
@@ -111,8 +124,8 @@ export default function JournalPage() {
                                             key={m.value}
                                             onClick={() => setMood(mood === m.value ? null : m.value)}
                                             className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-colors cursor-pointer border ${mood === m.value
-                                                    ? 'bg-purple-primary text-white border-purple-primary'
-                                                    : 'bg-bg-tertiary hover:bg-bg-hover border-white/5'
+                                                ? 'bg-purple-primary text-white border-purple-primary'
+                                                : 'bg-bg-tertiary hover:bg-bg-hover border-white/5'
                                                 }`}
                                         >
                                             {m.emoji} {m.label}
