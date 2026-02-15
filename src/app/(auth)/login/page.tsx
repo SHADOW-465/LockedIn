@@ -39,11 +39,8 @@ export default function LoginPage() {
                 .eq('id', user.id)
                 .single()
 
-            if (profile?.onboarding_completed) {
-                router.push('/home')
-            } else {
-                router.push('/onboarding/welcome')
-            }
+            // Always redirect to home - user can complete onboarding later in settings
+            router.push('/home')
         }
     }
 

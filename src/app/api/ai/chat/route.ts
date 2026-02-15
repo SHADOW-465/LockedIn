@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { generateChatResponse } from '@/lib/ai/gemini'
+import { emergencyRelease } from '@/lib/supabase/sessions'
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,6 +14,46 @@ export async function POST(request: Request) {
 
         if (!userId || !message) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+        }
+
+        // --- SAFEWORD DETECTION (Safety Critical) ---
+        const lowerMessage = message.toLowerCase().trim()
+        const safewords = ['red', 'stop', 'safeword', 'halt', 'end', 'quit']
+        const isSafeword = safewords.some(word => lowerMessage === word || lowerMessage.includes(word))
+        
+        if (isSafeword) {
+            // Immediately release the session
+            if (sessionId) {
+                await emergencyRelease(sessionId)
+            }
+            
+            // Save the safeword message
+            await supabaseAdmin.from('chat_messages').insert({
+                user_id: userId,
+                session_id: sessionId || null,
+                sender: 'user',
+                content: message,
+                message_type: 'command',
+            })
+            
+            // Save system halt message
+            const { data: haltMsg } = await supabaseAdmin
+                .from('chat_messages')
+                .insert({
+                    user_id: userId,
+                    session_id: sessionId || null,
+                    sender: 'ai',
+                    content: '**SESSION HALTED** - Safeword detected. All activities stopped. You are free.',
+                    message_type: 'system',
+                })
+                .select()
+                .single()
+            
+            return NextResponse.json({
+                message: haltMsg,
+                safeword_triggered: true,
+                session_halted: true,
+            })
         }
 
         // Save user message
@@ -45,8 +86,7 @@ export async function POST(request: Request) {
             willpower ?? 50
         )
 
-        // Detect rudeness/punishment triggers
-        const lowerMessage = message.toLowerCase()
+        // Detect rudeness/punishment triggers (reuse lowerMessage from safeword check)
         const isRude =
             lowerMessage.includes('fuck you') ||
             lowerMessage.includes('shut up') ||

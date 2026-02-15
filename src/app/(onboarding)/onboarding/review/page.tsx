@@ -130,8 +130,9 @@ export default function ReviewPage() {
             setTimeout(() => {
                 console.log('Animation done, resetting store and redirecting...')
                 store.reset()
-                // Force hard navigation to ensure middleware re-checks profile
-                window.location.href = '/home'
+                // Use router with refresh to avoid race condition
+                router.refresh() // Refresh server components to get updated profile
+                router.replace('/home')
             }, 3200)
         } catch (err) {
             console.error('Error saving onboarding data:', err)

@@ -31,8 +31,32 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    const { data: { user } } = await supabase.auth.getUser()
+    let user = null
+    let authError = null
+    
+    try {
+        const { data, error } = await supabase.auth.getUser()
+        user = data.user
+        authError = error
+    } catch (err) {
+        authError = err
+    }
+    
     const pathname = request.nextUrl.pathname
+    
+    // --- Zombie Loop Fix: If auth fails (user deleted), clear session and redirect to login ---
+    if (authError) {
+        console.error('Auth error in middleware:', authError)
+        // Clear all auth cookies
+        const cookies = request.cookies.getAll()
+        const response = NextResponse.redirect(new URL('/login', request.url))
+        cookies.forEach((cookie) => {
+            if (cookie.name.includes('sb-')) {
+                response.cookies.delete(cookie.name)
+            }
+        })
+        return response
+    }
 
     // Public routes that don't need auth
     const publicRoutes = ['/', '/login', '/signup', '/auth/callback']
@@ -60,33 +84,16 @@ export async function middleware(request: NextRequest) {
 
     // --- Authenticated user ---
     if (user) {
-        // Redirect away from login/signup
+        // Redirect away from login/signup to home (user can complete onboarding later in settings)
         if (pathname === '/login' || pathname === '/signup') {
-            // Check if onboarding is done to decide where to send them
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('onboarding_completed')
-                .eq('id', user.id)
-                .single()
-
-            if (profile?.onboarding_completed) {
-                return NextResponse.redirect(new URL('/home', request.url))
-            } else {
-                return NextResponse.redirect(new URL('/onboarding/welcome', request.url))
-            }
+            return NextResponse.redirect(new URL('/home', request.url))
         }
 
-        // On dashboard routes, check if onboarding is completed
+        // On dashboard routes, allow access even if onboarding is incomplete
+        // User can complete onboarding later in settings
         if (isDashboardRoute) {
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('onboarding_completed')
-                .eq('id', user.id)
-                .single()
-
-            if (!profile?.onboarding_completed) {
-                return NextResponse.redirect(new URL('/onboarding/welcome', request.url))
-            }
+            // Allow access - no mandatory redirect to onboarding
+            // Profile data will be fetched client-side as needed
         }
 
         // On onboarding routes, if already completed, redirect to home
