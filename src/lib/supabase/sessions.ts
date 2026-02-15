@@ -1,14 +1,13 @@
 import { getSupabase } from './client'
 import type { Session } from './schema'
 
-const supabase = getSupabase()
-
 export async function createSession(
     userId: string,
     tier: string,
     durationHours: number = 168,
     aiPersonality: string | null = null
 ): Promise<Session | null> {
+    const supabase = getSupabase()
     const endTime = new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString()
 
     const { data, error } = await supabase
@@ -32,6 +31,7 @@ export async function createSession(
 }
 
 export async function getActiveSession(userId: string): Promise<Session | null> {
+    const supabase = getSupabase()
     const { data, error } = await supabase
         .from('sessions')
         .select('*')
@@ -50,6 +50,7 @@ export async function getActiveSession(userId: string): Promise<Session | null> 
 }
 
 export async function endSession(sessionId: string): Promise<boolean> {
+    const supabase = getSupabase()
     const { error } = await supabase
         .from('sessions')
         .update({
@@ -67,6 +68,7 @@ export async function endSession(sessionId: string): Promise<boolean> {
 }
 
 export async function emergencyRelease(sessionId: string): Promise<boolean> {
+    const supabase = getSupabase()
     const { error } = await supabase
         .from('sessions')
         .update({
@@ -84,6 +86,7 @@ export async function emergencyRelease(sessionId: string): Promise<boolean> {
 }
 
 export async function addLockTime(sessionId: string, hours: number, reason: string) {
+    const supabase = getSupabase()
     const { data, error } = await supabase.rpc('add_lock_time', {
         p_session_id: sessionId,
         p_hours: hours,
@@ -99,6 +102,7 @@ export async function addLockTime(sessionId: string, hours: number, reason: stri
 }
 
 export async function subtractLockTime(sessionId: string, hours: number, reason: string) {
+    const supabase = getSupabase()
     const { data, error } = await supabase.rpc('subtract_lock_time', {
         p_session_id: sessionId,
         p_hours: hours,

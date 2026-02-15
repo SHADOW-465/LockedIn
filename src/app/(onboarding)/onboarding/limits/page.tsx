@@ -67,8 +67,8 @@ export default function LimitsPage() {
     const handleContinue = () => {
         setHardLimits(localHard)
         setSoftLimits(localSoft)
-        setStep(3)
-        router.push('/onboarding/profile')
+        setStep(4)
+        router.push('/onboarding/physical')
     }
 
     return (
@@ -77,9 +77,9 @@ export default function LimitsPage() {
                 {/* Progress */}
                 <div className="flex items-center gap-2 mb-2">
                     <div className="h-1 flex-1 rounded-full overflow-hidden bg-bg-tertiary">
-                        <div className="h-full w-[42%] bg-purple-primary rounded-full transition-all duration-500" />
+                        <div className="h-full w-[40%] bg-purple-primary rounded-full transition-all duration-500" />
                     </div>
-                    <span className="text-xs text-text-tertiary font-mono">3/7</span>
+                    <span className="text-xs text-text-tertiary font-mono">4/10</span>
                 </div>
 
                 <div className="text-center mb-8 animate-fade-in">
@@ -130,10 +130,10 @@ export default function LimitsPage() {
                                 variant="flat"
                                 size="sm"
                                 className={`!min-h-0 py-3 transition-all ${status === 'hard'
-                                        ? 'border-red-primary/50 bg-red-primary/5'
-                                        : status === 'soft'
-                                            ? 'border-tier-slave/50 bg-tier-slave/5'
-                                            : ''
+                                    ? 'border-red-primary/50 bg-red-primary/5'
+                                    : status === 'soft'
+                                        ? 'border-tier-slave/50 bg-tier-slave/5'
+                                        : ''
                                     }`}
                             >
                                 <div className="flex items-center justify-between">
@@ -142,8 +142,8 @@ export default function LimitsPage() {
                                         <button
                                             onClick={() => toggleSoftLimit(limit)}
                                             className={`px-3 py-1 rounded-[var(--radius-pill)] text-xs font-medium transition-all cursor-pointer ${status === 'soft'
-                                                    ? 'bg-tier-slave text-black'
-                                                    : 'bg-bg-tertiary text-text-tertiary hover:text-text-primary'
+                                                ? 'bg-tier-slave text-black'
+                                                : 'bg-bg-tertiary text-text-tertiary hover:text-text-primary'
                                                 }`}
                                         >
                                             <ShieldOff size={12} className="inline mr-1" />
@@ -152,8 +152,8 @@ export default function LimitsPage() {
                                         <button
                                             onClick={() => toggleHardLimit(limit)}
                                             className={`px-3 py-1 rounded-[var(--radius-pill)] text-xs font-medium transition-all cursor-pointer ${status === 'hard'
-                                                    ? 'bg-red-primary text-white'
-                                                    : 'bg-bg-tertiary text-text-tertiary hover:text-text-primary'
+                                                ? 'bg-red-primary text-white'
+                                                : 'bg-bg-tertiary text-text-tertiary hover:text-text-primary'
                                                 }`}
                                         >
                                             <Shield size={12} className="inline mr-1" />

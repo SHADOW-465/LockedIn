@@ -45,12 +45,12 @@
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   /* Shadows — Neumorphism */
-  --shadow-raised: 6px 6px 12px rgba(0,0,0,0.4), -6px -6px 12px rgba(255,255,255,0.05);
-  --shadow-raised-hover: 8px 8px 16px rgba(0,0,0,0.4), -8px -8px 16px rgba(255,255,255,0.05);
-  --shadow-inset: inset 4px 4px 8px rgba(0,0,0,0.5), inset -4px -4px 8px rgba(255,255,255,0.03);
-  --shadow-glow-red: 0 0 20px rgba(211,47,47,0.3), 0 0 40px rgba(211,47,47,0.15);
-  --shadow-glow-purple: 0 0 20px rgba(124,77,255,0.3), 0 0 40px rgba(124,77,255,0.15);
-  --shadow-glow-teal: 0 0 20px rgba(38,166,154,0.3), 0 0 40px rgba(38,166,154,0.15);
+  --shadow-raised: 6px 6px 12px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.05);
+  --shadow-raised-hover: 8px 8px 16px rgba(0, 0, 0, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.05);
+  --shadow-inset: inset 4px 4px 8px rgba(0, 0, 0, 0.5), inset -4px -4px 8px rgba(255, 255, 255, 0.03);
+  --shadow-glow-red: 0 0 20px rgba(211, 47, 47, 0.3), 0 0 40px rgba(211, 47, 47, 0.15);
+  --shadow-glow-purple: 0 0 20px rgba(124, 77, 255, 0.3), 0 0 40px rgba(124, 77, 255, 0.15);
+  --shadow-glow-teal: 0 0 20px rgba(38, 166, 154, 0.3), 0 0 40px rgba(38, 166, 154, 0.15);
 
   /* Border Radius */
   --radius-pill: 9999px;
@@ -93,13 +93,16 @@
   ::-webkit-scrollbar {
     width: 6px;
   }
+
   ::-webkit-scrollbar-track {
     background: var(--color-bg-primary);
   }
+
   ::-webkit-scrollbar-thumb {
     background: var(--color-bg-tertiary);
     border-radius: 3px;
   }
+
   ::-webkit-scrollbar-thumb:hover {
     background: var(--color-bg-hover);
   }
@@ -113,26 +116,33 @@
   .neumorphism-raised {
     box-shadow: var(--shadow-raised);
   }
+
   .neumorphism-raised-hover {
     box-shadow: var(--shadow-raised-hover);
   }
+
   .neumorphism-inset {
     box-shadow: var(--shadow-inset);
   }
+
   .glow-red {
     box-shadow: var(--shadow-glow-red);
   }
+
   .glow-purple {
     box-shadow: var(--shadow-glow-purple);
   }
+
   .glow-teal {
     box-shadow: var(--shadow-glow-teal);
   }
+
   .text-glow-red {
-    text-shadow: 0 0 10px rgba(211,47,47,0.5), 0 0 20px rgba(211,47,47,0.3);
+    text-shadow: 0 0 10px rgba(211, 47, 47, 0.5), 0 0 20px rgba(211, 47, 47, 0.3);
   }
+
   .text-glow-purple {
-    text-shadow: 0 0 10px rgba(124,77,255,0.5), 0 0 20px rgba(124,77,255,0.3);
+    text-shadow: 0 0 10px rgba(124, 77, 255, 0.5), 0 0 20px rgba(124, 77, 255, 0.3);
   }
 }
 
@@ -141,83 +151,220 @@
    ========================================== */
 
 @keyframes timer-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: var(--shadow-glow-red);
   }
+
   50% {
-    box-shadow: 0 0 30px rgba(211,47,47,0.5), 0 0 60px rgba(211,47,47,0.25);
+    box-shadow: 0 0 30px rgba(211, 47, 47, 0.5), 0 0 60px rgba(211, 47, 47, 0.25);
   }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes slide-in-left {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes lock-glow {
-  0%, 100% { filter: drop-shadow(0 0 4px rgba(211,47,47,0.4)); }
-  50% { filter: drop-shadow(0 0 12px rgba(211,47,47,0.8)); }
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px rgba(211, 47, 47, 0.4));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 12px rgba(211, 47, 47, 0.8));
+  }
+}
+
+/* ==========================================
+   LOCK-IN §11.2 ANIMATION KEYFRAMES
+   ========================================== */
+
+/* "ed" letters slide in from behind the "k" */
+@keyframes lockin-ed-slide {
+  0% {
+    max-width: 0;
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  40% {
+    opacity: 0;
+  }
+
+  100% {
+    max-width: 1.5ch;
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Lock shackle slides down from open to closed */
+@keyframes lock-shackle-close {
+  0% {
+    transform: translateY(-6px);
+    opacity: 0.6;
+  }
+
+  60% {
+    transform: translateY(1px);
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Sealed state — glow pulse */
+@keyframes lockin-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(211, 47, 47, 0.3), inset 0 0 8px rgba(211, 47, 47, 0.05);
+  }
+
+  50% {
+    box-shadow: 0 0 28px rgba(211, 47, 47, 0.55), inset 0 0 12px rgba(211, 47, 47, 0.1);
+  }
+}
+
+/* Fade up + slight scale for completion text */
+@keyframes lockin-fade-text {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Shimmer stripe traveling across the button */
+@keyframes lockin-shimmer-sweep {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+
+  100% {
+    transform: translateX(250%) skewX(-15deg);
+  }
 }
 
 @keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(100vh);
+  }
 }
 
 @layer utilities {
   .animate-fade-in {
     animation: fade-in 0.3s ease-out forwards;
   }
+
   .animate-fade-in-up {
     animation: fade-in-up 0.5s ease-out forwards;
   }
+
   .animate-slide-in-right {
     animation: slide-in-right 0.4s ease-out forwards;
   }
+
   .animate-slide-in-left {
     animation: slide-in-left 0.4s ease-out forwards;
   }
+
   .animate-scale-in {
     animation: scale-in 0.3s ease-out forwards;
   }
+
   .animate-timer-pulse {
     animation: timer-pulse 2s infinite;
   }
+
   .animate-lock-glow {
     animation: lock-glow 2s ease-in-out infinite;
   }
+
   .animate-shimmer {
-    background: linear-gradient(
-      90deg,
-      var(--color-bg-tertiary) 25%,
-      var(--color-bg-hover) 50%,
-      var(--color-bg-tertiary) 75%
-    );
+    background: linear-gradient(90deg,
+        var(--color-bg-tertiary) 25%,
+        var(--color-bg-hover) 50%,
+        var(--color-bg-tertiary) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
@@ -234,6 +381,7 @@
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.06);
   }
+
   .glass-strong {
     background: rgba(30, 33, 41, 0.9);
     backdrop-filter: blur(24px);
@@ -247,6 +395,7 @@
    ========================================== */
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

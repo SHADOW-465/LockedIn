@@ -24,6 +24,7 @@ interface OnboardingState {
     profileAnswers: Record<string, string>
     lockGoal: number
     notificationFreq: string
+    preferredRegimens: string[]
 
     setStep: (step: number) => void
     setTier: (tier: string) => void
@@ -35,6 +36,7 @@ interface OnboardingState {
     addProfileAnswer: (question: string, answer: string) => void
     setLockGoal: (hours: number) => void
     setNotificationFreq: (freq: string) => void
+    setPreferredRegimens: (regimens: string[]) => void
     reset: () => void
 }
 
@@ -49,6 +51,7 @@ const initialState = {
     profileAnswers: {},
     lockGoal: 168, // 7 days default
     notificationFreq: 'medium',
+    preferredRegimens: [],
 }
 
 export const useOnboarding = create<OnboardingState>()(
@@ -69,6 +72,7 @@ export const useOnboarding = create<OnboardingState>()(
                 })),
             setLockGoal: (lockGoal) => set({ lockGoal }),
             setNotificationFreq: (notificationFreq) => set({ notificationFreq }),
+            setPreferredRegimens: (preferredRegimens) => set({ preferredRegimens }),
             reset: () => set(initialState),
         }),
         {

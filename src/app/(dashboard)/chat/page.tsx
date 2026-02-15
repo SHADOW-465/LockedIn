@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { TopBar } from '@/components/layout/top-bar'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { Send, Loader2 } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
@@ -68,12 +69,14 @@ export default function ChatPage() {
 
     return (
         <>
+            <TopBar />
+
             <div className="min-h-screen pb-24 lg:pb-8 flex flex-col">
-                {/* Chat Header */}
-                <header className="sticky top-0 z-40 glass-strong px-4 py-3 border-b border-white/5">
-                    <div className="flex items-center justify-between">
+                {/* Chat Sub-Header */}
+                <div className="px-4 py-2 border-b border-white/5 bg-bg-secondary/50">
+                    <div className="flex items-center justify-between max-w-2xl mx-auto">
                         <div>
-                            <h1 className="text-lg font-bold">{personality}</h1>
+                            <h2 className="text-sm font-semibold">{personality}</h2>
                             <p className="text-xs text-text-tertiary">
                                 Tier: {profile?.tier ?? 'Newbie'}
                             </p>
@@ -83,7 +86,7 @@ export default function ChatPage() {
                             <Badge variant="tier2">ACTIVE</Badge>
                         </div>
                     </div>
-                </header>
+                </div>
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">

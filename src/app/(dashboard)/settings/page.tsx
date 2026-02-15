@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { TopBar } from '@/components/layout/top-bar'
 import { BottomNav } from '@/components/layout/bottom-nav'
+import { Lock as LockIcon } from 'lucide-react'
 import {
     Bell,
     Shield,
@@ -36,7 +37,7 @@ const settingsItems = [
         icon: Bell,
         label: 'Notifications',
         description: 'Frequency & quiet hours',
-        href: '#',
+        href: '/settings/notifications',
     },
     {
         icon: Shield,
@@ -48,7 +49,7 @@ const settingsItems = [
         icon: HelpCircle,
         label: 'Help & Support',
         description: 'Safeword, emergency, crisis resources',
-        href: '#',
+        href: '/settings/help',
     },
     {
         icon: MessageSquare,
@@ -63,9 +64,18 @@ export default function SettingsPage() {
     const router = useRouter()
     const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false)
     const [processing, setProcessing] = useState(false)
+    const [hasActiveSession, setHasActiveSession] = useState(false)
 
     const tier = profile?.tier ?? 'Newbie'
     const username = profile?.username ?? profile?.email?.split('@')[0] ?? 'User'
+
+    // Check for active session — settings locked during session per §11.2
+    useEffect(() => {
+        if (!user) return
+        getActiveSession(user.id).then((session) => {
+            setHasActiveSession(!!session)
+        })
+    }, [user])
 
     const handleSignOut = async () => {
         await signOut()
@@ -105,6 +115,19 @@ export default function SettingsPage() {
             <div className="min-h-screen pb-24 lg:pb-8 p-4">
                 <div className="max-w-2xl mx-auto space-y-6">
                     <h1 className="text-3xl font-bold">Settings</h1>
+
+                    {/* Session Active Banner */}
+                    {hasActiveSession && (
+                        <Card variant="flat" size="sm" className="!min-h-0 border-red-primary/30 bg-red-primary/5">
+                            <div className="flex items-center gap-3">
+                                <LockIcon size={18} className="text-red-primary shrink-0" />
+                                <div>
+                                    <p className="text-sm font-semibold text-red-primary">Session Active — Settings Locked</p>
+                                    <p className="text-xs text-text-tertiary">Profile, limits, and notifications are read-only during an active lock session.</p>
+                                </div>
+                            </div>
+                        </Card>
+                    )}
 
                     {/* Profile Card */}
                     <Card variant="hero">
@@ -176,10 +199,11 @@ export default function SettingsPage() {
                                             <button
                                                 key={t}
                                                 onClick={() => handleTierSwitch(t)}
+                                                disabled={hasActiveSession}
                                                 className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-colors cursor-pointer border ${t === tier
                                                     ? 'bg-purple-primary text-white border-purple-primary'
                                                     : 'bg-bg-tertiary hover:bg-bg-hover border-white/5'
-                                                    }`}
+                                                    } ${hasActiveSession ? 'opacity-40 cursor-not-allowed' : ''}`}
                                             >
                                                 {t}
                                             </button>
@@ -194,29 +218,30 @@ export default function SettingsPage() {
                     <div className="space-y-2">
                         {settingsItems.map((item) => {
                             const Icon = item.icon
-                            const content = (
-                                <Card
-                                    key={item.label}
-                                    variant="flat"
-                                    size="sm"
-                                    className="!min-h-0 py-4 cursor-pointer hover:bg-bg-tertiary transition-colors"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <Icon size={20} className="text-text-tertiary" />
-                                            <div>
-                                                <span className="font-medium text-sm">{item.label}</span>
-                                                <p className="text-xs text-text-tertiary">{item.description}</p>
+                            const isLocked = hasActiveSession && ['Edit Profile', 'Notifications', 'Hard Limits'].includes(item.label)
+                            return (
+                                <Link key={item.label} href={isLocked ? '#' : item.href} onClick={isLocked ? (e: React.MouseEvent) => e.preventDefault() : undefined}>
+                                    <Card
+                                        variant="flat"
+                                        size="sm"
+                                        className={`!min-h-0 py-4 transition-colors ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-bg-tertiary'}`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <Icon size={20} className="text-text-tertiary" />
+                                                <div>
+                                                    <span className="font-medium text-sm">{item.label}</span>
+                                                    <p className="text-xs text-text-tertiary">{item.description}</p>
+                                                </div>
                                             </div>
+                                            {isLocked ? (
+                                                <LockIcon size={16} className="text-red-primary/50" />
+                                            ) : (
+                                                <ChevronRight size={18} className="text-text-tertiary" />
+                                            )}
                                         </div>
-                                        <ChevronRight size={18} className="text-text-tertiary" />
-                                    </div>
-                                </Card>
-                            )
-                            return item.href !== '#' ? (
-                                <Link key={item.label} href={item.href}>{content}</Link>
-                            ) : (
-                                <div key={item.label}>{content}</div>
+                                    </Card>
+                                </Link>
                             )
                         })}
                     </div>

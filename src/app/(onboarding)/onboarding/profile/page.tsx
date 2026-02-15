@@ -28,8 +28,8 @@ export default function ProfilePage() {
         Object.entries(answers).forEach(([q, a]) => {
             if (a.trim()) addProfileAnswer(q, a)
         })
-        setStep(4)
-        router.push('/onboarding/review')
+        setStep(7)
+        router.push('/onboarding/lockgoal')
     }
 
     const answeredCount = Object.values(answers).filter((a) => a.trim().length > 0).length
@@ -40,9 +40,9 @@ export default function ProfilePage() {
                 {/* Progress */}
                 <div className="flex items-center gap-2 mb-2">
                     <div className="h-1 flex-1 rounded-full overflow-hidden bg-bg-tertiary">
-                        <div className="h-full w-[56%] bg-purple-primary rounded-full transition-all duration-500" />
+                        <div className="h-full w-[70%] bg-purple-primary rounded-full transition-all duration-500" />
                     </div>
-                    <span className="text-xs text-text-tertiary font-mono">4/7</span>
+                    <span className="text-xs text-text-tertiary font-mono">7/10</span>
                 </div>
 
                 <div className="text-center mb-8 animate-fade-in">

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { getSupabase } from '@/lib/supabase/client'
 import { createSession } from '@/lib/supabase/sessions'
-import { Lock, Check, AlertTriangle } from 'lucide-react'
+import { Lock, LockOpen, LockKeyhole, Check, AlertTriangle, Ruler, Dumbbell, Bell, Calendar } from 'lucide-react'
 
 export default function ReviewPage() {
     const router = useRouter()
@@ -17,17 +17,19 @@ export default function ReviewPage() {
     const store = useOnboarding()
     const [isLocking, setIsLocking] = useState(false)
     const [lockComplete, setLockComplete] = useState(false)
-
+    const [lockSealed, setLockSealed] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
     const handleLockIn = async () => {
         if (!user) return
         setIsLocking(true)
+        setError(null)
 
         try {
             const supabase = getSupabase()
 
-            // Update profile with tier, AI personality, and mark onboarding as done
-            await supabase
+            // 1. Update profile
+            const { error: profileError } = await supabase
                 .from('profiles')
                 .update({
                     tier: store.tier,
@@ -36,39 +38,65 @@ export default function ReviewPage() {
                 })
                 .eq('id', user.id)
 
-            // Upsert preferences
-            await supabase
+            if (profileError) {
+                console.error('Profile update error:', profileError)
+                throw new Error('Failed to save profile settings')
+            }
+
+            // 2. Upsert preferences — send fetish_tags as string[] not {tag,intensity}[]
+            const fetishTagNames = store.fetishTags?.map(t =>
+                typeof t === 'string' ? t : t.tag
+            ) ?? []
+
+            const { error: prefsError } = await supabase
                 .from('user_preferences')
                 .upsert({
                     user_id: user.id,
                     hard_limits: store.hardLimits,
                     soft_limits: store.softLimits,
-                    fetish_tags: store.fetishTags,
-                    physical_details: store.physicalDetails,
+                    fetish_tags: fetishTagNames,
+                    physical_details: store.physicalDetails ?? {},
                     notification_frequency: store.notificationFreq,
                     quiet_hours: null,
                     profile_answers: store.profileAnswers,
+                    preferred_regimens: store.preferredRegimens ?? [],
                 }, { onConflict: 'user_id' })
 
-            // Auto-create first lock session (168h / 1 week default)
-            await createSession(
+            if (prefsError) {
+                console.error('Preferences upsert error:', prefsError)
+                throw new Error('Failed to save preferences')
+            }
+
+            // 3. Create first session with user's chosen lock duration
+            const lockHours = store.lockGoal ?? 168
+            const session = await createSession(
                 user.id,
                 store.tier ?? 'Newbie',
-                168,
+                lockHours,
                 store.aiPersonality ?? null
             )
 
-            // Animate the lock-in
+            if (!session) {
+                console.error('Session creation returned null')
+                // Non-blocking — proceed even if session fails
+            }
+
+            // 4. Phase 2: Locking animation (icon morphs, shimmer)
+            setLockComplete(true)
+
+            // Phase 3: After 800ms, seal — "ed" slides in, glow pulse
             setTimeout(() => {
-                setLockComplete(true)
-                // Redirect after animation
-                setTimeout(() => {
-                    store.reset()
-                    router.push('/home')
-                }, 2000)
-            }, 1500)
-        } catch (error) {
-            console.error('Error saving onboarding data:', error)
+                setLockSealed(true)
+            }, 800)
+
+            // Redirect after full animation plays
+            setTimeout(() => {
+                store.reset()
+                router.push('/home')
+            }, 3200)
+        } catch (err) {
+            console.error('Error saving onboarding data:', err)
+            setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
             setIsLocking(false)
         }
     }
@@ -84,6 +112,19 @@ export default function ReviewPage() {
         }
     }
 
+    const getSizeBucket = () => {
+        if (!store.physicalDetails?.penisSize) return null
+        const len = store.physicalDetails.penisSize.erectLength
+        if (len < 3) return '<3"'
+        if (len < 4) return '3–4"'
+        if (len < 5) return '4–5"'
+        if (len < 6) return '5–6"'
+        if (len < 7) return '6–7"'
+        return '7"+'
+    }
+
+    const lockDays = Math.round((store.lockGoal ?? 168) / 24)
+
     return (
         <div className="min-h-screen p-4 pb-20 bg-bg-primary">
             <div className="max-w-2xl mx-auto space-y-6">
@@ -92,7 +133,7 @@ export default function ReviewPage() {
                     <div className="h-1 flex-1 rounded-full overflow-hidden bg-bg-tertiary">
                         <div className="h-full w-full bg-purple-primary rounded-full transition-all duration-500" />
                     </div>
-                    <span className="text-xs text-text-tertiary font-mono">7/7</span>
+                    <span className="text-xs text-text-tertiary font-mono">10/10</span>
                 </div>
 
                 <div className="text-center mb-8 animate-fade-in">
@@ -102,7 +143,7 @@ export default function ReviewPage() {
                     </p>
                 </div>
 
-                {/* Review Cards */}
+                {/* Tier */}
                 <Card variant="raised" size="sm">
                     <div className="flex items-center justify-between">
                         <span className="text-text-tertiary text-sm">Tier</span>
@@ -112,6 +153,7 @@ export default function ReviewPage() {
                     </div>
                 </Card>
 
+                {/* AI Personality */}
                 <Card variant="raised" size="sm">
                     <div className="flex items-center justify-between">
                         <span className="text-text-tertiary text-sm">AI Personality</span>
@@ -121,6 +163,7 @@ export default function ReviewPage() {
                     </div>
                 </Card>
 
+                {/* Hard Limits */}
                 <Card variant="raised" size="sm">
                     <div className="space-y-2">
                         <span className="text-text-tertiary text-sm">Hard Limits ({store.hardLimits.length})</span>
@@ -136,6 +179,7 @@ export default function ReviewPage() {
                     </div>
                 </Card>
 
+                {/* Soft Limits */}
                 <Card variant="raised" size="sm">
                     <div className="space-y-2">
                         <span className="text-text-tertiary text-sm">Soft Limits ({store.softLimits.length})</span>
@@ -151,6 +195,58 @@ export default function ReviewPage() {
                     </div>
                 </Card>
 
+                {/* Physical Details */}
+                {store.physicalDetails && (
+                    <Card variant="raised" size="sm">
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Ruler size={14} className="text-text-tertiary" />
+                                <span className="text-text-tertiary text-sm">Physical Details</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                    <span className="text-text-tertiary">Erect: </span>
+                                    <span className="text-text-primary font-medium">
+                                        {store.physicalDetails.penisSize.erectLength}" × {store.physicalDetails.penisSize.erectGirth}"
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="text-text-tertiary">Type: </span>
+                                    <span className="text-text-primary font-medium capitalize">
+                                        {store.physicalDetails.penisSize.growerOrShower}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="text-text-tertiary">Size: </span>
+                                    <Badge variant="genre">{getSizeBucket()}</Badge>
+                                </div>
+                                <div>
+                                    <span className="text-text-tertiary">Age: </span>
+                                    <span className="text-text-primary font-medium">{store.physicalDetails.age}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                )}
+
+                {/* Preferred Regimens */}
+                {(store.preferredRegimens?.length ?? 0) > 0 && (
+                    <Card variant="raised" size="sm">
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Dumbbell size={14} className="text-text-tertiary" />
+                                <span className="text-text-tertiary text-sm">Preferred Regimens ({store.preferredRegimens?.length})</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {store.preferredRegimens?.map((r) => (
+                                    <Badge key={r} variant="genre">{r}</Badge>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+                )}
+
+                {/* Profile Questions */}
                 <Card variant="raised" size="sm">
                     <div className="flex items-center justify-between">
                         <span className="text-text-tertiary text-sm">Profile Questions Answered</span>
@@ -160,7 +256,31 @@ export default function ReviewPage() {
                     </div>
                 </Card>
 
-                {/* Warning */}
+                {/* Lock Goal */}
+                <Card variant="raised" size="sm">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Calendar size={14} className="text-text-tertiary" />
+                            <span className="text-text-tertiary text-sm">Initial Lock Duration</span>
+                        </div>
+                        <Badge variant="locked">{lockDays} days</Badge>
+                    </div>
+                </Card>
+
+                {/* Notification Frequency */}
+                <Card variant="raised" size="sm">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Bell size={14} className="text-text-tertiary" />
+                            <span className="text-text-tertiary text-sm">Notifications</span>
+                        </div>
+                        <span className="text-text-primary font-medium text-sm capitalize">
+                            {store.notificationFreq}
+                        </span>
+                    </div>
+                </Card>
+
+                {/* Destruction Warning */}
                 {store.tier === 'Destruction' && (
                     <div className="bg-red-primary/10 border border-red-primary/30 rounded-[var(--radius-lg)] p-4 flex items-start gap-3">
                         <AlertTriangle size={20} className="text-red-primary shrink-0 mt-0.5" />
@@ -175,37 +295,84 @@ export default function ReviewPage() {
                     </div>
                 )}
 
-                {/* Lock In Button */}
+                {/* Error Message */}
+                {error && (
+                    <div className="bg-red-primary/10 border border-red-primary/30 rounded-[var(--radius-lg)] p-4 text-center">
+                        <p className="text-sm text-red-primary">{error}</p>
+                        <p className="text-xs text-text-tertiary mt-1">Check your connection and try again.</p>
+                    </div>
+                )}
+
+                {/* Lock In Button — §11.2 Animation */}
                 <div className="text-center pt-4">
-                    {!lockComplete ? (
-                        <Button
-                            variant="primary"
-                            size="lg"
-                            className="w-full text-xl py-5 relative overflow-hidden"
+                    {!lockSealed ? (
+                        <button
+                            className={`
+                                w-full py-5 rounded-[var(--radius-pill)] text-xl font-bold
+                                relative overflow-hidden transition-all duration-500 cursor-pointer
+                                flex items-center justify-center gap-3
+                                ${lockComplete
+                                    ? 'bg-red-primary/20 border-2 border-red-primary/50 text-red-primary'
+                                    : 'bg-purple-primary hover:bg-purple-primary/90 text-white border-2 border-transparent'
+                                }
+                                disabled:opacity-50 disabled:cursor-not-allowed
+                            `}
                             onClick={handleLockIn}
                             disabled={isLocking || !store.tier}
                         >
-                            {isLocking ? (
-                                <span className="flex items-center gap-2">
-                                    <Lock size={20} className="animate-spin" />
-                                    Locking...
-                                </span>
-                            ) : (
-                                <span className="flex items-center gap-2">
-                                    <Lock size={20} />
-                                    Lock In
-                                </span>
+                            {/* Shimmer sweep on locking */}
+                            {lockComplete && (
+                                <span
+                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent"
+                                    style={{ animation: 'lockin-shimmer-sweep 0.8s ease-out forwards' }}
+                                />
                             )}
-                        </Button>
+
+                            {/* Lock icon: LockOpen → LockKeyhole (animating closed) */}
+                            <span className="relative" style={lockComplete ? { animation: 'lock-shackle-close 0.6s ease-out forwards' } : undefined}>
+                                {lockComplete ? (
+                                    <LockKeyhole size={22} />
+                                ) : isLocking ? (
+                                    <Lock size={22} className="animate-spin" />
+                                ) : (
+                                    <LockOpen size={22} />
+                                )}
+                            </span>
+
+                            {/* Text: "Lock In" → "Locking..." → morphs next phase */}
+                            <span className="relative font-mono tracking-wide">
+                                {isLocking && !lockComplete ? 'Locking...' : 'Lock In'}
+                            </span>
+                        </button>
                     ) : (
-                        <div className="animate-scale-in">
-                            <div className="w-20 h-20 mx-auto rounded-full bg-teal-primary/20 flex items-center justify-center mb-4 glow-teal">
-                                <Check size={36} className="text-teal-primary" />
+                        /* Phase 3: Sealed — "Lock" + "ed" slides in + "In" stays */
+                        <div className="space-y-5">
+                            {/* The sealed lock icon with glow */}
+                            <div
+                                className="w-20 h-20 mx-auto rounded-full bg-red-primary/10 border-2 border-red-primary/40 flex items-center justify-center"
+                                style={{ animation: 'lockin-pulse 2s ease-in-out infinite' }}
+                            >
+                                <Lock size={36} className="text-red-primary" />
                             </div>
-                            <h2 className="text-3xl font-bold font-mono">
-                                Locked<span className="text-red-primary text-glow-red">In</span>
+
+                            {/* "Lock" + "ed" slides in + "In" — the signature animation */}
+                            <h2 className="text-4xl font-bold font-mono inline-flex items-baseline justify-center w-full">
+                                <span>Lock</span>
+                                <span
+                                    className="inline-block overflow-hidden"
+                                    style={{ animation: 'lockin-ed-slide 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards' }}
+                                >
+                                    ed
+                                </span>
+                                <span className="text-red-primary" style={{ textShadow: '0 0 12px rgba(211,47,47,0.5)' }}>In</span>
                             </h2>
-                            <p className="text-text-secondary mt-2">You are now under AI control.</p>
+
+                            <p
+                                className="text-text-secondary text-sm"
+                                style={{ animation: 'lockin-fade-text 0.6s ease-out 0.4s both' }}
+                            >
+                                You are now under AI control.
+                            </p>
                         </div>
                     )}
                 </div>
