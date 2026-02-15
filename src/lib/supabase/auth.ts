@@ -4,6 +4,10 @@ import { UserProfile } from './schema'
 export async function signUp(email: string, password: string) {
     const supabase = getSupabase()
     try {
+        // Clear any stale session/JWT from previously deleted users
+        // This prevents 403 "User from sub claim in JWT does not exist" errors
+        await supabase.auth.signOut()
+
         const { data, error } = await supabase.auth.signUp({
             email,
             password,

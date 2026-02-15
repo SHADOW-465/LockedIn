@@ -51,7 +51,18 @@ export default function SignupPage() {
         }
 
         if (user) {
-            router.push('/onboarding/welcome')
+            // Small delay to let AuthProvider pick up the new session
+            setTimeout(() => {
+                router.push('/onboarding/welcome')
+            }, 500)
+
+            // Safety timeout — if navigation silently fails, reset loading
+            setTimeout(() => {
+                setLoading(false)
+            }, 10000)
+        } else {
+            setError('Account created. Please check your email to confirm, then sign in.')
+            setLoading(false)
         }
     }
 
