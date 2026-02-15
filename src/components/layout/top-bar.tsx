@@ -2,16 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, ListTodo, MessageSquare, Calendar, Settings, Lock } from 'lucide-react'
+import { Home, ListTodo, MessageSquare, BookOpen, Settings, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/contexts/auth-context'
+import { NotificationBell } from '@/components/features/notification-bell'
 
 const navItems = [
     { href: '/home', icon: Home, label: 'Home' },
     { href: '/tasks', icon: ListTodo, label: 'Tasks' },
     { href: '/chat', icon: MessageSquare, label: 'Chat' },
-    { href: '/calendar', icon: Calendar, label: 'Calendar' },
+    { href: '/journal', icon: BookOpen, label: 'Journal' },
     { href: '/settings', icon: Settings, label: 'Settings' },
 ]
 
@@ -69,6 +70,7 @@ export function TopBar() {
 
                 {/* Right side */}
                 <div className="flex items-center gap-3">
+                    <NotificationBell />
                     <Badge variant={getTierBadge(tier)}>
                         {tier.toUpperCase()}
                     </Badge>

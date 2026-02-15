@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { getSupabase } from '@/lib/supabase/client'
+import { createSession } from '@/lib/supabase/sessions'
 import { Lock, Check, AlertTriangle } from 'lucide-react'
 
 export default function ReviewPage() {
@@ -47,6 +48,14 @@ export default function ReviewPage() {
                     quiet_hours: null,
                     profile_answers: store.profileAnswers,
                 }, { onConflict: 'user_id' })
+
+            // Auto-create first lock session (168h / 1 week default)
+            await createSession(
+                user.id,
+                store.tier ?? 'Newbie',
+                168,
+                store.aiPersonality ?? null
+            )
 
             // Animate the lock-in
             setTimeout(() => {
