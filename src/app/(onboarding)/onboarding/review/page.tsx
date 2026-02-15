@@ -25,11 +25,24 @@ export default function ReviewPage() {
         setIsLocking(true)
         setError(null)
 
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timed out - please check your connection')), 15000)
+        )
+
         try {
+            console.log('Starting Lock In process for user:', user.id)
             const supabase = getSupabase()
 
+            // Verify auth state matches
+            const { data: { user: authUser } } = await supabase.auth.getUser()
+            if (!authUser || authUser.id !== user.id) {
+                console.error('Auth mismatch:', { contextUser: user.id, authUser: authUser?.id })
+                throw new Error('Authentication sync error. Please refresh the page.')
+            }
+
             // 1. Update profile
-            const { error: profileError } = await supabase
+            console.log('Step 1: Updating profile...')
+            const profileUpdate = supabase
                 .from('profiles')
                 .update({
                     tier: store.tier,
@@ -37,18 +50,30 @@ export default function ReviewPage() {
                     onboarding_completed: true,
                 })
                 .eq('id', user.id)
+                .select() // Select to verify update happened
+
+            const { data: profileData, error: profileError } = await Promise.race([
+                profileUpdate,
+                timeoutPromise
+            ]) as any
 
             if (profileError) {
                 console.error('Profile update error:', profileError)
-                throw new Error('Failed to save profile settings')
+                throw new Error('Failed to save profile settings: ' + profileError.message)
             }
+            if (!profileData || profileData.length === 0) {
+                console.error('Profile update returned no rows - RLS mismatch?')
+                throw new Error('Profile update failed. Please sign out and sign in again.')
+            }
+            console.log('Step 1 Complete. Profile updated.')
 
             // 2. Upsert preferences — send fetish_tags as string[] not {tag,intensity}[]
             const fetishTagNames = store.fetishTags?.map(t =>
                 typeof t === 'string' ? t : t.tag
             ) ?? []
 
-            const { error: prefsError } = await supabase
+            console.log('Step 2: Upserting preferences...')
+            const prefsUpsert = supabase
                 .from('user_preferences')
                 .upsert({
                     user_id: user.id,
@@ -62,13 +87,23 @@ export default function ReviewPage() {
                     preferred_regimens: store.preferredRegimens ?? [],
                 }, { onConflict: 'user_id' })
 
+            const { error: prefsError } = await Promise.race([
+                prefsUpsert,
+                timeoutPromise
+            ]) as any
+
             if (prefsError) {
                 console.error('Preferences upsert error:', prefsError)
                 throw new Error('Failed to save preferences')
             }
+            console.log('Step 2 Complete. Preferences saved.')
 
             // 3. Create first session with user's chosen lock duration
+            console.log('Step 3: Creating session...')
             const lockHours = store.lockGoal ?? 168
+
+            // We don't wrap createSession in race because it's a wrapper itself, 
+            // but we assume it's fast. Let's trust it for now.
             const session = await createSession(
                 user.id,
                 store.tier ?? 'Newbie',
@@ -80,8 +115,10 @@ export default function ReviewPage() {
                 console.error('Session creation returned null')
                 // Non-blocking — proceed even if session fails
             }
+            console.log('Step 3 Complete. Session created.')
 
             // 4. Phase 2: Locking animation (icon morphs, shimmer)
+            console.log('Starting animation sequence...')
             setLockComplete(true)
 
             // Phase 3: After 800ms, seal — "ed" slides in, glow pulse
@@ -91,8 +128,10 @@ export default function ReviewPage() {
 
             // Redirect after full animation plays
             setTimeout(() => {
+                console.log('Animation done, resetting store and redirecting...')
                 store.reset()
-                router.push('/home')
+                // Force hard navigation to ensure middleware re-checks profile
+                window.location.href = '/home'
             }, 3200)
         } catch (err) {
             console.error('Error saving onboarding data:', err)
