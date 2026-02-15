@@ -134,34 +134,51 @@ Critical Path: Task 1 → Task 3 → Task 4
 
 ## TODOs
 
-- [ ] 1. Fix Middleware & Zombie Loop (Core Stability)
+- [ ] 1. Fix Middleware & Zombie Loop (Core Stability) - **CORRECTED**
 
+  **CRITICAL FIX REQUIRED**: The previous implementation was too aggressive and treated "no session" as an error.
+  
   **What to do**:
   - Update `src/middleware.ts`:
     - Check `supabase.auth.getUser()`.
-    - **IF** error (User not found/Deleted): Return response that clears cookies + Redirect to `/login`.
+    - **IF** error is "Auth session missing": This is NORMAL for unauthenticated users. Set `user = null` and continue (don't redirect).
+    - **IF** error is 401/403 or "user not found" (deleted user): Clear cookies + Redirect to `/login`.
     - **IF** valid user: Allow access to `/home` (DO NOT redirect to `/onboarding` even if `!onboarding_completed`).
     - **IF** unauthenticated: Allow `/login`, `/signup`, `/auth/callback`.
 
-  **Recommended Agent Profile**:
-  - **Category**: `quick`
-  - **Skills**: [`explore`, `frontend-ui-ux`] (Logic focus)
-
-  **Parallelization**:
-  - **Can Run In Parallel**: YES (Wave 1)
-  - **Blocks**: Task 3
-
-  **References**:
-  - `src/middleware.ts` - Current logic
-  - `src/lib/supabase/auth.ts` - usage of `getUser`
+  **Corrected Implementation**:
+  ```typescript
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  
+  // --- Zombie Loop Fix: Only clear session on specific auth errors (user deleted/invalid), not "no session" ---
+  if (authError && authError.message !== 'Auth session missing!') {
+      console.error('Auth error in middleware:', authError)
+      // Only clear cookies if it's a real auth error (not just missing session)
+      if (authError.status === 401 || authError.status === 403 || 
+          authError.message?.includes('not found') || 
+          authError.message?.includes('invalid')) {
+          const cookies = request.cookies.getAll()
+          const response = NextResponse.redirect(new URL('/login', request.url))
+          cookies.forEach((cookie) => {
+              if (cookie.name.includes('sb-')) {
+                  response.cookies.delete(cookie.name)
+              }
+          })
+          return response
+      }
+  }
+  // "No session" is normal - continue with user = null
+  ```
 
   **Acceptance Criteria**:
-  - [ ] Middleware redirects deleted user to `/login` immediately.
-  - [ ] Middleware allows authenticated user with `onboarding_completed: false` to access `/home`.
+  - [ ] Unauthenticated user can access `/login` page (shows form, doesn't redirect).
+  - [ ] Deleted user gets cleared session + redirect to `/login`.
+  - [ ] Authenticated user with `onboarding_completed: false` can access `/home`.
   - [ ] Middleware does NOT loop.
 
   **Agent-Executed QA Scenarios**:
-  - `Scenario: Deleted user access /home` -> Redirects to /login.
+  - `Scenario: Unauthenticated user access /login` -> Shows login form (200 OK).
+  - `Scenario: Deleted user access /home` -> Redirects to /login with cleared cookies.
   - `Scenario: Valid user (incomplete onboarding) access /home` -> Allows access (200 OK).
 
 ---

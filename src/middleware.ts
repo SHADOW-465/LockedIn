@@ -31,32 +31,27 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    let user = null
-    let authError = null
-    
-    try {
-        const { data, error } = await supabase.auth.getUser()
-        user = data.user
-        authError = error
-    } catch (err) {
-        authError = err
-    }
-    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     const pathname = request.nextUrl.pathname
     
-    // --- Zombie Loop Fix: If auth fails (user deleted), clear session and redirect to login ---
-    if (authError) {
+    // --- Zombie Loop Fix: Only clear session on specific auth errors (user deleted/invalid), not "no session" ---
+    if (authError && authError.message !== 'Auth session missing!') {
         console.error('Auth error in middleware:', authError)
-        // Clear all auth cookies
-        const cookies = request.cookies.getAll()
-        const response = NextResponse.redirect(new URL('/login', request.url))
-        cookies.forEach((cookie) => {
-            if (cookie.name.includes('sb-')) {
-                response.cookies.delete(cookie.name)
-            }
-        })
-        return response
+        // Only clear cookies if it's a real auth error (not just missing session)
+        if (authError.status === 401 || authError.status === 403 || 
+            authError.message?.includes('not found') || 
+            authError.message?.includes('invalid')) {
+            const cookies = request.cookies.getAll()
+            const response = NextResponse.redirect(new URL('/login', request.url))
+            cookies.forEach((cookie) => {
+                if (cookie.name.includes('sb-')) {
+                    response.cookies.delete(cookie.name)
+                }
+            })
+            return response
+        }
     }
+    // "No session" is normal - continue with user = null
 
     // Public routes that don't need auth
     const publicRoutes = ['/', '/login', '/signup', '/auth/callback']
