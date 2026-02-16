@@ -44,22 +44,35 @@ export async function POST(request: Request) {
             .eq('id', taskId)
 
         // If failed, apply punishment
-        if (!result.passed && task.session_id && task.punishment_on_fail) {
-            const punishment = task.punishment_on_fail as { hours: number }
-            await supabaseAdmin.rpc('add_lock_time', {
-                p_session_id: task.session_id,
-                p_hours: punishment.hours ?? 4,
-                p_reason: `Task failed: ${task.title}`,
-            })
+        // Logic: Use flattened fields
+        if (!result.passed && task.session_id) {
+            // Check punishment_hours or type
+            // If hours are set, add lock time
+            if (task.punishment_hours && task.punishment_hours > 0) {
+                 try {
+                     await supabaseAdmin.rpc('add_lock_time', {
+                        p_session_id: task.session_id,
+                        p_hours: task.punishment_hours,
+                        p_reason: `Task failed: ${task.title}`,
+                    })
+                 } catch (rpcError) {
+                     console.warn('Failed to add lock time', rpcError)
+                 }
+            }
         }
 
         // Notification
-        await supabaseAdmin.from('notifications').insert({
-            user_id: userId ?? task.user_id,
-            type: result.passed ? 'reward' : 'punishment',
-            title: result.passed ? '✅ Task Verified' : '❌ Verification Failed',
-            body: result.feedback,
-        })
+        // Notifications table might have changed? But we restored it in schema.ts
+        try {
+            await supabaseAdmin.from('notifications').insert({
+                user_id: userId ?? task.user_id,
+                type: result.passed ? 'reward' : 'punishment',
+                title: result.passed ? '✅ Task Verified' : '❌ Verification Failed',
+                body: result.feedback,
+            })
+        } catch (notifError) {
+            console.warn('Failed to send notification', notifError)
+        }
 
         return NextResponse.json({
             passed: result.passed,

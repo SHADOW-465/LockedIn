@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,7 +12,6 @@ import { useRealtimeQuery } from '@/lib/hooks/use-realtime'
 import { getActiveSession } from '@/lib/supabase/sessions'
 import { updateTaskStatus } from '@/lib/supabase/tasks'
 import type { Task, Session } from '@/lib/supabase/schema'
-import { useEffect } from 'react'
 
 function formatTimeLeft(deadline: Date) {
     const diff = deadline.getTime() - Date.now()
@@ -211,6 +210,7 @@ export default function TasksPage() {
                                                 disabled={verifying === task.id}
                                                 onClick={() => {
                                                     setSelectedTask(task.id)
+                                                    // Allow browser to process state update before clicking input
                                                     setTimeout(() => fileInputRef.current?.click(), 50)
                                                 }}
                                             >
@@ -225,14 +225,18 @@ export default function TasksPage() {
                                 </div>
 
                                 {/* Punishment Warning */}
-                                {task.punishment_on_fail && (
+                                {(task.punishment_type || task.punishment_hours) && (
                                     <div className="bg-red-primary/5 border border-red-primary/20 rounded-[var(--radius-md)] p-3 flex items-start gap-2">
                                         <AlertTriangle size={14} className="text-red-primary shrink-0 mt-0.5" />
-                                        <p className="text-xs text-red-primary">
-                                            Failure: +{(task.punishment_on_fail as { hours: number }).hours}h lock time
-                                            {(task.punishment_on_fail as { additional?: string }).additional &&
-                                                ` + ${(task.punishment_on_fail as { additional: string }).additional}`}
-                                        </p>
+                                        <div className="text-xs text-red-primary">
+                                            <span className="font-bold block mb-1">FAILURE PUNISHMENT</span>
+                                            {task.punishment_hours && (
+                                                <p>+ {task.punishment_hours}h lock time extension</p>
+                                            )}
+                                            {task.punishment_additional && (
+                                                <p>{task.punishment_additional}</p>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                             </Card>
