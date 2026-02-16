@@ -33,18 +33,18 @@ const frequencies = [
         description: 'Constant interruptions. Your phone becomes a leash.',
         icon: '⚡',
     },
-]
+] as const
 
 export default function NotificationsPage() {
     const router = useRouter()
-    const { notificationFreq, setNotificationFreq, setStep } = useOnboarding()
-    const [freq, setFreq] = useState(notificationFreq ?? 'medium')
+    const { notificationFrequency, setNotificationFrequency, setStep } = useOnboarding()
+    const [freq, setFreq] = useState<'low' | 'medium' | 'high' | 'extreme'>(notificationFrequency ?? 'medium')
     const [quietStart, setQuietStart] = useState('23:00')
     const [quietEnd, setQuietEnd] = useState('07:00')
     const [quietEnabled, setQuietEnabled] = useState(true)
 
     const handleContinue = () => {
-        setNotificationFreq(freq)
+        setNotificationFrequency(freq)
         setStep(9)
         router.push('/onboarding/review')
     }

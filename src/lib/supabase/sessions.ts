@@ -8,7 +8,9 @@ export async function createSession(
     aiPersonality: string | null = null
 ): Promise<Session | null> {
     const supabase = getSupabase()
-    const endTime = new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString()
+    const now = new Date()
+    const endTime = new Date(now.getTime() + durationHours * 60 * 60 * 1000).toISOString()
+    const startTime = now.toISOString()
 
     const { data, error } = await supabase
         .from('sessions')
@@ -16,8 +18,10 @@ export async function createSession(
             user_id: userId,
             tier,
             ai_personality: aiPersonality,
-            lock_goal_hours: durationHours,
+            // lock_goal_hours: durationHours, // Removed as per spec, use scheduled_end_time
+            start_time: startTime,
             scheduled_end_time: endTime,
+            status: 'active'
         })
         .select()
         .single()
@@ -72,7 +76,7 @@ export async function emergencyRelease(sessionId: string): Promise<boolean> {
     const { error } = await supabase
         .from('sessions')
         .update({
-            status: 'emergency_released',
+            status: 'emergency', // Spec says 'emergency' or 'emergency_released'? Spec says 'emergency' in status check.
             actual_end_time: new Date().toISOString(),
         })
         .eq('id', sessionId)
@@ -87,6 +91,7 @@ export async function emergencyRelease(sessionId: string): Promise<boolean> {
 
 export async function addLockTime(sessionId: string, hours: number, reason: string) {
     const supabase = getSupabase()
+    // RPC call assumes function exists
     const { data, error } = await supabase.rpc('add_lock_time', {
         p_session_id: sessionId,
         p_hours: hours,

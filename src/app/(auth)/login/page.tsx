@@ -30,16 +30,9 @@ export default function LoginPage() {
         }
 
         if (user) {
-            // Check if user has completed onboarding
-            const { getSupabase } = await import('@/lib/supabase/client')
-            const supabase = getSupabase()
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('onboarding_completed')
-                .eq('id', user.id)
-                .single()
-
-            // Always redirect to home - user can complete onboarding later in settings
+            // Success! RouteGuard will handle the specific redirect based on profile state.
+            // We push to home, and if onboarding is needed, RouteGuard intercepts.
+            router.refresh() // Ensure AuthContext picks up the new session if needed (though onAuthStateChange should handle it)
             router.push('/home')
         }
     }

@@ -19,12 +19,14 @@ import {
     User,
     AlertTriangle,
     Loader2,
+    RefreshCw
 } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { signOut } from '@/lib/supabase/auth'
 import { emergencyRelease, getActiveSession } from '@/lib/supabase/sessions'
 import { getSupabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useOnboarding } from '@/lib/stores/onboarding-store'
 
 const settingsItems = [
     {
@@ -60,11 +62,12 @@ const settingsItems = [
 ]
 
 export default function SettingsPage() {
-    const { user, profile } = useAuth()
+    const { user, profile, refreshProfile } = useAuth()
     const router = useRouter()
     const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false)
     const [processing, setProcessing] = useState(false)
     const [hasActiveSession, setHasActiveSession] = useState(false)
+    const { reset: resetStore } = useOnboarding()
 
     const tier = profile?.tier ?? 'Newbie'
     const username = profile?.username ?? profile?.email?.split('@')[0] ?? 'User'
@@ -86,6 +89,33 @@ export default function SettingsPage() {
         if (!user) return
         const supabase = getSupabase()
         await supabase.from('profiles').update({ tier: newTier }).eq('id', user.id)
+        refreshProfile()
+    }
+
+    const handleResetOnboarding = async () => {
+        if (!user) return
+        if (!confirm('Are you sure you want to reset onboarding? This will clear your tier and preferences.')) return
+
+        setProcessing(true)
+        const supabase = getSupabase()
+
+        // Reset DB
+        await supabase.from('profiles').update({
+            onboarding_completed: false,
+            onboarding_step: 0,
+            tier: null,
+            ai_personality: null
+        }).eq('id', user.id)
+
+        // Reset local store
+        resetStore()
+
+        // Refresh context to trigger redirect via RouteGuard
+        await refreshProfile()
+
+        // Manual redirect just in case
+        router.replace('/onboarding/welcome')
+        setProcessing(false)
     }
 
     const handleEmergencyRelease = async () => {
@@ -181,34 +211,51 @@ export default function SettingsPage() {
                         </div>
                     </Card>
 
-                    {/* Tier Switch (Testing Mode) */}
+                    {/* Testing / Dev Actions */}
                     <Card variant="flat" size="sm" className="!min-h-0">
                         <div className="flex items-start gap-3">
                             <User size={18} className="text-purple-primary shrink-0 mt-0.5" />
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <p className="text-sm font-medium">Testing Mode</p>
+                                    <p className="text-sm font-medium">Developer Controls</p>
                                     <Badge variant="info">DEV</Badge>
                                 </div>
-                                <p className="text-xs text-text-tertiary mb-3">
-                                    Tier switching is temporarily open for testing purposes.
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                    {['Newbie', 'Slave', 'Hardcore', 'Extreme', 'Destruction'].map(
-                                        (t) => (
-                                            <button
-                                                key={t}
-                                                onClick={() => handleTierSwitch(t)}
-                                                disabled={hasActiveSession}
-                                                className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-colors cursor-pointer border ${t === tier
-                                                    ? 'bg-purple-primary text-white border-purple-primary'
-                                                    : 'bg-bg-tertiary hover:bg-bg-hover border-white/5'
-                                                    } ${hasActiveSession ? 'opacity-40 cursor-not-allowed' : ''}`}
-                                            >
-                                                {t}
-                                            </button>
-                                        )
-                                    )}
+                                <div className="space-y-4">
+                                    {/* Tier Switch */}
+                                    <div>
+                                        <p className="text-xs text-text-tertiary mb-2">Switch Tier (Instant)</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {['Newbie', 'Slave', 'Hardcore', 'Extreme', 'Destruction'].map(
+                                                (t) => (
+                                                    <button
+                                                        key={t}
+                                                        onClick={() => handleTierSwitch(t)}
+                                                        disabled={hasActiveSession}
+                                                        className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-colors cursor-pointer border ${t === tier
+                                                            ? 'bg-purple-primary text-white border-purple-primary'
+                                                            : 'bg-bg-tertiary hover:bg-bg-hover border-white/5'
+                                                            } ${hasActiveSession ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                                    >
+                                                        {t}
+                                                    </button>
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Reset Onboarding */}
+                                    <div className="pt-2 border-t border-white/5">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={handleResetOnboarding}
+                                            disabled={hasActiveSession || processing}
+                                            className="text-text-tertiary hover:text-red-primary"
+                                        >
+                                            <RefreshCw size={14} className={`mr-2 ${processing ? 'animate-spin' : ''}`} />
+                                            Reset Onboarding Flow
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

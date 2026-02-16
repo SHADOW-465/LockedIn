@@ -51,16 +51,19 @@ export default function SignupPage() {
         }
 
         if (user) {
-            // Small delay to let AuthProvider pick up the new session
-            setTimeout(() => {
-                router.push('/onboarding/welcome')
-            }, 500)
-
-            // Safety timeout — if navigation silently fails, reset loading
-            setTimeout(() => {
-                setLoading(false)
-            }, 10000)
+            // Success
+            // If email confirmation is off or not required, user is logged in.
+            // RouteGuard will handle redirect to onboarding.
+            // We can push to /onboarding/welcome directly to be helpful.
+            router.refresh()
+            router.push('/onboarding/welcome')
+            // Don't set loading false immediately to prevent form flash
         } else {
+            // User created but needs email confirmation (if configured)
+            // But signUp function returns user if session is established?
+            // Usually returns user with null session if confirmation needed.
+            // My auth.ts wrapper returns user if data.user is present.
+            // If session is null, AuthContext won't see user.
             setError('Account created. Please check your email to confirm, then sign in.')
             setLoading(false)
         }
@@ -74,7 +77,6 @@ export default function SignupPage() {
             setError(authError)
             setLoading(false)
         }
-        // Google OAuth redirects — no need to handle navigation here
     }
 
     return (

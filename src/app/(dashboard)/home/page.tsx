@@ -96,7 +96,7 @@ export default function DashboardPage() {
                             <TimerCard
                                 endTime={new Date(session.scheduled_end_time)}
                                 tier={tier}
-                                status={session.total_punishments > 0 ? 'punishment' : 'locked'}
+                                status={session.punishments_received > 0 ? 'punishment' : 'locked'}
                             />
                         ) : (
                             <Card variant="hero" className="text-center py-12">
@@ -279,13 +279,13 @@ export default function DashboardPage() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <div className="text-lg font-bold font-mono">
-                                        {session?.total_tasks_completed ?? profile?.total_sessions ?? 0}
+                                        {session?.tasks_completed ?? profile?.total_sessions ?? 0}
                                     </div>
                                     <div className="text-xs text-text-tertiary">Tasks Done</div>
                                 </div>
                                 <div>
                                     <div className="text-lg font-bold font-mono">
-                                        {session?.total_tasks_failed ?? 0}
+                                        {session?.violations ?? 0}
                                     </div>
                                     <div className="text-xs text-text-tertiary">Violations</div>
                                 </div>
