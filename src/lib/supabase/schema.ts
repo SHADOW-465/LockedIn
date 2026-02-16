@@ -105,7 +105,18 @@ export interface ChatMessage {
 export interface Calendar {
     user_id: string
     scheduled_release_date: string | null
-    adjustment_log: any[]
+    adjustment_log: CalendarAdjustment[]
+}
+
+export interface CalendarAdjustment {
+    id: string
+    user_id: string
+    session_id: string | null
+    hours_added: number
+    hours_subtracted: number
+    reason: string
+    ai_controlled: boolean
+    created_at: string
 }
 
 // Additional Interfaces for Dashboard Pages
@@ -177,3 +188,4 @@ export type TableName =
     | 'journal_entries'
     | 'notifications'
     | 'regimens'
+    | 'calendar_adjustments'
