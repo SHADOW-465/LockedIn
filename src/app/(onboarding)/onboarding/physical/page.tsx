@@ -24,15 +24,15 @@ export default function PhysicalPage() {
     const router = useRouter()
     const { physicalDetails, setPhysicalDetails, setStep } = useOnboarding()
 
-    const [flaccidLength, setFlaccidLength] = useState(physicalDetails?.penisSize.flaccidLength ?? 3)
-    const [flaccidGirth, setFlaccidGirth] = useState(physicalDetails?.penisSize.flaccidGirth ?? 3.5)
-    const [erectLength, setErectLength] = useState(physicalDetails?.penisSize.erectLength ?? 5)
-    const [erectGirth, setErectGirth] = useState(physicalDetails?.penisSize.erectGirth ?? 4.5)
-    const [growerOrShower, setGrowerOrShower] = useState<'grower' | 'shower'>(physicalDetails?.penisSize.growerOrShower ?? 'grower')
+    const [flaccidLength, setFlaccidLength] = useState(physicalDetails?.penisSize?.flaccidLength ?? 3)
+    const [flaccidGirth, setFlaccidGirth] = useState(physicalDetails?.penisSize?.flaccidGirth ?? 3.5)
+    const [erectLength, setErectLength] = useState(physicalDetails?.penisSize?.erectLength ?? 5)
+    const [erectGirth, setErectGirth] = useState(physicalDetails?.penisSize?.erectGirth ?? 4.5)
+    const [growerOrShower, setGrowerOrShower] = useState<'grower' | 'shower'>(physicalDetails?.penisSize?.growerOrShower ?? 'grower')
     const [bodyType, setBodyType] = useState(physicalDetails?.bodyType ?? '')
     const [age, setAge] = useState(physicalDetails?.age ?? 25)
     const [orientation, setOrientation] = useState(physicalDetails?.orientation ?? '')
-    const [gender, setGender] = useState(physicalDetails?.gender ?? '')
+    const [gender, setGender] = useState(physicalDetails?.genderIdentity ?? '')
 
     const bucket = getSizeBucket(erectLength)
 
@@ -48,7 +48,7 @@ export default function PhysicalPage() {
             bodyType,
             age,
             orientation,
-            gender,
+            genderIdentity: gender,
         })
         setStep(5)
         router.push('/onboarding/regimens')

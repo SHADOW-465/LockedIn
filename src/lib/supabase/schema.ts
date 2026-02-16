@@ -9,82 +9,103 @@ export interface UserProfile {
     username: string | null
     tier: string
     ai_personality: string | null
+
+    // Onboarding & Preferences
+    hard_limits: string[]
+    soft_limits: string[]
+    interests: string[]
+    physical_details: {
+        penisSize?: {
+            flaccidLength?: number
+            flaccidGirth?: number
+            erectLength?: number
+            erectGirth?: number
+            growerOrShower?: 'grower' | 'shower'
+        }
+        bodyType?: string
+        orientation?: string
+        genderIdentity?: string
+        notes?: string
+    } | null
+    preferred_regimens: string[]
+    notification_frequency: 'low' | 'medium' | 'high' | 'extreme'
+    initial_lock_goal_hours: number | null
+
+    // Stats
     willpower_score: number
     compliance_streak: number
     total_sessions: number
     total_denial_hours: number
     total_edges: number
-    subscription_tier: string
-    last_release_date: string | null
-    onboarding_completed: boolean
-    created_at: string
-}
+    subscription_tier: string | null
 
-export interface UserPreferences {
-    id: string
-    user_id: string
-    hard_limits: string[]
-    soft_limits: string[]
-    fetish_tags: string[]
-    physical_details: Record<string, string>
-    notification_frequency: string
-    quiet_hours: Record<string, string> | null
-    profile_answers: Record<string, string>
+    onboarding_completed: boolean
+    onboarding_step: number
+
+    created_at: string
+    updated_at: string
 }
 
 export interface Session {
     id: string
     user_id: string
-    status: 'active' | 'completed' | 'emergency_released' | 'failed'
+    status: 'active' | 'completed' | 'emergency' | 'failed'
     tier: string
     ai_personality: string | null
-    lock_goal_hours: number
     start_time: string
     scheduled_end_time: string
     actual_end_time: string | null
-    total_tasks_assigned: number
-    total_tasks_completed: number
-    total_tasks_failed: number
-    total_punishments: number
-    total_rewards: number
+
+    tasks_completed: number
+    violations: number
+    punishments_received: number
+
     created_at: string
-    updated_at: string
 }
 
 export interface Task {
     id: string
     user_id: string
-    session_id: string | null
+    session_id: string
+    task_type: string
+    genres: string[]
     title: string
     description: string
-    genres: string[]
+    duration_minutes: number | null
     difficulty: number
     cage_status: 'caged' | 'uncaged' | 'semi-caged'
-    status: 'pending' | 'active' | 'completed' | 'failed' | 'skipped'
-    duration_minutes: number
-    deadline: string | null
-    verification_type: 'photo' | 'video' | 'audio' | 'text' | 'none'
-    verification_requirement: string | null
-    verification_image_url: string | null
-    ai_verification_result: string | null
-    punishment_on_fail: {
-        type: string
-        hours: number
-        additional?: string
-    } | null
+
+    verification_type: 'photo' | 'video' | 'audio' | 'self-report'
+    verification_requirement: string
+
+    punishment_type: string | null
+    punishment_hours: number | null
+    punishment_additional: string | null
+
+    status: 'pending' | 'active' | 'completed' | 'failed'
+
     assigned_at: string
+    deadline: string | null
     completed_at: string | null
-    created_at: string
+
+    ai_verification_passed: boolean | null
+    ai_verification_reason: string | null
 }
 
 export interface ChatMessage {
     id: string
     user_id: string
-    session_id: string | null
+    session_id: string
     sender: 'ai' | 'user'
     content: string
-    message_type: 'command' | 'response' | 'question' | 'punishment' | 'reward' | 'system'
+    message_type: 'command' | 'question' | 'response' | 'punishment' | 'system'
     created_at: string
+}
+
+export interface Calendar {
+    user_id: string
+    scheduled_release_date: string | null
+    adjustment_log: CalendarAdjustment[]
 }
 
 export interface CalendarAdjustment {
@@ -98,14 +119,15 @@ export interface CalendarAdjustment {
     created_at: string
 }
 
-export interface Notification {
+// Additional Interfaces for Dashboard Pages
+export interface Achievement {
     id: string
     user_id: string
-    type: 'checkin' | 'task' | 'punishment' | 'reward' | 'system' | 'info'
-    title: string
-    body: string | null
-    read: boolean
-    created_at: string
+    name: string
+    description: string | null
+    icon: string
+    xp_awarded: number
+    awarded_at: string
 }
 
 export interface Regimen {
@@ -121,16 +143,6 @@ export interface Regimen {
     started_at: string
     completed_at: string | null
     created_at: string
-}
-
-export interface Achievement {
-    id: string
-    user_id: string
-    name: string
-    description: string | null
-    icon: string
-    xp_awarded: number
-    awarded_at: string
 }
 
 export interface UserFeedback {
@@ -154,16 +166,26 @@ export interface JournalEntry {
     created_at: string
 }
 
+export interface Notification {
+    id: string
+    user_id: string
+    type: 'checkin' | 'task' | 'punishment' | 'reward' | 'system' | 'info'
+    title: string
+    body: string | null
+    read: boolean
+    created_at: string
+}
+
 // Table names for type-safe query helpers
 export type TableName =
     | 'profiles'
-    | 'user_preferences'
     | 'sessions'
     | 'tasks'
     | 'chat_messages'
-    | 'calendar_adjustments'
-    | 'notifications'
-    | 'regimens'
+    | 'calendars'
     | 'achievements'
     | 'user_feedback'
     | 'journal_entries'
+    | 'notifications'
+    | 'regimens'
+    | 'calendar_adjustments'

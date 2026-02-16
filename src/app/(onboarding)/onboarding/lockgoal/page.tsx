@@ -10,8 +10,9 @@ import { Calendar, Clock, AlertTriangle } from 'lucide-react'
 
 export default function LockGoalPage() {
     const router = useRouter()
-    const { lockGoal, setLockGoal, setStep, tier } = useOnboarding()
-    const [hours, setHours] = useState(lockGoal ?? 168)
+    const { initialLockGoalHours, setInitialLockGoalHours, setStep } = useOnboarding()
+    // Use initialLockGoalHours from store, default 168
+    const [hours, setHours] = useState(initialLockGoalHours || 168)
 
     const days = Math.round(hours / 24)
     const releaseDate = useMemo(() => {
@@ -35,7 +36,7 @@ export default function LockGoalPage() {
     const label = getDurationLabel()
 
     const handleContinue = () => {
-        setLockGoal(hours)
+        setInitialLockGoalHours(hours)
         setStep(8)
         router.push('/onboarding/notifications')
     }
