@@ -38,7 +38,7 @@ export async function POST(request: Request) {
             .from('tasks')
             .update({
                 status: newStatus,
-                ai_verification_result: result.feedback,
+                ai_verification_reason: result.feedback,
                 completed_at: result.passed ? new Date().toISOString() : null,
             })
             .eq('id', taskId)

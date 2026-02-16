@@ -255,7 +255,7 @@ export default function TasksPage() {
                                                 <p className="text-sm font-medium">{task.title}</p>
                                                 <p className="text-xs text-text-tertiary">
                                                     {task.status === 'completed' ? '✅ Passed' : '❌ Failed'}
-                                                    {task.ai_verification_result && ` — ${task.ai_verification_result}`}
+                                                    {task.ai_verification_reason && ` — ${task.ai_verification_reason}`}
                                                 </p>
                                             </div>
                                             <Badge variant={task.status === 'completed' ? 'info' : 'locked'}>
