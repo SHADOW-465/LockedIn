@@ -2,15 +2,30 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Lock } from 'lucide-react'
+import { Lock, Loader2 } from 'lucide-react'
+import { createGuestAccount } from '@/lib/supabase/auth'
 
 export default function LandingPage() {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  const handleLockIn = async () => {
+    setLoading(true)
+    // Create guest account and redirect immediately
+    const { user } = await createGuestAccount()
+    if (user) {
+        router.refresh()
+        router.push('/home')
+    } else {
+        setLoading(false)
+        // Ideally show error, but silent fail -> retry
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-bg-primary relative overflow-hidden">
@@ -49,17 +64,24 @@ export default function LandingPage() {
         {/* CTA Buttons */}
         <div className="space-y-4 pt-4">
           <button
-            onClick={() => router.push('/login')}
-            className="w-full py-4 px-8 rounded-[var(--radius-pill)] bg-red-primary text-white font-semibold uppercase tracking-wide shadow-raised glow-red hover:bg-red-hover hover:shadow-raised-hover active:shadow-inset transition-all duration-200 cursor-pointer text-lg"
+            onClick={handleLockIn}
+            disabled={loading}
+            className="w-full py-4 px-8 rounded-[var(--radius-pill)] bg-red-primary text-white font-semibold uppercase tracking-wide shadow-raised glow-red hover:bg-red-hover hover:shadow-raised-hover active:shadow-inset transition-all duration-200 cursor-pointer text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Lock In
+            {loading ? (
+                <>
+                    <Loader2 size={20} className="animate-spin" /> Locking In...
+                </>
+            ) : (
+                'Lock In'
+            )}
           </button>
-          <button
-            onClick={() => router.push('/signup')}
-            className="w-full py-4 px-8 rounded-[var(--radius-pill)] bg-bg-secondary text-text-primary font-semibold uppercase tracking-wide shadow-raised hover:shadow-raised-hover active:shadow-inset transition-all duration-200 cursor-pointer border border-white/5"
-          >
-            Create Account
-          </button>
+
+          <div className="text-center pt-2">
+             <p className="text-xs text-text-tertiary">
+                Already have an account? <span className="text-text-secondary">Go to Settings after locking in to login.</span>
+             </p>
+          </div>
         </div>
 
         {/* Warning */}

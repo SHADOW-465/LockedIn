@@ -1,374 +1,221 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { TopBar } from '@/components/layout/top-bar'
 import { BottomNav } from '@/components/layout/bottom-nav'
-import { Lock as LockIcon } from 'lucide-react'
-import {
-    Bell,
-    Shield,
-    HelpCircle,
-    MessageSquare,
-    LogOut,
-    ChevronRight,
-    Crown,
-    User,
-    AlertTriangle,
-    Loader2,
-    RefreshCw
-} from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
-import { signOut } from '@/lib/supabase/auth'
-import { emergencyRelease, getActiveSession } from '@/lib/supabase/sessions'
+import { signIn, signOut } from '@/lib/supabase/auth'
 import { getSupabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { useOnboarding } from '@/lib/stores/onboarding-store'
+import { User, Shield, Bell, Dumbbell, Lock, Save, Loader2, LogOut } from 'lucide-react'
 
-const settingsItems = [
-    {
-        icon: User,
-        label: 'Edit Profile',
-        description: 'Username, personality & limits',
-        href: '/settings/profile',
-    },
-    {
-        icon: Bell,
-        label: 'Notifications',
-        description: 'Frequency & quiet hours',
-        href: '/settings/notifications',
-    },
-    {
-        icon: Shield,
-        label: 'Hard Limits',
-        description: 'Always editable for safety',
-        href: '/settings/profile',
-    },
-    {
-        icon: HelpCircle,
-        label: 'Help & Support',
-        description: 'Safeword, emergency, crisis resources',
-        href: '/settings/help',
-    },
-    {
-        icon: MessageSquare,
-        label: 'Suggestions',
-        description: 'Submit feedback (good suggestions earn XP)',
-        href: '/feedback',
-    },
-]
+// Sub-components for tabs
+function AccountTab({ user, profile, onSignOut }: any) {
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [loading, setLoading] = useState(false)
+    const [message, setMessage] = useState('')
+    const [mode, setMode] = useState<'login' | 'register'>('register') // Register to claim, Login to switch
+
+    const isGuest = user?.email?.includes('@lockedin.temp')
+
+    const handleAction = async () => {
+        setLoading(true)
+        setMessage('')
+        const supabase = getSupabase()
+
+        if (mode === 'register') {
+            // Update current user
+            const { error } = await supabase.auth.updateUser({ email, password })
+            if (error) setMessage(`Error: ${error.message}`)
+            else setMessage('Account updated! Please verify your email if required.')
+        } else {
+            // Login (switch account)
+            const { error } = await signIn(email, password)
+            if (error) setMessage(`Login failed: ${error.message}`)
+            else window.location.reload() // Force reload to pick up new session
+        }
+        setLoading(false)
+    }
+
+    return (
+        <div className="space-y-6">
+            <Card variant="raised">
+                <h3 className="text-lg font-bold mb-2">Current Session</h3>
+                <div className="text-sm space-y-1">
+                    <p><span className="text-text-tertiary">ID:</span> {user?.id.slice(0, 8)}...</p>
+                    <p><span className="text-text-tertiary">Type:</span> {isGuest ? 'Guest (Unsaved)' : 'Registered'}</p>
+                    <p><span className="text-text-tertiary">Email:</span> {user?.email}</p>
+                </div>
+                {isGuest && (
+                    <div className="mt-3 p-2 bg-red-primary/10 border border-red-primary/30 rounded text-xs text-red-primary">
+                        ⚠️ You are using a temporary guest account. You will lose your data if you clear cookies. Register below to save progress.
+                    </div>
+                )}
+            </Card>
+
+            <Card variant="flat" className="!min-h-0">
+                <div className="flex gap-4 border-b border-white/10 mb-4 pb-2">
+                    <button
+                        onClick={() => setMode('register')}
+                        className={`text-sm font-medium pb-2 ${mode === 'register' ? 'text-purple-primary border-b-2 border-purple-primary' : 'text-text-tertiary'}`}
+                    >
+                        {isGuest ? 'Claim Account' : 'Update Credentials'}
+                    </button>
+                    <button
+                        onClick={() => setMode('login')}
+                        className={`text-sm font-medium pb-2 ${mode === 'login' ? 'text-purple-primary border-b-2 border-purple-primary' : 'text-text-tertiary'}`}
+                    >
+                        Switch Account
+                    </button>
+                </div>
+
+                <div className="space-y-4">
+                    <div>
+                        <label className="text-xs text-text-tertiary mb-1 block">Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            className="w-full bg-bg-primary border border-white/10 rounded p-2 text-sm"
+                            placeholder="user@example.com"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs text-text-tertiary mb-1 block">Password</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            className="w-full bg-bg-primary border border-white/10 rounded p-2 text-sm"
+                            placeholder="••••••••"
+                        />
+                    </div>
+                    {message && <p className="text-xs text-yellow-500">{message}</p>}
+
+                    <Button variant="primary" className="w-full" onClick={handleAction} disabled={loading}>
+                        {loading ? <Loader2 className="animate-spin" /> : (mode === 'register' ? 'Save Account' : 'Login')}
+                    </Button>
+                </div>
+            </Card>
+
+            <Button variant="ghost" className="w-full text-red-primary hover:text-red-hover" onClick={onSignOut}>
+                <LogOut size={16} className="mr-2" /> Sign Out
+            </Button>
+        </div>
+    )
+}
+
+function ProfileTab({ profile }: any) {
+    const [tier, setTier] = useState(profile?.tier || 'Newbie')
+    const [personality, setPersonality] = useState(profile?.ai_personality || 'Cruel Mistress')
+    const [saving, setSaving] = useState(false)
+
+    const handleSave = async () => {
+        setSaving(true)
+        const supabase = getSupabase()
+        await supabase.from('profiles').update({ tier, ai_personality: personality }).eq('id', profile.id)
+        setSaving(false)
+    }
+
+    return (
+        <div className="space-y-6">
+            <Card variant="raised">
+                <h3 className="text-lg font-bold mb-4">Training Parameters</h3>
+
+                <div className="space-y-4">
+                    <div>
+                        <label className="text-sm font-medium mb-2 block">Difficulty Tier</label>
+                        <div className="flex flex-wrap gap-2">
+                            {['Newbie', 'Slave', 'Hardcore', 'Extreme', 'Destruction'].map(t => (
+                                <button
+                                    key={t}
+                                    onClick={() => setTier(t)}
+                                    className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${tier === t ? 'bg-purple-primary border-purple-primary text-white' : 'border-white/10 hover:border-purple-primary/50'}`}
+                                >
+                                    {t}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="text-sm font-medium mb-2 block">AI Personality</label>
+                        <select
+                            value={personality}
+                            onChange={e => setPersonality(e.target.value)}
+                            className="w-full bg-bg-tertiary border border-white/10 rounded p-2 text-sm"
+                        >
+                            <option value="Cruel Mistress">Cruel Mistress</option>
+                            <option value="Clinical Sadist">Clinical Sadist</option>
+                            <option value="Playful Tease">Playful Tease</option>
+                            <option value="Strict Master">Strict Master</option>
+                            <option value="Humiliation Expert">Humiliation Expert</option>
+                        </select>
+                    </div>
+                </div>
+            </Card>
+
+            <Button variant="primary" className="w-full" onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving...' : 'Update Profile'}
+            </Button>
+        </div>
+    )
+}
 
 export default function SettingsPage() {
-    const { user, profile, refreshProfile } = useAuth()
+    const { user, profile } = useAuth()
     const router = useRouter()
-    const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false)
-    const [processing, setProcessing] = useState(false)
-    const [hasActiveSession, setHasActiveSession] = useState(false)
-    const { reset: resetStore } = useOnboarding()
-
-    const tier = profile?.tier ?? 'Newbie'
-    const username = profile?.username ?? profile?.email?.split('@')[0] ?? 'User'
-
-    // Check for active session — settings locked during session per §11.2
-    useEffect(() => {
-        if (!user) return
-        getActiveSession(user.id).then((session) => {
-            setHasActiveSession(!!session)
-        })
-    }, [user])
+    const [activeTab, setActiveTab] = useState('account')
 
     const handleSignOut = async () => {
         await signOut()
-        router.push('/login')
-    }
-
-    const handleTierSwitch = async (newTier: string) => {
-        if (!user) return
-        const supabase = getSupabase()
-        await supabase.from('profiles').update({ tier: newTier }).eq('id', user.id)
-        refreshProfile()
-    }
-
-    const handleResetOnboarding = async () => {
-        if (!user) return
-        if (!confirm('Are you sure you want to reset onboarding? This will clear your tier and preferences.')) return
-
-        setProcessing(true)
-        const supabase = getSupabase()
-
-        // Reset DB
-        await supabase.from('profiles').update({
-            onboarding_completed: false,
-            onboarding_step: 0,
-            tier: null,
-            ai_personality: null
-        }).eq('id', user.id)
-
-        // Reset local store
-        resetStore()
-
-        // Refresh context to trigger redirect via RouteGuard
-        await refreshProfile()
-
-        // Manual redirect just in case
-        router.replace('/onboarding/welcome')
-        setProcessing(false)
-    }
-
-    const handleEmergencyRelease = async () => {
-        if (!user) return
-        setProcessing(true)
-        const session = await getActiveSession(user.id)
-        if (session) {
-            await emergencyRelease(session.id)
-            // Apply willpower penalty
-            const supabase = getSupabase()
-            await supabase
-                .from('profiles')
-                .update({
-                    willpower_score: Math.max((profile?.willpower_score ?? 50) - 30, 0),
-                    compliance_streak: 0,
-                })
-                .eq('id', user.id)
-        }
-        setProcessing(false)
-        setShowEmergencyConfirm(false)
+        router.push('/')
     }
 
     return (
         <>
             <TopBar />
-
             <div className="min-h-screen pb-24 lg:pb-8 p-4">
                 <div className="max-w-2xl mx-auto space-y-6">
                     <h1 className="text-3xl font-bold">Settings</h1>
 
-                    {/* Session Active Banner */}
-                    {hasActiveSession && (
-                        <Card variant="flat" size="sm" className="!min-h-0 border-red-primary/30 bg-red-primary/5">
-                            <div className="flex items-center gap-3">
-                                <LockIcon size={18} className="text-red-primary shrink-0" />
-                                <div>
-                                    <p className="text-sm font-semibold text-red-primary">Session Active — Settings Locked</p>
-                                    <p className="text-xs text-text-tertiary">Profile, limits, and notifications are read-only during an active lock session.</p>
-                                </div>
-                            </div>
-                        </Card>
-                    )}
-
-                    {/* Profile Card */}
-                    <Card variant="hero">
-                        <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-full bg-purple-primary/20 flex items-center justify-center text-2xl font-bold text-purple-primary border border-purple-primary/30">
-                                {username.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="flex-1">
-                                <h2 className="text-xl font-bold">{username}</h2>
-                                <p className="text-sm text-text-secondary">{profile?.email ?? 'No email'}</p>
-                            </div>
-                            <Badge variant={
-                                `tier${tier === 'Newbie' ? '1' : tier === 'Slave' ? '2' : tier === 'Hardcore' ? '3' : tier === 'Extreme' ? '4' : '5'}` as 'tier1'
-                            }>
-                                {tier.toUpperCase()}
-                            </Badge>
-                        </div>
-
-                        {/* Stats row */}
-                        <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-white/5">
-                            <div className="text-center">
-                                <div className="text-lg font-bold font-mono">{profile?.total_sessions ?? 0}</div>
-                                <div className="text-[10px] text-text-tertiary uppercase">Sessions</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-lg font-bold font-mono">{profile?.total_denial_hours ?? 0}h</div>
-                                <div className="text-[10px] text-text-tertiary uppercase">Denial</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-lg font-bold font-mono">{profile?.total_edges ?? 0}</div>
-                                <div className="text-[10px] text-text-tertiary uppercase">Edges</div>
-                            </div>
-                        </div>
-                    </Card>
-
-                    {/* Subscription */}
-                    <Card variant="raised">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <Crown size={20} className="text-tier-slave" />
-                                <div>
-                                    <h3 className="font-semibold">Subscription</h3>
-                                    <p className="text-sm text-text-tertiary">
-                                        {profile?.subscription_tier?.toUpperCase() ?? 'FREE'} Tier
-                                    </p>
-                                </div>
-                            </div>
-                            <Button variant="secondary" size="sm">
-                                Upgrade
-                            </Button>
-                        </div>
-                    </Card>
-
-                    {/* Testing / Dev Actions */}
-                    <Card variant="flat" size="sm" className="!min-h-0">
-                        <div className="flex items-start gap-3">
-                            <User size={18} className="text-purple-primary shrink-0 mt-0.5" />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <p className="text-sm font-medium">Developer Controls</p>
-                                    <Badge variant="info">DEV</Badge>
-                                </div>
-                                <div className="space-y-4">
-                                    {/* Tier Switch */}
-                                    <div>
-                                        <p className="text-xs text-text-tertiary mb-2">Switch Tier (Instant)</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {['Newbie', 'Slave', 'Hardcore', 'Extreme', 'Destruction'].map(
-                                                (t) => (
-                                                    <button
-                                                        key={t}
-                                                        onClick={() => handleTierSwitch(t)}
-                                                        disabled={hasActiveSession}
-                                                        className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-colors cursor-pointer border ${t === tier
-                                                            ? 'bg-purple-primary text-white border-purple-primary'
-                                                            : 'bg-bg-tertiary hover:bg-bg-hover border-white/5'
-                                                            } ${hasActiveSession ? 'opacity-40 cursor-not-allowed' : ''}`}
-                                                    >
-                                                        {t}
-                                                    </button>
-                                                )
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Reset Onboarding */}
-                                    <div className="pt-2 border-t border-white/5">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={handleResetOnboarding}
-                                            disabled={hasActiveSession || processing}
-                                            className="text-text-tertiary hover:text-red-primary"
-                                        >
-                                            <RefreshCw size={14} className={`mr-2 ${processing ? 'animate-spin' : ''}`} />
-                                            Reset Onboarding Flow
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-
-                    {/* Settings List */}
-                    <div className="space-y-2">
-                        {settingsItems.map((item) => {
-                            const Icon = item.icon
-                            const isLocked = hasActiveSession && ['Edit Profile', 'Notifications', 'Hard Limits'].includes(item.label)
-                            return (
-                                <Link key={item.label} href={isLocked ? '#' : item.href} onClick={isLocked ? (e: React.MouseEvent) => e.preventDefault() : undefined}>
-                                    <Card
-                                        variant="flat"
-                                        size="sm"
-                                        className={`!min-h-0 py-4 transition-colors ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-bg-tertiary'}`}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <Icon size={20} className="text-text-tertiary" />
-                                                <div>
-                                                    <span className="font-medium text-sm">{item.label}</span>
-                                                    <p className="text-xs text-text-tertiary">{item.description}</p>
-                                                </div>
-                                            </div>
-                                            {isLocked ? (
-                                                <LockIcon size={16} className="text-red-primary/50" />
-                                            ) : (
-                                                <ChevronRight size={18} className="text-text-tertiary" />
-                                            )}
-                                        </div>
-                                    </Card>
-                                </Link>
-                            )
-                        })}
+                    {/* Tabs */}
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                        {[
+                            { id: 'account', icon: User, label: 'Account' },
+                            { id: 'profile', icon: Dumbbell, label: 'Profile' },
+                            // Add more tabs later
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+                                    activeTab === tab.id
+                                        ? 'bg-purple-primary text-white'
+                                        : 'bg-bg-tertiary text-text-secondary hover:bg-bg-hover'
+                                }`}
+                            >
+                                <tab.icon size={14} />
+                                {tab.label}
+                            </button>
+                        ))}
                     </div>
 
-                    {/* Emergency Release */}
-                    {!showEmergencyConfirm ? (
-                        <Card
-                            variant="flat"
-                            size="sm"
-                            className="!min-h-0 py-4 border-red-primary/30 cursor-pointer hover:bg-red-primary/5 transition-colors"
-                            onClick={() => setShowEmergencyConfirm(true)}
-                        >
-                            <div className="flex items-center gap-3">
-                                <AlertTriangle size={20} className="text-red-primary" />
-                                <div>
-                                    <span className="font-medium text-sm text-red-primary">
-                                        Emergency Release
-                                    </span>
-                                    <p className="text-xs text-text-tertiary">
-                                        Always available. Severe in-game penalties apply.
-                                    </p>
-                                </div>
-                            </div>
-                        </Card>
-                    ) : (
-                        <Card variant="raised" className="border-red-primary/30">
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2 text-red-primary">
-                                    <AlertTriangle size={20} />
-                                    <h3 className="font-bold">Confirm Emergency Release</h3>
-                                </div>
-                                <p className="text-sm text-text-secondary">
-                                    This will immediately end your session. Penalties:
-                                </p>
-                                <ul className="text-xs text-red-primary space-y-1 list-disc pl-4">
-                                    <li>-30 willpower score</li>
-                                    <li>Compliance streak reset to 0</li>
-                                    <li>Session marked as failed</li>
-                                </ul>
-                                <div className="flex gap-3">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setShowEmergencyConfirm(false)}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        variant="primary"
-                                        size="sm"
-                                        className="!bg-red-primary"
-                                        onClick={handleEmergencyRelease}
-                                        disabled={processing}
-                                    >
-                                        {processing ? (
-                                            <><Loader2 size={14} className="mr-1 animate-spin" /> Releasing...</>
-                                        ) : (
-                                            'Yes, Release Now'
-                                        )}
-                                    </Button>
-                                </div>
-                            </div>
-                        </Card>
-                    )}
-
-                    {/* Sign Out */}
-                    <Card
-                        variant="flat"
-                        size="sm"
-                        className="!min-h-0 py-4 cursor-pointer hover:bg-red-primary/10 transition-colors border-red-primary/20"
-                        onClick={handleSignOut}
-                    >
-                        <div className="flex items-center gap-3">
-                            <LogOut size={20} className="text-red-primary" />
-                            <span className="font-medium text-sm text-red-primary">Sign Out</span>
-                        </div>
-                    </Card>
+                    {/* Content */}
+                    <div className="animate-fade-in">
+                        {activeTab === 'account' && (
+                            <AccountTab user={user} profile={profile} onSignOut={handleSignOut} />
+                        )}
+                        {activeTab === 'profile' && (
+                            <ProfileTab profile={profile} />
+                        )}
+                    </div>
                 </div>
             </div>
-
             <BottomNav />
         </>
     )

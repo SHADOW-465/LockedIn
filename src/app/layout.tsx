@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/lib/contexts/auth-context'
-import { RouteGuard } from '@/components/route-guard'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -43,7 +42,7 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-bg-primary text-text-primary`}
       >
         <AuthProvider>
-          <RouteGuard>{children}</RouteGuard>
+          {children}
         </AuthProvider>
       </body>
     </html>
