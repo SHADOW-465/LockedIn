@@ -37,6 +37,7 @@ export interface UserProfile {
     total_sessions: number
     total_denial_hours: number
     total_edges: number
+    subscription_tier: string | null
 
     onboarding_completed: boolean
     onboarding_step: number
@@ -107,6 +108,63 @@ export interface Calendar {
     adjustment_log: any[]
 }
 
+// Additional Interfaces for Dashboard Pages
+export interface Achievement {
+    id: string
+    user_id: string
+    name: string
+    description: string | null
+    icon: string
+    xp_awarded: number
+    awarded_at: string
+}
+
+export interface Regimen {
+    id: string
+    user_id: string
+    name: string
+    description: string | null
+    level: number
+    current_day: number
+    total_days: number
+    progress: Record<string, unknown>
+    status: 'active' | 'completed' | 'paused' | 'abandoned'
+    started_at: string
+    completed_at: string | null
+    created_at: string
+}
+
+export interface UserFeedback {
+    id: string
+    user_id: string
+    category: string
+    suggestion: string
+    rating: number | null
+    status: 'pending' | 'reviewed' | 'implemented'
+    created_at: string
+}
+
+export interface JournalEntry {
+    id: string
+    user_id: string
+    session_id: string | null
+    content: string
+    mood: 'submissive' | 'resistant' | 'broken' | 'eager' | 'neutral' | 'defiant' | null
+    obedience_rating: number | null
+    ai_analysis: string | null
+    created_at: string
+}
+
+export interface Notification {
+    id: string
+    user_id: string
+    type: 'checkin' | 'task' | 'punishment' | 'reward' | 'system' | 'info'
+    title: string
+    body: string | null
+    read: boolean
+    created_at: string
+}
+
 // Table names for type-safe query helpers
 export type TableName =
     | 'profiles'
@@ -114,3 +172,8 @@ export type TableName =
     | 'tasks'
     | 'chat_messages'
     | 'calendars'
+    | 'achievements'
+    | 'user_feedback'
+    | 'journal_entries'
+    | 'notifications'
+    | 'regimens'
