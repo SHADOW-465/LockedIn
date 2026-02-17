@@ -50,16 +50,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Get the initial session
         const initSession = async () => {
-            const { data } = await supabase.auth.getSession()
-            const currentUser = data.session?.user ?? null
-            setUser(currentUser)
-            if (currentUser) {
-                await fetchProfile(currentUser.id)
+            try {
+                // Check if Supabase client is initialized (env vars check)
+                if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+                    console.error('Supabase env vars missing. Auth initialization skipped.')
+                    setLoading(false)
+                    return
+                }
+
+                const { data, error } = await supabase.auth.getSession()
+                if (error) throw error
+
+                const currentUser = data.session?.user ?? null
+                setUser(currentUser)
+                if (currentUser) {
+                    await fetchProfile(currentUser.id)
+                }
+            } catch (err) {
+                console.error('Auth initialization error:', err)
+            } finally {
+                setLoading(false)
             }
-            setLoading(false)
         }
 
         initSession()
+
+        // Safety timeout: stop loading after 3s even if Supabase hangs
+        const timeoutId = setTimeout(() => {
+            setLoading(prev => {
+                if (prev) {
+                    console.warn('Auth initialization timed out. Forcing loading=false.')
+                    return false
+                }
+                return prev
+            })
+        }, 3000)
 
         // Listen for auth state changes
         const { data: listener } = supabase.auth.onAuthStateChange(
@@ -77,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         )
 
         return () => {
+            clearTimeout(timeoutId)
             listener.subscription.unsubscribe()
         }
     }, [fetchProfile])
