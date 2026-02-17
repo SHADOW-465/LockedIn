@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateText, type AIContext } from '@/lib/ai/ai-service'
-import { getSupabase } from '@/lib/supabase/client'
+import { getServerSupabase } from '@/lib/supabase/server'
 import { applyPunishment } from '@/lib/engines/punishment'
 
 // Default safeword — user can customize during onboarding
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Message is required' }, { status: 400 })
         }
 
-        const supabase = getSupabase()
+        const supabase = getServerSupabase()
         const userSafeword = safeword || DEFAULT_SAFEWORD
 
         // ── Detect safeword ──────────────────────────────────
@@ -104,6 +104,7 @@ export async function POST(request: NextRequest) {
 
             if (isRude && userId && sessionId) {
                 const punishment = await applyPunishment(
+                    supabase,
                     userId,
                     sessionId,
                     'rude_chat',

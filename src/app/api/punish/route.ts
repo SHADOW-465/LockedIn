@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { applyPunishment, getPunishmentHours } from '@/lib/engines/punishment'
+import { getServerSupabase } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
     try {
@@ -19,7 +20,8 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const result = await applyPunishment(userId, sessionId, violationType, tier, reason)
+        const supabase = getServerSupabase()
+        const result = await applyPunishment(supabase, userId, sessionId, violationType, tier, reason)
 
         if (!result) {
             return NextResponse.json({ error: 'Punishment failed to apply' }, { status: 500 })

@@ -31,6 +31,7 @@ interface VerificationResult {
     punishmentHours: number
     punishmentReason: string | null
     achievements: string[]
+    pendingMessage?: string
 }
 
 // ── Task Detail Modal ────────────────────────────────────────
@@ -278,6 +279,10 @@ export default function TasksPage() {
     const [verifying, setVerifying] = useState<string | null>(null)
     const [detailTask, setDetailTask] = useState<Task | null>(null)
     const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null)
+    const [dailyTaskCount, setDailyTaskCount] = useState(0)
+    const [dailyLimitReached, setDailyLimitReached] = useState(false)
+    const [pendingMessage, setPendingMessage] = useState<string | null>(null)
+    const DAILY_LIMIT = 5
 
     const { data: tasks, refetch } = useRealtimeQuery<Task>(
         'tasks',
@@ -292,8 +297,9 @@ export default function TasksPage() {
         }
     }, [user])
 
-    const activeTasks = tasks.filter((t) => t.status === 'pending' || t.status === 'active')
+    const activeTasks = tasks.filter((t) => t.status === 'pending' || t.status === 'active' || t.status === 'verification_pending')
     const completedTasks = tasks.filter((t) => t.status === 'completed' || t.status === 'failed')
+    const pendingVerificationTasks = tasks.filter((t) => t.status === 'verification_pending')
 
     // ── Generate Task ────────────────────────────────────────
     const handleGenerateTask = useCallback(async () => {
@@ -313,7 +319,17 @@ export default function TasksPage() {
                     personality: profile.ai_personality ?? 'Cruel Mistress',
                 }),
             })
-            if (res.ok) refetch()
+
+            if (res.ok) {
+                const data = await res.json()
+                setDailyTaskCount(data.tasksToday ?? 0)
+                setDailyLimitReached(false)
+                refetch()
+            } else if (res.status === 429) {
+                const data = await res.json()
+                setDailyLimitReached(true)
+                setDailyTaskCount(data.tasksToday ?? DAILY_LIMIT)
+            }
         } catch (err) {
             console.error('Task generation failed:', err)
         }
@@ -338,6 +354,9 @@ export default function TasksPage() {
 
                 const task = tasks.find((t) => t.id === taskId)
 
+                // Show pending message immediately
+                setPendingMessage('Submitting your pathetic attempt for review...')
+
                 const res = await fetch('/api/verify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -354,6 +373,7 @@ export default function TasksPage() {
 
                 if (res.ok) {
                     const data = await res.json()
+                    setPendingMessage(null)
                     setVerificationResult(data)
                     refetch()
                 }
@@ -361,6 +381,7 @@ export default function TasksPage() {
             }
             reader.readAsDataURL(file)
         } catch {
+            setPendingMessage(null)
             setVerifying(null)
         }
     }
@@ -374,22 +395,42 @@ export default function TasksPage() {
                     <div className="flex items-center justify-between mb-6">
                         <h1 className="text-3xl font-bold">Tasks</h1>
                         <div className="flex items-center gap-3">
+                            {pendingVerificationTasks.length > 0 && (
+                                <Badge variant="locked">
+                                    ⏳ {pendingVerificationTasks.length} Pending
+                                </Badge>
+                            )}
                             <Badge variant="locked">{activeTasks.length} Active</Badge>
+                            <div className="text-xs text-text-tertiary font-mono">
+                                {dailyTaskCount}/{DAILY_LIMIT}
+                            </div>
                             <Button
                                 variant="primary"
                                 size="sm"
                                 onClick={handleGenerateTask}
-                                disabled={generating}
+                                disabled={generating || dailyLimitReached}
                             >
                                 {generating ? (
                                     <Loader2 size={14} className="mr-1 animate-spin" />
                                 ) : (
                                     <Sparkles size={14} className="mr-1" />
                                 )}
-                                {generating ? 'Generating...' : 'New Task'}
+                                {dailyLimitReached ? 'Limit Reached' : generating ? 'Generating...' : 'New Task'}
                             </Button>
                         </div>
                     </div>
+
+                    {/* Daily Limit Warning */}
+                    {dailyLimitReached && (
+                        <div className="mb-6 bg-red-primary/5 border border-red-primary/20 rounded-xl p-4 text-center">
+                            <p className="text-red-primary font-mono text-sm font-bold">
+                                You&apos;ve used all {DAILY_LIMIT} tasks for today.
+                            </p>
+                            <p className="text-xs text-text-tertiary mt-1">
+                                Come back tomorrow, slave. Your Master decides when you&apos;ve had enough.
+                            </p>
+                        </div>
+                    )}
 
                     {/* Active Tasks */}
                     <div className="space-y-4">
@@ -465,6 +506,10 @@ export default function TasksPage() {
                                         >
                                             Start Task
                                         </Button>
+                                    ) : task.status === 'verification_pending' ? (
+                                        <Badge variant="locked">
+                                            ⏳ UNDER REVIEW
+                                        </Badge>
                                     ) : (
                                         <Badge variant="info">
                                             {verifying === task.id ? '⏳ Verifying...' : '👆 Tap for details'}

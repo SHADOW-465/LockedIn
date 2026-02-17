@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateSimpleText } from '@/lib/ai/ai-service'
-import { getSupabase } from '@/lib/supabase/client'
+import { getServerSupabase } from '@/lib/supabase/server'
+
+const DAILY_TASK_LIMIT = 5
 
 export async function POST(request: NextRequest) {
     try {
@@ -19,6 +21,29 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'userId is required' }, { status: 400 })
         }
 
+        const supabase = getServerSupabase()
+        const today = new Date().toISOString().split('T')[0]
+
+        // ── Enforce daily 5-task limit ────────────────────────
+        const { data: dailyLog } = await supabase
+            .from('daily_task_log')
+            .select('tasks_generated')
+            .eq('user_id', userId)
+            .eq('task_date', today)
+            .maybeSingle()
+
+        const tasksToday = dailyLog?.tasks_generated ?? 0
+
+        if (tasksToday >= DAILY_TASK_LIMIT) {
+            return NextResponse.json({
+                error: 'daily_limit_reached',
+                message: `You've already been assigned ${DAILY_TASK_LIMIT} tasks today. Come back tomorrow, slave. Your Master decides when you've had enough.`,
+                tasksToday,
+                limit: DAILY_TASK_LIMIT,
+            }, { status: 429 })
+        }
+
+        // ── Generate task via AI ──────────────────────────────
         const systemPrompt = `You are a task generator for the LockedIn chastity app.
 Generate a single task for the user based on their profile.
 
@@ -38,7 +63,7 @@ Response format: VALID JSON only. No markdown fences, no explanation.
   "duration_minutes": 10-120,
   "genres": ["genre1", "genre2"],
   "cage_status": "caged" or "uncaged" or "semi-caged",
-  "verification_type": "photo" or "self-report" or "timer",
+  "verification_type": "photo" or "self-report" or "text",
   "verification_requirement": "What the proof photo must show",
   "punishment_hours": 2-48,
   "punishment_additional": "Additional punishment description if failed"
@@ -49,11 +74,9 @@ Response format: VALID JSON only. No markdown fences, no explanation.
         // Parse AI response into task fields
         let taskData: Record<string, unknown>
         try {
-            // Strip markdown fences if AI added them
             const cleaned = result.replace(/```json?\n?/g, '').replace(/```\n?/g, '').trim()
             taskData = JSON.parse(cleaned)
         } catch {
-            // Fallback: create a generic task
             taskData = {
                 title: 'Obedience Task',
                 description: result,
@@ -61,15 +84,19 @@ Response format: VALID JSON only. No markdown fences, no explanation.
                 duration_minutes: 15,
                 genres: ['obedience'],
                 cage_status: 'caged',
-                verification_type: 'self-report',
+                verification_type: 'photo',
                 verification_requirement: 'Confirm completion honestly',
                 punishment_hours: 4,
                 punishment_additional: null,
             }
         }
 
+        // Map 'self-report' to valid DB value, or keep photo/text/video/audio
+        const verType = taskData.verification_type as string
+        const validTypes = ['photo', 'video', 'audio', 'text', 'none', 'self-report']
+        const finalVerType = validTypes.includes(verType) ? verType : 'photo'
+
         // Insert into DB
-        const supabase = getSupabase()
         const now = new Date()
         const deadlineMs = (typeof taskData.duration_minutes === 'number' ? taskData.duration_minutes : 30) * 60 * 1000
 
@@ -84,7 +111,7 @@ Response format: VALID JSON only. No markdown fences, no explanation.
                 duration_minutes: taskData.duration_minutes || 30,
                 genres: Array.isArray(taskData.genres) ? taskData.genres : ['obedience'],
                 cage_status: taskData.cage_status || 'caged',
-                verification_type: taskData.verification_type || 'self-report',
+                verification_type: finalVerType,
                 verification_requirement: taskData.verification_requirement || '',
                 punishment_type: 'task_failed',
                 punishment_hours: taskData.punishment_hours || 4,
@@ -98,7 +125,6 @@ Response format: VALID JSON only. No markdown fences, no explanation.
 
         if (error) {
             console.error('[Task API] DB insert failed:', error)
-            // Still return the task data even if DB write fails
             return NextResponse.json({
                 task: taskData,
                 saved: false,
@@ -107,9 +133,20 @@ Response format: VALID JSON only. No markdown fences, no explanation.
             })
         }
 
+        // ── Update daily task log ─────────────────────────────
+        await supabase
+            .from('daily_task_log')
+            .upsert({
+                user_id: userId,
+                task_date: today,
+                tasks_generated: tasksToday + 1,
+            }, { onConflict: 'user_id,task_date' })
+
         return NextResponse.json({
             task: savedTask,
             saved: true,
+            tasksToday: tasksToday + 1,
+            limit: DAILY_TASK_LIMIT,
             timestamp: now.toISOString(),
         })
     } catch (error) {

@@ -80,14 +80,14 @@ export interface Task {
     difficulty: number
     cage_status: 'caged' | 'uncaged' | 'semi-caged'
 
-    verification_type: 'photo' | 'video' | 'audio' | 'self-report'
+    verification_type: 'photo' | 'video' | 'audio' | 'text' | 'self-report' | 'none'
     verification_requirement: string
 
     punishment_type: string | null
     punishment_hours: number | null
     punishment_additional: string | null
 
-    status: 'pending' | 'active' | 'completed' | 'failed'
+    status: 'pending' | 'active' | 'completed' | 'failed' | 'skipped' | 'verification_pending'
 
     assigned_at: string
     deadline: string | null
@@ -95,6 +95,7 @@ export interface Task {
 
     ai_verification_passed: boolean | null
     ai_verification_reason: string | null
+    verification_submitted_at: string | null
 }
 
 export interface ChatMessage {

@@ -60,67 +60,90 @@ export default function OnboardingPage() {
             setSaving(true)
             setSaveError('')
 
-            // Timeout failsafe: force saving=false after 10s
-            const timeoutId = setTimeout(() => {
-                setSaving(false)
-                setSaveError('Save timed out. Please try again.')
-            }, 10000)
+            const MAX_RETRIES = 3
+            const TIMEOUT_MS = 30000
 
-            try {
-                const supabase = getSupabase()
+            for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+                try {
+                    const result = await Promise.race([
+                        saveOnboardingData(),
+                        new Promise<'timeout'>((resolve) =>
+                            setTimeout(() => resolve('timeout'), TIMEOUT_MS)
+                        ),
+                    ])
 
-                // Upsert the profile with all onboarding data
-                const { error: profileError } = await supabase.from('profiles').upsert({
-                    id: user.id,
-                    email: user.email,
-                    tier: state.tier || 'Newbie',
-                    ai_personality: state.aiPersonality,
-                    hard_limits: state.hardLimits,
-                    soft_limits: state.softLimits,
-                    interests: state.fetishProfile,
-                    physical_details: state.physicalDetails || {},
-                    preferred_regimens: state.selectedRegimens.map(r => r.name),
-                    initial_lock_goal_hours: state.initialLockGoalHours,
-                    notification_frequency: state.notificationFrequency,
-                    onboarding_completed: true,
-                    onboarding_step: 11,
-                }, { onConflict: 'id' })
+                    if (result === 'timeout') {
+                        if (attempt < MAX_RETRIES) {
+                            console.warn(`Save attempt ${attempt} timed out, retrying...`)
+                            continue
+                        }
+                        setSaving(false)
+                        setSaveError(`Save timed out after ${MAX_RETRIES} attempts. Check your connection and try again.`)
+                        return
+                    }
 
-                if (profileError) {
-                    console.error('Error saving profile:', profileError)
-                    clearTimeout(timeoutId)
-                    setSaving(false)
-                    setSaveError('Failed to save profile. Please try again.')
+                    // Success — redirect
+                    await refreshProfile()
+                    router.replace('/home')
                     return
+                } catch (err) {
+                    console.error(`Onboarding save attempt ${attempt} failed:`, err)
+                    if (attempt >= MAX_RETRIES) {
+                        setSaving(false)
+                        const msg = err instanceof Error ? err.message : 'Unknown error'
+                        setSaveError(`Save failed: ${msg}. Please try again.`)
+                        return
+                    }
+                    // Brief pause before retry
+                    await new Promise(r => setTimeout(r, 1000))
                 }
-
-                // Save user preferences (non-blocking — don't let this prevent redirect)
-                const { error: prefsError } = await supabase.from('user_preferences').upsert({
-                    user_id: user.id,
-                    safeword: state.safeword || 'MERCY',
-                    notification_frequency: state.notificationFrequency,
-                    standby_consent: state.standbyConsent ?? false,
-                    hard_limits: state.hardLimits,
-                    soft_limits: state.softLimits,
-                }, { onConflict: 'user_id' })
-
-                if (prefsError) {
-                    console.warn('Warning saving preferences (non-fatal):', prefsError)
-                }
-
-                clearTimeout(timeoutId)
-                await refreshProfile()
-                router.replace('/home')
-            } catch (err) {
-                console.error('Onboarding save error:', err)
-                clearTimeout(timeoutId)
-                setSaving(false)
-                setSaveError('An unexpected error occurred. Please try again.')
             }
             return
         }
         setDirection('next')
         nextStep()
+    }
+
+    /** Save both profile + preferences. Throws on failure. */
+    async function saveOnboardingData(): Promise<'ok'> {
+        const supabase = getSupabase()
+
+        // Upsert the profile with all onboarding data
+        const { error: profileError } = await supabase.from('profiles').upsert({
+            id: user!.id,
+            email: user!.email,
+            tier: state.tier || 'Newbie',
+            ai_personality: state.aiPersonality,
+            hard_limits: state.hardLimits,
+            soft_limits: state.softLimits,
+            interests: state.fetishProfile,
+            physical_details: state.physicalDetails || {},
+            preferred_regimens: state.selectedRegimens.map(r => r.name),
+            initial_lock_goal_hours: state.initialLockGoalHours,
+            notification_frequency: state.notificationFrequency,
+            onboarding_completed: true,
+            onboarding_step: 11,
+        }, { onConflict: 'id' })
+
+        if (profileError) {
+            throw new Error(`Profile save failed: ${profileError.message}`)
+        }
+
+        // Save user preferences (non-blocking — warn but don't fail)
+        const { error: prefsError } = await supabase.from('user_preferences').upsert({
+            user_id: user!.id,
+            safeword: state.safeword || 'MERCY',
+            notification_frequency: state.notificationFrequency,
+            standby_consent: state.standbyConsent ?? false,
+            hard_limits: state.hardLimits,
+            soft_limits: state.softLimits,
+        }, { onConflict: 'user_id' })
+
+        if (prefsError) {
+            console.warn('Warning saving preferences (non-fatal):', prefsError)
+        }
+
+        return 'ok'
     }
 
     const handlePrev = () => {
