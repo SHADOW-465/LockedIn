@@ -52,15 +52,20 @@ export interface Session {
     status: 'active' | 'completed' | 'emergency' | 'failed'
     tier: string
     ai_personality: string | null
+    lock_goal_hours: number | null
     start_time: string
     scheduled_end_time: string
     actual_end_time: string | null
 
-    tasks_completed: number
-    violations: number
-    punishments_received: number
+    total_tasks_assigned: number
+    total_tasks_completed: number
+    total_tasks_failed: number
+    total_punishments: number
+    total_rewards: number
+    care_mode_active: boolean
 
     created_at: string
+    updated_at: string
 }
 
 export interface Task {

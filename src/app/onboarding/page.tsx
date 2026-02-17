@@ -52,48 +52,71 @@ export default function OnboardingPage() {
     const isFirst = step === 1
     const isLast = step === 11
 
+    const [saveError, setSaveError] = useState('')
+
     const handleNext = async () => {
         if (isLast) {
             if (!user) return
             setSaving(true)
+            setSaveError('')
 
-            const supabase = getSupabase()
-
-            // Upsert the profile with all onboarding data
-            const { error } = await supabase.from('profiles').upsert({
-                id: user.id,
-                email: user.email,
-                tier: state.tier,
-                ai_personality: state.aiPersonality,
-                hard_limits: state.hardLimits,
-                soft_limits: state.softLimits,
-                interests: state.fetishProfile,
-                physical_details: state.physicalDetails,
-                preferred_regimens: state.selectedRegimens,
-                initial_lock_goal_hours: state.initialLockGoalHours,
-                notification_frequency: state.notificationFrequency,
-                onboarding_completed: true,
-                onboarding_step: 11,
-            }, { onConflict: 'id' })
-
-            if (error) {
-                console.error('Error saving profile:', error)
+            // Timeout failsafe: force saving=false after 10s
+            const timeoutId = setTimeout(() => {
                 setSaving(false)
-                return
+                setSaveError('Save timed out. Please try again.')
+            }, 10000)
+
+            try {
+                const supabase = getSupabase()
+
+                // Upsert the profile with all onboarding data
+                const { error: profileError } = await supabase.from('profiles').upsert({
+                    id: user.id,
+                    email: user.email,
+                    tier: state.tier,
+                    ai_personality: state.aiPersonality,
+                    hard_limits: state.hardLimits,
+                    soft_limits: state.softLimits,
+                    interests: state.fetishProfile,
+                    physical_details: state.physicalDetails,
+                    preferred_regimens: state.selectedRegimens,
+                    initial_lock_goal_hours: state.initialLockGoalHours,
+                    notification_frequency: state.notificationFrequency,
+                    onboarding_completed: true,
+                    onboarding_step: 11,
+                }, { onConflict: 'id' })
+
+                if (profileError) {
+                    console.error('Error saving profile:', profileError)
+                    clearTimeout(timeoutId)
+                    setSaving(false)
+                    setSaveError('Failed to save profile. Please try again.')
+                    return
+                }
+
+                // Save user preferences (non-blocking — don't let this prevent redirect)
+                const { error: prefsError } = await supabase.from('user_preferences').upsert({
+                    user_id: user.id,
+                    safeword: state.safeword || 'MERCY',
+                    notification_frequency: state.notificationFrequency,
+                    standby_consent: state.standbyConsent ?? false,
+                    hard_limits: state.hardLimits,
+                    soft_limits: state.softLimits,
+                }, { onConflict: 'user_id' })
+
+                if (prefsError) {
+                    console.warn('Warning saving preferences (non-fatal):', prefsError)
+                }
+
+                clearTimeout(timeoutId)
+                await refreshProfile()
+                router.replace('/home')
+            } catch (err) {
+                console.error('Onboarding save error:', err)
+                clearTimeout(timeoutId)
+                setSaving(false)
+                setSaveError('An unexpected error occurred. Please try again.')
             }
-
-            // Save user preferences
-            await supabase.from('user_preferences').upsert({
-                user_id: user.id,
-                safeword: state.safeword,
-                notification_frequency: state.notificationFrequency,
-                standby_consent: state.standbyConsent,
-                hard_limits: state.hardLimits,
-                soft_limits: state.softLimits,
-            }, { onConflict: 'user_id' })
-
-            await refreshProfile()
-            router.replace('/home')
             return
         }
         setDirection('next')
@@ -169,6 +192,13 @@ export default function OnboardingPage() {
                     <StepComponent onValid={setCanProceed} />
                 </div>
             </main>
+
+            {/* Save Error Banner */}
+            {saveError && (
+                <div className="relative z-10 mx-6 mb-2 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-mono text-center">
+                    {saveError}
+                </div>
+            )}
 
             {/* Bottom Navigation */}
             <footer className="relative z-10 px-6 py-4 border-t border-white/5 flex items-center justify-between">
