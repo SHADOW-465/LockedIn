@@ -49,16 +49,10 @@ export default function LandingPage() {
         {/* CTA Buttons */}
         <div className="space-y-4 pt-4">
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/onboarding')}
             className="w-full py-4 px-8 rounded-[var(--radius-pill)] bg-red-primary text-white font-semibold uppercase tracking-wide shadow-raised glow-red hover:bg-red-hover hover:shadow-raised-hover active:shadow-inset transition-all duration-200 cursor-pointer text-lg"
           >
-            Lock In
-          </button>
-          <button
-            onClick={() => router.push('/signup')}
-            className="w-full py-4 px-8 rounded-[var(--radius-pill)] bg-bg-secondary text-text-primary font-semibold uppercase tracking-wide shadow-raised hover:shadow-raised-hover active:shadow-inset transition-all duration-200 cursor-pointer border border-white/5"
-          >
-            Create Account
+            Enter LockedIn
           </button>
         </div>
 

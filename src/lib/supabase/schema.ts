@@ -98,7 +98,7 @@ export interface ChatMessage {
     session_id: string
     sender: 'ai' | 'user'
     content: string
-    message_type: 'command' | 'question' | 'response' | 'punishment' | 'system'
+    message_type: 'command' | 'question' | 'response' | 'punishment' | 'system' | 'care_mode' | 'safeword_detected' | 'normal'
     created_at: string
 }
 

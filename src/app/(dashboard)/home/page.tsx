@@ -59,35 +59,7 @@ export default function DashboardPage() {
             <TopBar />
 
             <div className="min-h-screen pb-24 lg:pb-8">
-                {/* Progressive Onboarding Banner */}
-                {!onboardingCompleted && (
-                    <div className="mx-4 mt-4 mb-2">
-                        <Card className="bg-gradient-to-r from-purple-primary/20 to-red-primary/20 border-purple-primary/30">
-                            <div className="p-4 flex items-center justify-between gap-4">
-                                <div className="flex-1">
-                                    <h3 className="font-semibold text-text-primary mb-1">
-                                        Complete Your Profile
-                                    </h3>
-                                    <p className="text-sm text-text-secondary">
-                                        Finish onboarding to unlock personalized training regimens and AI personality matching.
-                                    </p>
-                                </div>
-                                <div className="flex gap-2 shrink-0">
-                                    <Link href="/onboarding/welcome">
-                                        <Button variant="primary" size="sm">
-                                            Continue Setup
-                                        </Button>
-                                    </Link>
-                                    <Link href="/settings">
-                                        <Button variant="ghost" size="sm">
-                                            Quick Settings
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </div>
-                        </Card>
-                    </div>
-                )}
+                {/* Progressive Onboarding Banner removed */}
 
                 <BentoGrid>
                     {/* Hero Timer */}

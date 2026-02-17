@@ -1,8 +1,7 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { User, AuthChangeEvent, Session } from '@supabase/supabase-js'
-import { getSupabase } from '@/lib/supabase/client'
+import { createContext, useContext, useState, useEffect } from 'react'
+import { User } from '@supabase/supabase-js'
 import { UserProfile } from '@/lib/supabase/schema'
 
 interface AuthContextType {
@@ -12,138 +11,69 @@ interface AuthContextType {
     refreshProfile: () => Promise<void>
 }
 
+// Mock Data
+const MOCK_USER: User = {
+    id: '00000000-0000-0000-0000-000000000000',
+    app_metadata: {},
+    user_metadata: {},
+    aud: 'authenticated',
+    created_at: new Date().toISOString()
+}
+
+const MOCK_PROFILE: UserProfile = {
+    id: '00000000-0000-0000-0000-000000000000',
+    email: 'demo@lockedin.app',
+    username: 'Demo User',
+    tier: 'Pro',
+    ai_personality: 'Strict',
+    hard_limits: [],
+    soft_limits: [],
+    interests: [],
+    physical_details: {
+        penisSize: {
+            flaccidLength: 4,
+            flaccidGirth: 4,
+            erectLength: 6,
+            erectGirth: 5,
+            growerOrShower: 'grower',
+        },
+        bodyType: 'Athletic',
+        orientation: 'Straight',
+        genderIdentity: 'Male',
+        notes: 'Ready to serve.',
+    },
+    preferred_regimens: [],
+    notification_frequency: 'medium',
+    initial_lock_goal_hours: 24,
+    willpower_score: 80,
+    compliance_streak: 5,
+    total_sessions: 10,
+    total_denial_hours: 100,
+    total_edges: 50,
+    subscription_tier: 'Pro',
+    onboarding_completed: true,
+    onboarding_step: 4,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+}
+
 const AuthContext = createContext<AuthContextType>({
-    user: null,
-    profile: null,
-    loading: true,
+    user: MOCK_USER,
+    profile: MOCK_PROFILE,
+    loading: false,
     refreshProfile: async () => {},
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null)
-    const [profile, setProfile] = useState<UserProfile | null>(null)
-    const [loading, setLoading] = useState(true)
+    // Always return the mock user and profile
+    const [user] = useState<User | null>(MOCK_USER)
+    const [profile] = useState<UserProfile | null>(MOCK_PROFILE)
+    const [loading] = useState(false)
 
-    // Stable client reference
-    const supabase = getSupabase()
-
-    const fetchProfile = useCallback(async (userId: string, userEmail?: string) => {
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', userId)
-                .single()
-
-            if (error && (error.code === 'PGRST116' || error.message.includes('No rows found'))) {
-                // Profile missing, create stub
-                console.log('Profile missing, creating stub for', userId)
-                const { data: newProfile, error: createError } = await supabase
-                    .from('profiles')
-                    .insert({
-                        id: userId,
-                        email: userEmail || 'unknown@lockedin.app',
-                        onboarding_completed: false,
-                        onboarding_step: 0,
-                        tier: 'Newbie'
-                    })
-                    .select()
-                    .single()
-
-                if (createError) {
-                    console.error('Error creating stub profile:', createError)
-                    return null
-                }
-                return newProfile as UserProfile
-            }
-
-            if (error) {
-                console.error('Error fetching profile:', error)
-                return null
-            }
-
-            return data as UserProfile
-        } catch (err) {
-            console.error('Unexpected error in fetchProfile:', err)
-            return null
-        }
-    }, [supabase])
-
-    const refreshProfile = useCallback(async () => {
-        // Get current user from state or session?
-        // State might be stale if called from outside?
-        // Better to rely on supabase session for refresh
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session?.user) return
-
-        const p = await fetchProfile(session.user.id, session.user.email)
-        setProfile(p)
-    }, [supabase, fetchProfile])
-
-    useEffect(() => {
-        let mounted = true
-
-        const initSession = async () => {
-            try {
-                const { data: { session } } = await supabase.auth.getSession()
-
-                if (mounted) {
-                    if (session?.user) {
-                        setUser(session.user)
-                        const p = await fetchProfile(session.user.id, session.user.email)
-                        if (mounted) setProfile(p)
-                    } else {
-                        setUser(null)
-                        setProfile(null)
-                    }
-                }
-            } catch (err) {
-                console.error('Session init error:', err)
-            } finally {
-                if (mounted) setLoading(false)
-            }
-        }
-
-        initSession()
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event: AuthChangeEvent, session: Session | null) => {
-                // console.log('Auth state change:', event)
-
-                if (mounted) {
-                    setUser(session?.user ?? null)
-
-                    if (session?.user) {
-                         // Only fetch profile if not redundant?
-                         // But for safety, always fetch on auth change (login, token refresh)
-                         // to ensure profile is in sync.
-                         // But skip if INITIAL_SESSION as we handled it in initSession?
-                         // Actually onAuthStateChange fires INITIAL_SESSION too.
-                         // So we might double fetch.
-                         // But `initSession` is async and runs concurrently with `onAuthStateChange`.
-                         // `onAuthStateChange` might fire first or last.
-                         // To avoid race, maybe we should rely ONLY on `onAuthStateChange`?
-                         // But `initSession` is needed to handle the "already logged in" state before the listener attaches?
-                         // Usually `getSession` is faster than waiting for event?
-                         // Let's keep both but maybe throttle?
-                         // It's okay to double fetch, Supabase is fast.
-
-                         const p = await fetchProfile(session.user.id, session.user.email)
-                         if (mounted) setProfile(p)
-                    } else {
-                        setProfile(null)
-                    }
-
-                    setLoading(false)
-                }
-            }
-        )
-
-        return () => {
-            mounted = false
-            subscription.unsubscribe()
-        }
-    }, [supabase, fetchProfile])
+    const refreshProfile = async () => {
+        // No-op for mock
+        console.log('Mock refresh profile')
+    }
 
     return (
         <AuthContext.Provider value={{ user, profile, loading, refreshProfile }}>

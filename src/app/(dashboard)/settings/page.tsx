@@ -22,7 +22,7 @@ import {
     RefreshCw
 } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
-import { signOut } from '@/lib/supabase/auth'
+// import { signOut } from '@/lib/supabase/auth'
 import { emergencyRelease, getActiveSession } from '@/lib/supabase/sessions'
 import { getSupabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -67,7 +67,7 @@ export default function SettingsPage() {
     const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false)
     const [processing, setProcessing] = useState(false)
     const [hasActiveSession, setHasActiveSession] = useState(false)
-    const { reset: resetStore } = useOnboarding()
+    // const { reset: resetStore } = useOnboarding()
 
     const tier = profile?.tier ?? 'Newbie'
     const username = profile?.username ?? profile?.email?.split('@')[0] ?? 'User'
@@ -80,10 +80,10 @@ export default function SettingsPage() {
         })
     }, [user])
 
-    const handleSignOut = async () => {
-        await signOut()
-        router.push('/login')
-    }
+    // const handleSignOut = async () => {
+    //     await signOut()
+    //     router.push('/login')
+    // }
 
     const handleTierSwitch = async (newTier: string) => {
         if (!user) return
@@ -92,31 +92,31 @@ export default function SettingsPage() {
         refreshProfile()
     }
 
-    const handleResetOnboarding = async () => {
-        if (!user) return
-        if (!confirm('Are you sure you want to reset onboarding? This will clear your tier and preferences.')) return
-
-        setProcessing(true)
-        const supabase = getSupabase()
-
-        // Reset DB
-        await supabase.from('profiles').update({
-            onboarding_completed: false,
-            onboarding_step: 0,
-            tier: null,
-            ai_personality: null
-        }).eq('id', user.id)
-
-        // Reset local store
-        resetStore()
-
-        // Refresh context to trigger redirect via RouteGuard
-        await refreshProfile()
-
-        // Manual redirect just in case
-        router.replace('/onboarding/welcome')
-        setProcessing(false)
-    }
+    // const handleResetOnboarding = async () => {
+    //     if (!user) return
+    //     if (!confirm('Are you sure you want to reset onboarding? This will clear your tier and preferences.')) return
+    // 
+    //     setProcessing(true)
+    //     const supabase = getSupabase()
+    // 
+    //     // Reset DB
+    //     await supabase.from('profiles').update({
+    //         onboarding_completed: false,
+    //         onboarding_step: 0,
+    //         tier: null,
+    //         ai_personality: null
+    //     }).eq('id', user.id)
+    // 
+    //     // Reset local store
+    //     resetStore()
+    // 
+    //     // Refresh context to trigger redirect via RouteGuard
+    //     await refreshProfile()
+    // 
+    //     // Manual redirect just in case
+    //     router.replace('/onboarding/welcome')
+    //     setProcessing(false)
+    // }
 
     const handleEmergencyRelease = async () => {
         if (!user) return
@@ -243,19 +243,7 @@ export default function SettingsPage() {
                                         </div>
                                     </div>
 
-                                    {/* Reset Onboarding */}
-                                    <div className="pt-2 border-t border-white/5">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={handleResetOnboarding}
-                                            disabled={hasActiveSession || processing}
-                                            className="text-text-tertiary hover:text-red-primary"
-                                        >
-                                            <RefreshCw size={14} className={`mr-2 ${processing ? 'animate-spin' : ''}`} />
-                                            Reset Onboarding Flow
-                                        </Button>
-                                    </div>
+                                    {/* Reset Onboarding Removed */}
                                 </div>
                             </div>
                         </div>
@@ -354,18 +342,7 @@ export default function SettingsPage() {
                         </Card>
                     )}
 
-                    {/* Sign Out */}
-                    <Card
-                        variant="flat"
-                        size="sm"
-                        className="!min-h-0 py-4 cursor-pointer hover:bg-red-primary/10 transition-colors border-red-primary/20"
-                        onClick={handleSignOut}
-                    >
-                        <div className="flex items-center gap-3">
-                            <LogOut size={20} className="text-red-primary" />
-                            <span className="font-medium text-sm text-red-primary">Sign Out</span>
-                        </div>
-                    </Card>
+                    {/* Sign Out Removed */}
                 </div>
             </div>
 
