@@ -3,7 +3,9 @@
 import { useOnboarding } from '@/lib/stores/onboarding-store'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Lock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Lock, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { useAuth } from '@/lib/contexts/auth-context'
+import { getSupabase } from '@/lib/supabase/client'
 
 // Step components
 import WelcomeStep from '@/components/onboarding/step-1-welcome'
@@ -38,18 +40,60 @@ const STEP_LABELS = [
 ]
 
 export default function OnboardingPage() {
-    const { step, nextStep, prevStep } = useOnboarding()
+    const state = useOnboarding()
+    const { step, nextStep, prevStep } = state
+    const { user, refreshProfile } = useAuth()
     const router = useRouter()
     const [canProceed, setCanProceed] = useState(false)
     const [direction, setDirection] = useState<'next' | 'prev'>('next')
+    const [saving, setSaving] = useState(false)
 
     const StepComponent = STEP_COMPONENTS[step - 1]
     const isFirst = step === 1
     const isLast = step === 11
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (isLast) {
-            router.push('/home')
+            if (!user) return
+            setSaving(true)
+
+            const supabase = getSupabase()
+
+            // Upsert the profile with all onboarding data
+            const { error } = await supabase.from('profiles').upsert({
+                id: user.id,
+                email: user.email,
+                tier: state.tier,
+                ai_personality: state.aiPersonality,
+                hard_limits: state.hardLimits,
+                soft_limits: state.softLimits,
+                interests: state.fetishProfile,
+                physical_details: state.physicalDetails,
+                preferred_regimens: state.selectedRegimens,
+                initial_lock_goal_hours: state.initialLockGoalHours,
+                notification_frequency: state.notificationFrequency,
+                onboarding_completed: true,
+                onboarding_step: 11,
+            }, { onConflict: 'id' })
+
+            if (error) {
+                console.error('Error saving profile:', error)
+                setSaving(false)
+                return
+            }
+
+            // Save user preferences
+            await supabase.from('user_preferences').upsert({
+                user_id: user.id,
+                safeword: state.safeword,
+                notification_frequency: state.notificationFrequency,
+                standby_consent: state.standbyConsent,
+                hard_limits: state.hardLimits,
+                soft_limits: state.softLimits,
+            }, { onConflict: 'user_id' })
+
+            await refreshProfile()
+            router.replace('/home')
             return
         }
         setDirection('next')
@@ -139,16 +183,18 @@ export default function OnboardingPage() {
 
                 <button
                     onClick={handleNext}
-                    disabled={!canProceed}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-[var(--radius-pill)] font-semibold text-sm uppercase tracking-wide transition-all duration-200 cursor-pointer ${canProceed
-                            ? isLast
-                                ? 'bg-red-primary text-white glow-red hover:bg-red-hover hover:shadow-raised-hover'
-                                : 'bg-purple-primary text-white glow-purple hover:bg-purple-hover hover:shadow-raised-hover'
-                            : 'bg-bg-tertiary text-text-disabled cursor-not-allowed'
+                    disabled={!canProceed || saving}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-[var(--radius-pill)] font-semibold text-sm uppercase tracking-wide transition-all duration-200 cursor-pointer ${canProceed && !saving
+                        ? isLast
+                            ? 'bg-red-primary text-white glow-red hover:bg-red-hover hover:shadow-raised-hover'
+                            : 'bg-purple-primary text-white glow-purple hover:bg-purple-hover hover:shadow-raised-hover'
+                        : 'bg-bg-tertiary text-text-disabled cursor-not-allowed'
                         }`}
                 >
-                    {isLast ? 'Lock In' : 'Continue'}
-                    {!isLast && <ChevronRight size={16} />}
+                    {saving ? (
+                        <><Loader2 size={16} className="animate-spin" /> Saving...</>
+                    ) : isLast ? 'Lock In' : 'Continue'}
+                    {!isLast && !saving && <ChevronRight size={16} />}
                 </button>
             </footer>
         </div>

@@ -22,7 +22,7 @@ import {
     RefreshCw
 } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
-// import { signOut } from '@/lib/supabase/auth'
+import { signOut } from '@/lib/supabase/auth'
 import { emergencyRelease, getActiveSession } from '@/lib/supabase/sessions'
 import { getSupabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -80,10 +80,10 @@ export default function SettingsPage() {
         })
     }, [user])
 
-    // const handleSignOut = async () => {
-    //     await signOut()
-    //     router.push('/login')
-    // }
+    const handleSignOut = async () => {
+        await signOut()
+        router.push('/login')
+    }
 
     const handleTierSwitch = async (newTier: string) => {
         if (!user) return
@@ -342,7 +342,21 @@ export default function SettingsPage() {
                         </Card>
                     )}
 
-                    {/* Sign Out Removed */}
+                    {/* Sign Out */}
+                    <Card
+                        variant="flat"
+                        size="sm"
+                        className="!min-h-0 py-4 cursor-pointer hover:bg-bg-tertiary transition-colors"
+                        onClick={handleSignOut}
+                    >
+                        <div className="flex items-center gap-3">
+                            <LogOut size={20} className="text-text-tertiary" />
+                            <div>
+                                <span className="font-medium text-sm">Sign Out</span>
+                                <p className="text-xs text-text-tertiary">Log out of your account</p>
+                            </div>
+                        </div>
+                    </Card>
                 </div>
             </div>
 

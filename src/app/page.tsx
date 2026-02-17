@@ -3,14 +3,28 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Lock } from 'lucide-react'
+import { useAuth } from '@/lib/contexts/auth-context'
 
 export default function LandingPage() {
   const router = useRouter()
+  const { user, profile, loading } = useAuth()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // If already logged in, redirect
+  useEffect(() => {
+    if (loading) return
+    if (user) {
+      if (!profile?.onboarding_completed) {
+        router.replace('/onboarding')
+      } else {
+        router.replace('/home')
+      }
+    }
+  }, [user, profile, loading, router])
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-bg-primary relative overflow-hidden">
@@ -47,12 +61,18 @@ export default function LandingPage() {
         </div>
 
         {/* CTA Buttons */}
-        <div className="space-y-4 pt-4">
+        <div className="space-y-3 pt-4">
           <button
-            onClick={() => router.push('/onboarding')}
+            onClick={() => router.push('/signup')}
             className="w-full py-4 px-8 rounded-[var(--radius-pill)] bg-red-primary text-white font-semibold uppercase tracking-wide shadow-raised glow-red hover:bg-red-hover hover:shadow-raised-hover active:shadow-inset transition-all duration-200 cursor-pointer text-lg"
           >
-            Enter LockedIn
+            Create Account
+          </button>
+          <button
+            onClick={() => router.push('/login')}
+            className="w-full py-4 px-8 rounded-[var(--radius-pill)] bg-bg-secondary text-text-secondary font-semibold uppercase tracking-wide border border-white/5 hover:bg-bg-tertiary hover:border-white/10 transition-all duration-200 cursor-pointer text-lg"
+          >
+            Sign In
           </button>
         </div>
 
