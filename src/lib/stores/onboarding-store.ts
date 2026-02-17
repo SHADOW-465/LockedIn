@@ -65,15 +65,33 @@ export const FETISH_GENRES = [
     'JOI',
 ] as const
 
-// Training regimens per PRD §3.3
+// Training regimens — comprehensive list
 export const REGIMEN_OPTIONS = [
-    { id: 'sissy-training', name: 'Sissy Training', description: 'Feminization and identity exploration' },
-    { id: 'obedience-service', name: 'Obedience & Service', description: 'Discipline and protocol training' },
-    { id: 'cei-mastery', name: 'CEI Mastery', description: 'Progressive conditioning program' },
-    { id: 'edging-endurance', name: 'Edging Endurance', description: 'Stamina and control development' },
-    { id: 'sph-conditioning', name: 'SPH Conditioning', description: 'Small penis humiliation training' },
-    { id: 'humiliation-marathon', name: 'Humiliation Marathon', description: 'Progressive degradation exposure' },
-    { id: 'anal-mastery', name: 'Anal Training', description: 'Progressive anal conditioning' },
+    { id: 'sissy-training', name: 'Sissy Training', description: 'Feminization, makeup practice, and identity exploration' },
+    { id: 'obedience-service', name: 'Obedience & Service', description: 'Discipline, protocol training, and domestic servitude' },
+    { id: 'cei-mastery', name: 'CEI Mastery', description: 'Progressive cum eating conditioning program' },
+    { id: 'edging-endurance', name: 'Edging Endurance', description: 'Stamina building, edge-hold-release control drills' },
+    { id: 'sph-conditioning', name: 'SPH Conditioning', description: 'Small penis humiliation and acceptance training' },
+    { id: 'humiliation-marathon', name: 'Humiliation Marathon', description: 'Progressive degradation and shame exposure therapy' },
+    { id: 'anal-mastery', name: 'Anal Training', description: 'Progressive anal conditioning with size milestones' },
+    { id: 'body-worship', name: 'Body Worship', description: 'Foot worship, body part devotion rituals' },
+    { id: 'pet-play', name: 'Pet Play Training', description: 'Puppy/kitten training, crawling, fetching, barking drills' },
+    { id: 'bondage-self-tie', name: 'Self-Bondage', description: 'Rope work, restraint practice, and predicament bondage' },
+    { id: 'pain-tolerance', name: 'Pain Tolerance', description: 'CBT, nipple torture, impact play conditioning' },
+    { id: 'chastity-endurance', name: 'Chastity Endurance', description: 'Long-term cage wear, hygiene routines, denial milestones' },
+    { id: 'body-writing', name: 'Body Writing', description: 'Degrading text written on body, photo verification' },
+    { id: 'exhibitionism', name: 'Exhibitionism Training', description: 'Exposure tasks, public dares, and visibility challenges' },
+    { id: 'orgasm-control', name: 'Orgasm Control', description: 'Ruined orgasms, timed releases, denial schedules' },
+    { id: 'fitness-punishment', name: 'Fitness & Punishment', description: 'Exercise-based punishments, physical conditioning tasks' },
+    { id: 'mental-conditioning', name: 'Mental Conditioning', description: 'Mantras, affirmations, journaling, mindset reshaping' },
+    { id: 'wardrobe-control', name: 'Wardrobe Control', description: 'Clothing assignments, panty wearing, outfit protocols' },
+    { id: 'financial-servitude', name: 'Financial Servitude', description: 'Tribute tasks, budget control, earning assignments' },
+    { id: 'sensory-deprivation', name: 'Sensory Deprivation', description: 'Blindfold tasks, earplugs, isolation challenges' },
+    { id: 'domestic-service', name: 'Domestic Service', description: 'Cleaning, cooking, household chore assignments' },
+    { id: 'cock-worship', name: 'Cock Worship', description: 'Dildo training, deepthroat practice, oral servitude' },
+    { id: 'nipple-training', name: 'Nipple Training', description: 'Sensitivity training, clamps, suction conditioning' },
+    { id: 'posture-protocol', name: 'Posture & Protocol', description: 'Standing, kneeling, sitting positions, eye contact rules' },
+    { id: 'degradation-exposure', name: 'Degradation Journaling', description: 'Writing confessions, shame journaling, self-assessment' },
 ] as const
 
 // ── State Interface ─────────────────────────────────────────

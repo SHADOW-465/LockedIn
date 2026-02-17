@@ -19,7 +19,7 @@ export default function RegimensStep({ onValid }: StepProps) {
         const exists = selectedRegimens.find((r) => r.id === id)
         if (exists) {
             setSelectedRegimens(selectedRegimens.filter((r) => r.id !== id))
-        } else if (selectedRegimens.length < 3) {
+        } else {
             const isPrimary = selectedRegimens.length === 0
             setSelectedRegimens([...selectedRegimens, { id, name, isPrimary }])
         }
@@ -36,8 +36,8 @@ export default function RegimensStep({ onValid }: StepProps) {
             <div className="text-center space-y-2">
                 <h2 className="text-2xl font-bold font-mono">Training Regimens</h2>
                 <p className="text-text-secondary text-sm">
-                    Choose <span className="text-red-primary font-semibold">1 primary</span> and up to{' '}
-                    <span className="text-purple-primary font-semibold">2 secondary</span> regimens.
+                    Choose <span className="text-red-primary font-semibold">1 primary</span> and as many{' '}
+                    <span className="text-purple-primary font-semibold">secondary</span> regimens as you like.
                 </p>
             </div>
 
@@ -46,23 +46,21 @@ export default function RegimensStep({ onValid }: StepProps) {
                     const selected = selectedRegimens.find((r) => r.id === reg.id)
                     const isSelected = !!selected
                     const isPrimary = selected?.isPrimary ?? false
-                    const canAdd = selectedRegimens.length < 3
 
                     return (
                         <div
                             key={reg.id}
                             className={`p-4 rounded-[var(--radius-lg)] border transition-all duration-200 ${isSelected
-                                    ? isPrimary
-                                        ? 'border-red-primary/40 bg-red-primary/5 glow-red'
-                                        : 'border-purple-primary/40 bg-purple-primary/5'
-                                    : 'border-white/5 bg-bg-secondary/50 hover:bg-bg-secondary'
+                                ? isPrimary
+                                    ? 'border-red-primary/40 bg-red-primary/5 glow-red'
+                                    : 'border-purple-primary/40 bg-purple-primary/5'
+                                : 'border-white/5 bg-bg-secondary/50 hover:bg-bg-secondary'
                                 }`}
                         >
                             <div className="flex items-center justify-between">
                                 <button
                                     onClick={() => toggleRegimen(reg.id, reg.name)}
-                                    disabled={!isSelected && !canAdd}
-                                    className="flex-1 text-left cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                                    className="flex-1 text-left cursor-pointer"
                                 >
                                     <span className={`font-semibold text-sm ${isPrimary ? 'text-red-primary' : isSelected ? 'text-purple-primary' : ''
                                         }`}>
@@ -92,7 +90,7 @@ export default function RegimensStep({ onValid }: StepProps) {
 
             {selectedRegimens.length > 0 && (
                 <p className="text-center text-xs text-text-tertiary">
-                    {selectedRegimens.length}/3 selected
+                    {selectedRegimens.length} selected • ⭐ = primary
                 </p>
             )}
         </div>

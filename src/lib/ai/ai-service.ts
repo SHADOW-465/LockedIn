@@ -6,9 +6,14 @@ import Groq from 'groq-sdk';
 // Vision/Voice: OpenRouter  |  TTS: Web Speech API
 // ============================================================
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
-});
+// Lazy singleton — avoids crashing at build time when env vars are missing
+let _groq: Groq | null = null;
+function getGroq(): Groq {
+    if (!_groq) {
+        _groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
+    }
+    return _groq;
+}
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 
@@ -56,7 +61,7 @@ export async function generateText(
 
     // 1. Try Groq (fastest)
     try {
-        const completion = await groq.chat.completions.create({
+        const completion = await getGroq().chat.completions.create({
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: prompt },
@@ -87,7 +92,7 @@ export async function generateText(
  */
 export async function generateSimpleText(systemPrompt: string, userPrompt: string): Promise<string> {
     try {
-        const completion = await groq.chat.completions.create({
+        const completion = await getGroq().chat.completions.create({
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPrompt },
