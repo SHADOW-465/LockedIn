@@ -17,12 +17,13 @@ Keep responses gentle and brief.`
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { message, context, userId, sessionId, safeword } = body as {
+        const { message, context, userId, sessionId, safeword, skipDbWrite } = body as {
             message: string
             context: AIContext
             userId?: string
             sessionId?: string
             safeword?: string
+            skipDbWrite?: boolean
         }
 
         if (!message?.trim()) {
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
         const isResume = message.toLowerCase().includes('resume training')
 
         // ── Save user message to DB ──────────────────────────
-        if (userId) {
+        if (userId && !skipDbWrite) {
             await supabase.from('chat_messages').insert({
                 user_id: userId,
                 session_id: sessionId || null,
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
         }
 
         // ── Save AI response to DB ───────────────────────────
-        if (userId) {
+        if (userId && !skipDbWrite) {
             await supabase.from('chat_messages').insert({
                 user_id: userId,
                 session_id: sessionId || null,

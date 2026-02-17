@@ -7,9 +7,17 @@ import { TopBar } from '@/components/layout/top-bar'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { Send, Loader2, Heart, Shield, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
-import { useRealtimeQuery } from '@/lib/hooks/use-realtime'
+import { getSupabase } from '@/lib/supabase/client'
 import { getActiveSession } from '@/lib/supabase/sessions'
-import type { ChatMessage, Session } from '@/lib/supabase/schema'
+import type { Session } from '@/lib/supabase/schema'
+
+interface DisplayMessage {
+    id: string
+    sender: 'user' | 'ai'
+    content: string
+    message_type: string
+    created_at: string
+}
 
 export default function ChatPage() {
     const { user, profile } = useAuth()
@@ -17,15 +25,44 @@ export default function ChatPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [session, setSession] = useState<Session | null>(null)
     const [careMode, setCareMode] = useState(false)
+    const [messages, setMessages] = useState<DisplayMessage[]>([])
+    const [initialLoading, setInitialLoading] = useState(true)
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
-    const { data: messages } = useRealtimeQuery<ChatMessage>(
-        'chat_messages',
-        user ? { user_id: user.id } : {},
-        'created_at',
-        true
-    )
+    // Load existing messages from DB on mount
+    useEffect(() => {
+        if (!user) return
 
+        const loadMessages = async () => {
+            const supabase = getSupabase()
+            const { data, error } = await supabase
+                .from('chat_messages')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: true })
+
+            if (!error && data) {
+                setMessages(data.map((m: Record<string, unknown>) => ({
+                    id: m.id as string,
+                    sender: m.sender as 'user' | 'ai',
+                    content: m.content as string,
+                    message_type: (m.message_type as string) || 'normal',
+                    created_at: m.created_at as string,
+                })))
+
+                // Detect if last AI message was care_mode
+                const lastAi = [...data].reverse().find((m: Record<string, unknown>) => m.sender === 'ai')
+                if (lastAi && (lastAi as Record<string, unknown>).message_type === 'care_mode') {
+                    setCareMode(true)
+                }
+            }
+            setInitialLoading(false)
+        }
+
+        loadMessages()
+    }, [user])
+
+    // Load active session
     useEffect(() => {
         if (user) {
             getActiveSession(user.id).then(setSession)
@@ -34,14 +71,6 @@ export default function ChatPage() {
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, [messages])
-
-    // Detect if last AI message was care_mode to persist banner
-    useEffect(() => {
-        const lastAi = [...messages].reverse().find(m => m.sender === 'ai')
-        if (lastAi?.message_type === 'care_mode') {
-            setCareMode(true)
-        }
     }, [messages])
 
     const handleSend = useCallback(async () => {
@@ -56,6 +85,29 @@ export default function ChatPage() {
             setCareMode(false)
         }
 
+        // Optimistically add user message to local state
+        const userMsg: DisplayMessage = {
+            id: `temp-${Date.now()}`,
+            sender: 'user',
+            content: message,
+            message_type: 'normal',
+            created_at: new Date().toISOString(),
+        }
+        setMessages(prev => [...prev, userMsg])
+
+        // Save user message to DB (client-side, has auth token)
+        const supabase = getSupabase()
+        const isSafeword = message.toUpperCase().includes('MERCY')
+
+        await supabase.from('chat_messages').insert({
+            user_id: user.id,
+            session_id: session?.id || null,
+            sender: 'user',
+            content: message,
+            message_type: isSafeword ? 'safeword_detected' : 'normal',
+            persona_used: profile?.ai_personality || 'Strict Master',
+        })
+
         try {
             const res = await fetch('/api/chat', {
                 method: 'POST',
@@ -64,7 +116,8 @@ export default function ChatPage() {
                     message,
                     userId: user.id,
                     sessionId: session?.id,
-                    safeword: 'MERCY', // TODO: pull from user preferences
+                    safeword: 'MERCY',
+                    skipDbWrite: true, // Tell API not to write to DB
                     context: {
                         persona: profile?.ai_personality ?? 'Cruel Mistress',
                         tier: profile?.tier ?? 'Newbie',
@@ -80,9 +133,47 @@ export default function ChatPage() {
                 if (data.careMode) {
                     setCareMode(true)
                 }
+
+                // Add AI reply to local state
+                const aiMsg: DisplayMessage = {
+                    id: `ai-${Date.now()}`,
+                    sender: 'ai',
+                    content: data.reply,
+                    message_type: data.messageType || 'normal',
+                    created_at: new Date().toISOString(),
+                }
+                setMessages(prev => [...prev, aiMsg])
+
+                // Save AI reply to DB (client-side)
+                await supabase.from('chat_messages').insert({
+                    user_id: user.id,
+                    session_id: session?.id || null,
+                    sender: 'ai',
+                    content: data.reply,
+                    message_type: data.messageType || 'normal',
+                    persona_used: profile?.ai_personality || 'Strict Master',
+                })
+            } else {
+                // Show error message
+                const aiMsg: DisplayMessage = {
+                    id: `err-${Date.now()}`,
+                    sender: 'ai',
+                    content: 'I couldn\'t process your message. Try again.',
+                    message_type: 'normal',
+                    created_at: new Date().toISOString(),
+                }
+                setMessages(prev => [...prev, aiMsg])
             }
         } catch (err) {
             console.error('Chat error:', err)
+            const aiMsg: DisplayMessage = {
+                id: `err-${Date.now()}`,
+                sender: 'ai',
+                content: 'Connection error. Please try again.',
+                message_type: 'normal',
+                created_at: new Date().toISOString(),
+            }
+            setMessages(prev => [...prev, aiMsg])
         }
 
         setIsLoading(false)
@@ -100,8 +191,8 @@ export default function ChatPage() {
             <div className="min-h-screen pb-24 lg:pb-8 flex flex-col">
                 {/* Chat Sub-Header */}
                 <div className={`px-4 py-2 border-b transition-colors ${careMode
-                        ? 'border-teal-primary/30 bg-teal-primary/5'
-                        : 'border-white/5 bg-bg-secondary/50'
+                    ? 'border-teal-primary/30 bg-teal-primary/5'
+                    : 'border-white/5 bg-bg-secondary/50'
                     }`}>
                     <div className="flex items-center justify-between max-w-2xl mx-auto">
                         <div>
@@ -154,11 +245,15 @@ export default function ChatPage() {
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {messages.length === 0 && (
+                    {initialLoading ? (
+                        <div className="text-center py-12">
+                            <Loader2 size={24} className="animate-spin mx-auto text-text-tertiary" />
+                        </div>
+                    ) : messages.length === 0 ? (
                         <div className="text-center py-12 text-text-tertiary">
                             <p className="text-sm">Start the conversation. Address your Master respectfully.</p>
                         </div>
-                    )}
+                    ) : null}
 
                     {messages.map((message) => {
                         const isCareMode = message.message_type === 'care_mode'
@@ -172,22 +267,22 @@ export default function ChatPage() {
                             >
                                 <div
                                     className={`max-w-[85%] rounded-2xl px-4 py-3 ${message.sender === 'ai'
-                                            ? isCareMode
-                                                ? 'bg-teal-primary/10 border border-teal-primary/20'
-                                                : isPunishment
-                                                    ? 'bg-red-primary/10 border border-red-primary/20'
-                                                    : 'bg-purple-primary/10 border border-purple-primary/20'
-                                            : isSafeword
-                                                ? 'bg-teal-primary/10 border border-teal-primary/20'
-                                                : 'bg-bg-tertiary border border-white/5'
+                                        ? isCareMode
+                                            ? 'bg-teal-primary/10 border border-teal-primary/20'
+                                            : isPunishment
+                                                ? 'bg-red-primary/10 border border-red-primary/20'
+                                                : 'bg-purple-primary/10 border border-purple-primary/20'
+                                        : isSafeword
+                                            ? 'bg-teal-primary/10 border border-teal-primary/20'
+                                            : 'bg-bg-tertiary border border-white/5'
                                         }`}
                                 >
                                     {message.sender === 'ai' && (
                                         <p className={`text-xs font-semibold mb-1.5 ${isCareMode
-                                                ? 'text-teal-primary'
-                                                : isPunishment
-                                                    ? 'text-red-primary'
-                                                    : 'text-purple-primary'
+                                            ? 'text-teal-primary'
+                                            : isPunishment
+                                                ? 'text-red-primary'
+                                                : 'text-purple-primary'
                                             }`}>
                                             {isCareMode ? '💚 Care Mode' : personality}
                                             {isPunishment && ' ⚠️'}
@@ -212,8 +307,8 @@ export default function ChatPage() {
                     {isLoading && (
                         <div className="flex justify-start">
                             <div className={`rounded-2xl px-4 py-3 ${careMode
-                                    ? 'bg-teal-primary/10 border border-teal-primary/20'
-                                    : 'bg-purple-primary/10 border border-purple-primary/20'
+                                ? 'bg-teal-primary/10 border border-teal-primary/20'
+                                : 'bg-purple-primary/10 border border-purple-primary/20'
                                 }`}>
                                 <div className="flex gap-1.5">
                                     <div className={`w-2 h-2 rounded-full animate-bounce ${careMode ? 'bg-teal-primary/50' : 'bg-purple-primary/50'}`} style={{ animationDelay: '0ms' }} />
@@ -229,8 +324,8 @@ export default function ChatPage() {
 
                 {/* Input */}
                 <div className={`sticky bottom-20 lg:bottom-0 p-4 border-t transition-colors ${careMode
-                        ? 'glass-strong border-teal-primary/10'
-                        : 'glass-strong border-white/5'
+                    ? 'glass-strong border-teal-primary/10'
+                    : 'glass-strong border-white/5'
                     }`}>
                     <div className="flex gap-2">
                         <input
