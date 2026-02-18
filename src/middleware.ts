@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Paths that never require authentication
-const PUBLIC_PATHS = ['/', '/login', '/signup', '/auth']
+// NOTE: '/' is intentionally excluded — the root page.tsx is a server component
+// that performs its own SSR auth check and redirect.
+const PUBLIC_PATHS = ['/login', '/signup', '/auth']
 // API routes handle their own auth — skip onboarding redirect
 const API_PREFIX = '/api/'
 
@@ -21,6 +23,10 @@ export async function middleware(request: NextRequest) {
 
     // Create a mutable response to allow cookie updates
     let response = NextResponse.next({ request: { headers: request.headers } })
+
+    // Root path: unauthenticated users see the landing page;
+    // authenticated users are redirected below after the auth check.
+    const isRootPath = pathname === '/'
 
     // SSR Supabase client — reads/writes session cookies
     const supabase = createServerClient(
@@ -50,9 +56,30 @@ export async function middleware(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (!user) {
+        // Unauthenticated on root → show landing page
+        if (isRootPath) return response
         const loginUrl = request.nextUrl.clone()
         loginUrl.pathname = '/login'
         return NextResponse.redirect(loginUrl)
+    }
+
+    // Authenticated on root → redirect to dashboard immediately at the Edge
+    if (isRootPath) {
+        const cachedOnboardingForRoot = request.cookies.get('x-onboarding-done')?.value === '1'
+        if (cachedOnboardingForRoot) {
+            const homeUrl = request.nextUrl.clone()
+            homeUrl.pathname = '/home'
+            return NextResponse.redirect(homeUrl)
+        }
+        const { data: rootProfile } = await supabase
+            .from('profiles')
+            .select('onboarding_completed')
+            .eq('id', user.id)
+            .single()
+        const dest = rootProfile?.onboarding_completed ? '/home' : '/onboarding'
+        const destUrl = request.nextUrl.clone()
+        destUrl.pathname = dest
+        return NextResponse.redirect(destUrl)
     }
 
     const isOnboardingPath = pathname.startsWith('/onboarding')

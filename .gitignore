@@ -46,3 +46,6 @@ next-env.d.ts
 *.pdf
 /lockedin-app/
 
+# AI Assistant
+.claude/
+.mcp.json
