@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyImage } from '@/lib/ai/ai-service'
-import { getServerSupabase } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { applyPunishment } from '@/lib/engines/punishment'
 import { awardCompletion, checkAchievements, awardStreak } from '@/lib/engines/rewards'
 
@@ -31,8 +32,9 @@ function randomPendingMessage(): string {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { imageBase64, taskId, userId, sessionId, taskType, taskDescription, tier } = body as {
-            imageBase64: string
+        const { storagePath, imageBase64, taskId, userId, sessionId, taskType, taskDescription, tier } = body as {
+            storagePath?: string
+            imageBase64?: string // Legacy support
             taskId: string
             userId: string
             sessionId?: string
@@ -41,14 +43,55 @@ export async function POST(request: NextRequest) {
             tier?: string
         }
 
-        if (!imageBase64) {
-            return NextResponse.json({ error: 'Image data is required' }, { status: 400 })
-        }
         if (!taskId || !userId) {
             return NextResponse.json({ error: 'taskId and userId are required' }, { status: 400 })
         }
 
-        const supabase = getServerSupabase()
+        const cookieStore = await cookies()
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    getAll() {
+                        return cookieStore.getAll()
+                    },
+                    setAll(cookiesToSet) {
+                        try {
+                            cookiesToSet.forEach(({ name, value, options }) =>
+                                cookieStore.set(name, value, options)
+                            )
+                        } catch {
+                            // Ignored
+                        }
+                    },
+                },
+            }
+        )
+
+        let base64Image = body.imageBase64
+
+        // ── Download from Storage if path provided ───────────
+        if (storagePath) {
+            const { data, error } = await supabase
+                .storage
+                .from('verification-proofs')
+                .download(storagePath)
+
+            if (error) {
+                console.error('[Verify API] Download failed:', error)
+                return NextResponse.json({ error: 'Failed to retrieve proof image' }, { status: 400 })
+            }
+
+            // Convert Blob/File to Base64
+            const arrayBuffer = await data.arrayBuffer()
+            const buffer = Buffer.from(arrayBuffer)
+            base64Image = buffer.toString('base64')
+        }
+
+        if (!base64Image) {
+            return NextResponse.json({ error: 'Image data is required' }, { status: 400 })
+        }
 
         // ── Look up the task from DB ─────────────────────────
         let type = taskType || 'general'
@@ -86,7 +129,7 @@ export async function POST(request: NextRequest) {
 
         // ── Build verification prompt and call AI ────────────
         const prompt = buildVerificationPrompt(type, description)
-        const result = await verifyImage(imageBase64, prompt)
+        const result = await verifyImage(base64Image, prompt)
 
         // ── Update task status based on result ───────────────
         const newStatus = result.success ? 'completed' : 'failed'

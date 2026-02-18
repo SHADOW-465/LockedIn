@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { useRealtimeQuery } from '@/lib/hooks/use-realtime'
+import { getSupabase } from '@/lib/supabase/client'
 import { getActiveSession } from '@/lib/supabase/sessions'
 import { updateTaskStatus } from '@/lib/supabase/tasks'
 import type { Task, Session } from '@/lib/supabase/schema'
@@ -421,41 +422,54 @@ export default function TasksPage() {
         setDetailTask(null) // Close detail modal
 
         try {
-            const reader = new FileReader()
-            reader.onload = async () => {
-                const base64 = (reader.result as string).split(',')[1]
+            setPendingMessage('Uploading proof to secure vault...')
+            const supabase = getSupabase()
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${user?.id}/${taskId}/${Date.now()}.${fileExt}`
 
-                const task = tasks.find((t) => t.id === taskId)
+            // 1. Upload to Supabase Storage
+            const { error: uploadError } = await supabase.storage
+                .from('verification-proofs')
+                .upload(fileName, file)
 
-                // Show pending message immediately
-                setPendingMessage('Submitting your pathetic attempt for review...')
-
-                const res = await fetch('/api/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        taskId,
-                        imageBase64: base64,
-                        userId: user?.id,
-                        sessionId: session?.id,
-                        taskType: task?.verification_type || 'general',
-                        taskDescription: task?.description || '',
-                        tier: profile?.tier || 'Newbie',
-                    }),
-                })
-
-                if (res.ok) {
-                    const data = await res.json()
-                    setPendingMessage(null)
-                    setVerificationResult(data)
-                    refetch()
-                }
-                setVerifying(null)
+            if (uploadError) {
+                throw new Error('Upload failed: ' + uploadError.message)
             }
-            reader.readAsDataURL(file)
-        } catch {
+
+            // 2. Call Verify API with storage path
+            setPendingMessage('Submitting your pathetic attempt for review...')
+
+            const task = tasks.find((t) => t.id === taskId)
+
+            const res = await fetch('/api/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    taskId,
+                    storagePath: fileName,
+                    userId: user?.id,
+                    sessionId: session?.id,
+                    taskType: task?.verification_type || 'general',
+                    taskDescription: task?.description || '',
+                    tier: profile?.tier || 'Newbie',
+                }),
+            })
+
+            if (res.ok) {
+                const data = await res.json()
+                setPendingMessage(null)
+                setVerificationResult(data)
+                refetch()
+            } else {
+                setPendingMessage(null)
+            }
+            setVerifying(null)
+
+        } catch (error) {
+            console.error('Verification failed:', error)
             setPendingMessage(null)
             setVerifying(null)
+            alert('Failed to upload proof. Ensure you have permission.')
         }
     }
 
