@@ -5,5 +5,17 @@
     "start_url": "/",
     "display": "standalone",
     "background_color": "#0F1117",
-    "theme_color": "#0F1117"
+    "theme_color": "#0F1117",
+    "icons": [
+        {
+            "src": "/LockedIn-logo.ico",
+            "sizes": "any",
+            "type": "image/x-icon"
+        },
+        {
+            "src": "/LockedIn-logo.svg",
+            "sizes": "any",
+            "type": "image/svg+xml"
+        }
+    ]
 }

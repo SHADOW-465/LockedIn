@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { NotificationBell } from '@/components/features/notification-bell'
+import { UsageMeter } from '@/components/features/usage-meter'
 
 const navItems = [
     { href: '/home', icon: Home, label: 'Home' },
@@ -70,6 +71,7 @@ export function TopBar() {
 
                 {/* Right side */}
                 <div className="flex items-center gap-3">
+                    <UsageMeter />
                     <NotificationBell />
                     <Badge variant={getTierBadge(tier)}>
                         {tier.toUpperCase()}

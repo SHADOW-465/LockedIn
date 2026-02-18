@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { TopBar } from '@/components/layout/top-bar'
 import { BottomNav } from '@/components/layout/bottom-nav'
-import { Dumbbell, Plus, ChevronRight, Pause, Play, X, CheckCircle, Loader2 } from 'lucide-react'
+import { Dumbbell, Plus, ChevronRight, Pause, Play, X, CheckCircle, Loader2, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
-import { getUserRegimens, createRegimen, advanceRegimenDay, pauseRegimen, abandonRegimen } from '@/lib/supabase/regimens'
+import { getUserRegimens, createRegimen, pauseRegimen, abandonRegimen } from '@/lib/supabase/regimens'
 import type { Regimen } from '@/lib/supabase/schema'
 
 const TEMPLATES = [
@@ -19,12 +19,27 @@ const TEMPLATES = [
     { name: 'Submission Training', description: 'Learn to accept and comply with any command given', days: 10 },
 ]
 
+interface NextDayTask {
+    title: string
+    description: string
+    difficulty?: number
+}
+
+interface AdvanceState {
+    [regimenId: string]: {
+        advancing: boolean
+        error: string | null
+        nextDayTask: NextDayTask | null
+    }
+}
+
 export default function RegimensPage() {
     const { user } = useAuth()
     const [regimens, setRegimens] = useState<Regimen[]>([])
     const [loading, setLoading] = useState(true)
     const [showCreate, setShowCreate] = useState(false)
     const [creating, setCreating] = useState(false)
+    const [advanceState, setAdvanceState] = useState<AdvanceState>({})
 
     useEffect(() => {
         if (user) loadRegimens()
@@ -47,8 +62,56 @@ export default function RegimensPage() {
     }
 
     async function handleAdvance(regimen: Regimen) {
-        await advanceRegimenDay(regimen.id, regimen.current_day, regimen.total_days)
-        await loadRegimens()
+        if (!user) return
+
+        setAdvanceState(prev => ({
+            ...prev,
+            [regimen.id]: { advancing: true, error: null, nextDayTask: null },
+        }))
+
+        try {
+            const res = await fetch('/api/regimens/complete-day', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    regimenId: regimen.id,
+                    userId: user.id,
+                    currentDay: regimen.current_day,
+                }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok || !data.advanced) {
+                setAdvanceState(prev => ({
+                    ...prev,
+                    [regimen.id]: {
+                        advancing: false,
+                        error: data.reason || 'Failed to advance regimen.',
+                        nextDayTask: null,
+                    },
+                }))
+            } else {
+                setAdvanceState(prev => ({
+                    ...prev,
+                    [regimen.id]: {
+                        advancing: false,
+                        error: null,
+                        nextDayTask: data.nextDayTask || null,
+                    },
+                }))
+                await loadRegimens()
+            }
+        } catch {
+            setAdvanceState(prev => ({
+                ...prev,
+                [regimen.id]: {
+                    advancing: false,
+                    error: 'Connection error. Please try again.',
+                    nextDayTask: null,
+                },
+            }))
+        }
     }
 
     async function handlePause(regimenId: string) {
@@ -119,7 +182,16 @@ export default function RegimensPage() {
                         <div className="space-y-3">
                             <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">Active</h3>
                             {active.map((r) => (
-                                <RegimenCard key={r.id} regimen={r} onAdvance={handleAdvance} onPause={handlePause} onAbandon={handleAbandon} />
+                                <RegimenCard
+                                    key={r.id}
+                                    regimen={r}
+                                    onAdvance={handleAdvance}
+                                    onPause={handlePause}
+                                    onAbandon={handleAbandon}
+                                    advancing={advanceState[r.id]?.advancing ?? false}
+                                    error={advanceState[r.id]?.error ?? null}
+                                    nextDayTask={advanceState[r.id]?.nextDayTask ?? null}
+                                />
                             ))}
                         </div>
                     )}
@@ -129,7 +201,16 @@ export default function RegimensPage() {
                         <div className="space-y-3">
                             <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">Paused</h3>
                             {paused.map((r) => (
-                                <RegimenCard key={r.id} regimen={r} onAdvance={handleAdvance} onPause={handlePause} onAbandon={handleAbandon} />
+                                <RegimenCard
+                                    key={r.id}
+                                    regimen={r}
+                                    onAdvance={handleAdvance}
+                                    onPause={handlePause}
+                                    onAbandon={handleAbandon}
+                                    advancing={advanceState[r.id]?.advancing ?? false}
+                                    error={advanceState[r.id]?.error ?? null}
+                                    nextDayTask={advanceState[r.id]?.nextDayTask ?? null}
+                                />
                             ))}
                         </div>
                     )}
@@ -181,11 +262,17 @@ function RegimenCard({
     onAdvance,
     onPause,
     onAbandon,
+    advancing,
+    error,
+    nextDayTask,
 }: {
     regimen: Regimen
     onAdvance: (r: Regimen) => void
     onPause: (id: string) => void
     onAbandon: (id: string) => void
+    advancing: boolean
+    error: string | null
+    nextDayTask: NextDayTask | null
 }) {
     const progress = Math.round((regimen.current_day / regimen.total_days) * 100)
     const isActive = regimen.status === 'active'
@@ -218,13 +305,40 @@ function RegimenCard({
                 </div>
             </div>
 
+            {/* Task quota gate message */}
+            {error && (
+                <div className="flex items-start gap-2 p-3 bg-red-primary/10 border border-red-primary/20 rounded-lg">
+                    <AlertTriangle size={14} className="text-red-primary shrink-0 mt-0.5" />
+                    <p className="text-xs text-red-primary">{error}</p>
+                </div>
+            )}
+
+            {/* AI-generated next day task preview */}
+            {nextDayTask && (
+                <div className="p-3 bg-purple-primary/10 border border-purple-primary/20 rounded-lg space-y-1">
+                    <p className="text-xs font-semibold text-purple-primary">Tomorrow&apos;s Task</p>
+                    <p className="text-xs font-medium">{nextDayTask.title}</p>
+                    <p className="text-xs text-text-tertiary line-clamp-2">{nextDayTask.description}</p>
+                </div>
+            )}
+
             {/* Actions */}
             <div className="flex items-center gap-2 pt-2 border-t border-white/5">
                 {isActive ? (
                     <>
-                        <Button variant="primary" size="sm" className="flex-1" onClick={() => onAdvance(regimen)}>
-                            <CheckCircle size={14} className="mr-1" />
-                            {regimen.current_day >= regimen.total_days ? 'Complete' : 'Day Done'}
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            className="flex-1"
+                            disabled={advancing}
+                            onClick={() => onAdvance(regimen)}
+                        >
+                            {advancing ? (
+                                <><Loader2 size={14} className="mr-1 animate-spin" /> Checking...</>
+                            ) : (
+                                <><CheckCircle size={14} className="mr-1" />
+                                    {regimen.current_day >= regimen.total_days ? 'Complete' : 'Day Done'}</>
+                            )}
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => onPause(regimen.id)}>
                             <Pause size={14} />

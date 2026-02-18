@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateText, type AIContext } from '@/lib/ai/ai-service'
+import { generateText, trackUsage, type AIContext } from '@/lib/ai/ai-service'
 import { getServerSupabase } from '@/lib/supabase/server'
 import { applyPunishment } from '@/lib/engines/punishment'
 
@@ -17,13 +17,14 @@ Keep responses gentle and brief.`
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { message, context, userId, sessionId, safeword, skipDbWrite } = body as {
+        const { message, context, userId, sessionId, safeword, skipDbWrite, profileSummary } = body as {
             message: string
             context: AIContext
             userId?: string
             sessionId?: string
             safeword?: string
             skipDbWrite?: boolean
+            profileSummary?: string
         }
 
         if (!message?.trim()) {
@@ -63,15 +64,23 @@ export async function POST(request: NextRequest) {
             psychProfile: context?.psychProfile,
         }
 
+        // ── Compact system prompt when summary is available ──
+        // Reduces per-message system prompt tokens by ~60%
+        const compactSystem = profileSummary
+            ? `You are the AI Master of the LockedIn chastity app. NEVER break character.\n\nUser profile: ${profileSummary}\n\nBe dominant, strict, and psychologically engaging. Never violate listed limits.`
+            : undefined
+
         let reply: string
         let messageType: string = 'normal'
         let careMode = false
 
         if (isSafeword) {
             // ── CARE MODE: Override persona completely ────────
-            reply = await generateText(message, aiContext, CARE_MODE_PROMPT)
+            const { text, usage } = await generateText(message, aiContext, CARE_MODE_PROMPT)
+            reply = text
             messageType = 'care_mode'
             careMode = true
+            if (userId) await trackUsage(supabase, userId, 'llama-3.3-70b-versatile', usage, 'chat')
 
             // Pause active session if exists
             if (sessionId) {
@@ -82,11 +91,14 @@ export async function POST(request: NextRequest) {
             }
         } else if (isResume) {
             // ── Resume training from Care Mode ───────────────
-            reply = await generateText(
+            const { text, usage } = await generateText(
                 'The slave has returned from Care Mode and wishes to resume training.',
                 aiContext,
+                compactSystem,
             )
+            reply = text
             messageType = 'normal'
+            if (userId) await trackUsage(supabase, userId, 'llama-3.3-70b-versatile', usage, 'chat')
 
             if (sessionId) {
                 await supabase
@@ -96,7 +108,9 @@ export async function POST(request: NextRequest) {
             }
         } else {
             // ── Normal AI response ───────────────────────────
-            reply = await generateText(message, aiContext)
+            const { text, usage } = await generateText(message, aiContext, compactSystem)
+            reply = text
+            if (userId) await trackUsage(supabase, userId, 'llama-3.3-70b-versatile', usage, 'chat')
 
             // Detect rudeness/disrespect → trigger punishment
             const rudeIndicators = ['fuck you', 'shut up', 'i refuse', 'make me', 'no master', 'bite me']

@@ -34,16 +34,70 @@ interface VerificationResult {
     pendingMessage?: string
 }
 
+// ── Quick Action Buttons (per card) ─────────────────────────
+// Each instance owns its own fileRef so cards don't share refs.
+function TaskQuickActions({
+    task,
+    isVerifying,
+    onPhotoUpload,
+    onSelfComplete,
+}: {
+    task: Task
+    isVerifying: boolean
+    onPhotoUpload: (file: File) => void
+    onSelfComplete: () => void
+}) {
+    const fileRef = useRef<HTMLInputElement>(null)
+
+    return (
+        <>
+            <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) onPhotoUpload(file)
+                    e.target.value = ''
+                }}
+            />
+            {task.verification_type === 'self-report' ? (
+                <Button
+                    size="sm"
+                    variant="primary"
+                    disabled={isVerifying}
+                    onClick={(e) => { e.stopPropagation(); onSelfComplete() }}
+                >
+                    <CheckCircle size={13} className="mr-1" /> Mark Done
+                </Button>
+            ) : (
+                <Button
+                    size="sm"
+                    variant="primary"
+                    disabled={isVerifying}
+                    onClick={(e) => { e.stopPropagation(); fileRef.current?.click() }}
+                >
+                    <Camera size={13} className="mr-1" /> Submit Proof
+                </Button>
+            )}
+        </>
+    )
+}
+
 // ── Task Detail Modal ────────────────────────────────────────
 function TaskDetailModal({
     task,
     onClose,
     onSubmitProof,
+    onSelfComplete,
     isVerifying,
 }: {
     task: Task
     onClose: () => void
     onSubmitProof: (file: File) => void
+    onSelfComplete: () => void
     isVerifying: boolean
 }) {
     const fileRef = useRef<HTMLInputElement>(null)
@@ -161,11 +215,7 @@ function TaskDetailModal({
                             className="w-full"
                             disabled={isVerifying}
                             onClick={() => {
-                                // Self-report: mark as completed directly
-                                updateTaskStatus(task.id, 'completed', {
-                                    ai_verification_passed: true,
-                                    ai_verification_reason: 'Self-reported completion',
-                                })
+                                onSelfComplete()
                                 onClose()
                             }}
                         >
@@ -342,6 +392,29 @@ export default function TasksPage() {
         refetch()
     }
 
+    // ── Self-report complete via API (updates willpower) ─────
+    const handleSelfComplete = useCallback(async (taskId: string) => {
+        const task = tasks.find(t => t.id === taskId)
+        if (!task || !user) return
+
+        try {
+            await fetch('/api/tasks/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    taskId,
+                    userId: user.id,
+                    sessionId: session?.id,
+                    difficulty: task.difficulty,
+                    selfReport: true,
+                }),
+            })
+            refetch()
+        } catch (err) {
+            console.error('Self-complete failed:', err)
+        }
+    }, [tasks, user, session, refetch])
+
     // ── Photo Upload & Verification ──────────────────────────
     const handlePhotoUpload = async (taskId: string, file: File) => {
         setVerifying(taskId)
@@ -432,6 +505,14 @@ export default function TasksPage() {
                         </div>
                     )}
 
+                    {/* Pending message */}
+                    {pendingMessage && (
+                        <div className="mb-4 bg-purple-primary/5 border border-purple-primary/20 rounded-xl p-3 text-center text-sm text-purple-primary font-mono">
+                            <Loader2 size={14} className="inline mr-2 animate-spin" />
+                            {pendingMessage}
+                        </div>
+                    )}
+
                     {/* Active Tasks */}
                     <div className="space-y-4">
                         {activeTasks.length === 0 && (
@@ -510,10 +591,15 @@ export default function TasksPage() {
                                         <Badge variant="locked">
                                             ⏳ UNDER REVIEW
                                         </Badge>
+                                    ) : verifying === task.id ? (
+                                        <Badge variant="info">⏳ Verifying...</Badge>
                                     ) : (
-                                        <Badge variant="info">
-                                            {verifying === task.id ? '⏳ Verifying...' : '👆 Tap for details'}
-                                        </Badge>
+                                        <TaskQuickActions
+                                            task={task}
+                                            isVerifying={verifying === task.id}
+                                            onPhotoUpload={(file) => handlePhotoUpload(task.id, file)}
+                                            onSelfComplete={() => handleSelfComplete(task.id)}
+                                        />
                                     )}
                                 </div>
 
@@ -569,6 +655,7 @@ export default function TasksPage() {
                     task={detailTask}
                     onClose={() => setDetailTask(null)}
                     onSubmitProof={(file) => handlePhotoUpload(detailTask.id, file)}
+                    onSelfComplete={() => handleSelfComplete(detailTask.id)}
                     isVerifying={verifying === detailTask.id}
                 />
             )}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateSimpleText } from '@/lib/ai/ai-service'
+import { generateSimpleText, trackUsage } from '@/lib/ai/ai-service'
 import { getServerSupabase } from '@/lib/supabase/server'
 
 const DAILY_TASK_LIMIT = 5
@@ -69,7 +69,10 @@ Response format: VALID JSON only. No markdown fences, no explanation.
   "punishment_additional": "Additional punishment description if failed"
 }`
 
-        const result = await generateSimpleText(systemPrompt, 'Generate one task now.')
+        const { text: result, usage } = await generateSimpleText(systemPrompt, 'Generate one task now.')
+
+        // Track token usage
+        if (userId) await trackUsage(supabase, userId, 'llama-3.3-70b-versatile', usage, 'task_gen')
 
         // Parse AI response into task fields
         let taskData: Record<string, unknown>

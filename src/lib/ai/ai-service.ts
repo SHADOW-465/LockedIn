@@ -1,4 +1,5 @@
 import Groq from 'groq-sdk';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 // ============================================================
 // LockedIn AI Service — Unified Client
@@ -16,7 +17,6 @@ function getGroq(): Groq {
 }
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
-
 const OPENROUTER_BASE = 'https://openrouter.ai/api/v1/chat/completions';
 
 // Free-tier models on OpenRouter
@@ -45,21 +45,33 @@ export interface VerificationResult {
     confidence?: number;
 }
 
+export interface TokenUsage {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+}
+
+export interface GenerateResult {
+    text: string;
+    usage: TokenUsage;
+}
+
+const ZERO_USAGE: TokenUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+
 // ── Text Generation ──────────────────────────────────────────
 
 /**
  * Generate text with automatic Groq → OpenRouter fallback.
- * Groq is ~300 tok/s but rate-limited on free tier.
- * If it fails we silently fall back to OpenRouter's free pool.
+ * Returns text + token usage for metering.
  */
 export async function generateText(
     prompt: string,
     context: AIContext,
     systemOverride?: string,
-): Promise<string> {
+): Promise<GenerateResult> {
     const systemPrompt = systemOverride || buildSystemPrompt(context);
 
-    // 1. Try Groq (fastest)
+    // 1. Try Groq (fastest, returns real usage)
     try {
         const completion = await getGroq().chat.completions.create({
             messages: [
@@ -71,26 +83,40 @@ export async function generateText(
             max_tokens: 1024,
         });
         const text = completion.choices[0]?.message?.content;
-        if (text) return text;
+        if (text) {
+            return {
+                text,
+                usage: {
+                    promptTokens: completion.usage?.prompt_tokens ?? 0,
+                    completionTokens: completion.usage?.completion_tokens ?? 0,
+                    totalTokens: completion.usage?.total_tokens ?? 0,
+                },
+            };
+        }
     } catch (err) {
         console.warn('[AI] Groq failed, falling back to OpenRouter:', (err as Error).message);
     }
 
-    // 2. Fallback to OpenRouter free model
+    // 2. Fallback to OpenRouter free model (usage not available)
     try {
-        return await openRouterChat(systemPrompt, prompt, OPENROUTER_MODELS.textFallback);
+        const text = await openRouterChat(systemPrompt, prompt, OPENROUTER_MODELS.textFallback);
+        return { text, usage: ZERO_USAGE };
     } catch (err) {
         console.error('[AI] OpenRouter fallback also failed:', (err as Error).message);
     }
 
-    return 'The AI Master is momentarily silent. Try again.';
+    return { text: 'The AI Master is momentarily silent. Try again.', usage: ZERO_USAGE };
 }
 
 /**
  * Quick text generation (no context needed) — for utility purposes
- * like generating task descriptions, mantras, journal prompts.
+ * like generating task descriptions, mantras, and regimen day tasks.
+ * Returns text + token usage for metering.
  */
-export async function generateSimpleText(systemPrompt: string, userPrompt: string): Promise<string> {
+export async function generateSimpleText(
+    systemPrompt: string,
+    userPrompt: string,
+): Promise<GenerateResult> {
     try {
         const completion = await getGroq().chat.completions.create({
             messages: [
@@ -101,9 +127,46 @@ export async function generateSimpleText(systemPrompt: string, userPrompt: strin
             temperature: 0.9,
             max_tokens: 512,
         });
-        return completion.choices[0]?.message?.content || '';
+        const text = completion.choices[0]?.message?.content || '';
+        return {
+            text,
+            usage: {
+                promptTokens: completion.usage?.prompt_tokens ?? 0,
+                completionTokens: completion.usage?.completion_tokens ?? 0,
+                totalTokens: completion.usage?.total_tokens ?? 0,
+            },
+        };
     } catch {
-        return await openRouterChat(systemPrompt, userPrompt, OPENROUTER_MODELS.textFallback);
+        const text = await openRouterChat(systemPrompt, userPrompt, OPENROUTER_MODELS.textFallback);
+        return { text, usage: ZERO_USAGE };
+    }
+}
+
+// ── Usage Tracking ───────────────────────────────────────────
+
+/**
+ * Record token usage to the api_usage table.
+ * Fire-and-forget — errors are logged but never thrown.
+ */
+export async function trackUsage(
+    supabase: SupabaseClient,
+    userId: string,
+    model: string,
+    usage: TokenUsage,
+    endpoint: string,
+): Promise<void> {
+    if (!userId || usage.totalTokens === 0) return;
+    try {
+        await supabase.from('api_usage').insert({
+            user_id: userId,
+            model,
+            prompt_tokens: usage.promptTokens,
+            completion_tokens: usage.completionTokens,
+            total_tokens: usage.totalTokens,
+            endpoint,
+        });
+    } catch (err) {
+        console.error('[AI] Failed to track usage:', err);
     }
 }
 
@@ -184,7 +247,7 @@ async function openRouterChat(system: string, user: string, model: string): Prom
     return data.choices?.[0]?.message?.content || '';
 }
 
-function buildSystemPrompt(ctx: AIContext): string {
+export function buildSystemPrompt(ctx: AIContext): string {
     return `You are the AI Master of the LockedIn chastity app.
 
 USER PROFILE:

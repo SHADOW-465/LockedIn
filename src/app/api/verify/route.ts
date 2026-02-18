@@ -166,6 +166,21 @@ export async function POST(request: NextRequest) {
                     `Failed verification for task: ${task?.title || 'Unknown'}`
                 )
             }
+
+            // ── Deduct willpower on failure ──────────────────
+            const { data: profileWP } = await supabase
+                .from('profiles')
+                .select('willpower_score')
+                .eq('id', userId)
+                .single()
+
+            const currentWP = profileWP?.willpower_score ?? 50
+            const newWP = Math.max(0, currentWP - Math.ceil(difficulty * 2))
+
+            await supabase
+                .from('profiles')
+                .update({ willpower_score: newWP })
+                .eq('id', userId)
         }
 
         return NextResponse.json({

@@ -9,6 +9,7 @@ import { Send, Loader2, Heart, Shield, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { getSupabase } from '@/lib/supabase/client'
 import { getActiveSession } from '@/lib/supabase/sessions'
+import { buildProfileSummary } from '@/lib/ai/context-builder'
 import type { Session } from '@/lib/supabase/schema'
 
 interface DisplayMessage {
@@ -27,6 +28,7 @@ export default function ChatPage() {
     const [careMode, setCareMode] = useState(false)
     const [messages, setMessages] = useState<DisplayMessage[]>([])
     const [initialLoading, setInitialLoading] = useState(true)
+    const [profileSummary, setProfileSummary] = useState('')
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
     // Load existing messages from DB on mount
@@ -68,6 +70,13 @@ export default function ChatPage() {
             getActiveSession(user.id).then(setSession)
         }
     }, [user])
+
+    // Build compact profile summary once when profile loads
+    useEffect(() => {
+        if (profile) {
+            setProfileSummary(buildProfileSummary(profile))
+        }
+    }, [profile])
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -118,7 +127,9 @@ export default function ChatPage() {
                     sessionId: session?.id,
                     safeword: 'MERCY',
                     skipDbWrite: true, // Tell API not to write to DB
-                    context: {
+                    profileSummary: profileSummary || undefined,
+                    // Fallback full context if summary not yet built
+                    context: profileSummary ? undefined : {
                         persona: profile?.ai_personality ?? 'Cruel Mistress',
                         tier: profile?.tier ?? 'Newbie',
                         willpower: profile?.willpower_score ?? 50,

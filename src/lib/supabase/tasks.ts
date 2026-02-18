@@ -58,3 +58,14 @@ export async function updateTaskStatus(
 
     return true
 }
+
+/**
+ * Mark a task as self-reported complete (client-side).
+ * For full willpower scoring, call POST /api/tasks/complete instead.
+ */
+export async function completeTask(taskId: string, selfReport = false): Promise<boolean> {
+    return updateTaskStatus(taskId, 'completed', {
+        ai_verification_passed: true,
+        ai_verification_reason: selfReport ? 'Self-reported completion' : 'Manually marked complete',
+    })
+}
