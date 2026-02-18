@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import type { User } from '@supabase/supabase-js'
+import type { User, Session } from '@supabase/supabase-js'
 import { getSupabase } from '@/lib/supabase/client'
 import type { UserProfile } from '@/lib/supabase/schema'
 
@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!error && data) {
             setProfile(data as UserProfile)
         } else {
+            if (error) console.error('[Auth] fetchProfile error:', error.message, error.code)
             setProfile(null)
         }
     }, [])
@@ -88,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Listen for auth state changes
         const { data: listener } = supabase.auth.onAuthStateChange(
-            async (_event: string, session: { user: User } | null) => {
+            async (_event: string, session: Session | null) => {
                 const currentUser = session?.user ?? null
                 setUser(currentUser)
 

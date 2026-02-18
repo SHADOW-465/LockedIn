@@ -11,12 +11,14 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { Flame, TrendingUp, AlertTriangle, Calendar, Target, Zap, Play, Trophy, Dumbbell } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { getActiveSession, createSession } from '@/lib/supabase/sessions'
 import { getActiveTasks } from '@/lib/supabase/tasks'
 import type { Session, Task } from '@/lib/supabase/schema'
 
 export default function DashboardPage() {
     const { user, profile } = useAuth()
+    const router = useRouter()
     const [session, setSession] = useState<Session | null>(null)
     const [currentTask, setCurrentTask] = useState<Task | null>(null)
     const [loading, setLoading] = useState(true)
@@ -25,26 +27,30 @@ export default function DashboardPage() {
         if (!user) return
 
         async function loadDashboard() {
-            const activeSession = await getActiveSession(user!.id)
-            setSession(activeSession)
+            try {
+                const activeSession = await getActiveSession(user!.id)
+                setSession(activeSession)
 
-            const tasks = await getActiveTasks(user!.id)
-            const active = tasks.find((t) => t.status === 'active') ?? tasks[0] ?? null
-            setCurrentTask(active)
-
-            setLoading(false)
+                const tasks = await getActiveTasks(user!.id)
+                const active = tasks.find((t) => t.status === 'active') ?? tasks[0] ?? null
+                setCurrentTask(active)
+            } catch (err) {
+                console.error('[Home] loadDashboard error:', err)
+            } finally {
+                setLoading(false)
+            }
         }
 
         loadDashboard()
     }, [user])
 
     const handleStartSession = async () => {
-        if (!user || !profile) return
+        if (!user) return
         const newSession = await createSession(
             user.id,
-            profile.tier ?? 'Newbie',
+            profile?.tier ?? 'Newbie',
             168,
-            profile.ai_personality
+            profile?.ai_personality ?? null
         )
         if (newSession) setSession(newSession)
     }
@@ -157,10 +163,10 @@ export default function DashboardPage() {
                                         )}
                                     </div>
                                     <div className="flex gap-3">
-                                        <Button variant="primary" className="flex-1">
+                                        <Button variant="primary" className="flex-1" onClick={() => router.push('/tasks')}>
                                             Submit Proof
                                         </Button>
-                                        <Button variant="ghost" size="sm">
+                                        <Button variant="ghost" size="sm" onClick={() => router.push('/tasks')}>
                                             Details
                                         </Button>
                                     </div>

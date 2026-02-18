@@ -1,12 +1,11 @@
 import { getSupabase } from './client'
 import type { Task } from './schema'
 
-const supabase = getSupabase()
-
 export async function getUserTasks(
     userId: string,
     statusFilter?: string[]
 ): Promise<Task[]> {
+    const supabase = getSupabase()
     let query = supabase
         .from('tasks')
         .select('*')
@@ -36,6 +35,7 @@ export async function updateTaskStatus(
     status: Task['status'],
     extras?: Partial<Task>
 ): Promise<boolean> {
+    const supabase = getSupabase()
     const updateData: Record<string, unknown> = { status }
 
     if (status === 'completed') {
