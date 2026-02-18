@@ -41,8 +41,9 @@ export async function POST(request: NextRequest) {
         const isResume = message.toLowerCase().includes('resume training')
 
         // ── Save user message to DB ──────────────────────────
-        if (userId && !skipDbWrite) {
-            await supabase.from('chat_messages').insert({
+        // ALWAYS save server-side to ensure consistency
+        if (userId) {
+            const { error: msgError } = await supabase.from('chat_messages').insert({
                 user_id: userId,
                 session_id: sessionId || null,
                 sender: 'user',
@@ -50,6 +51,11 @@ export async function POST(request: NextRequest) {
                 message_type: isSafeword ? 'safeword_detected' : 'normal',
                 persona_used: context?.persona || 'Strict Master',
             })
+
+            if (msgError) {
+                console.error('[Chat API] Failed to save user message:', msgError)
+                // Continue anyway to at least return AI response, but specific error logging is important
+            }
         }
 
         // ── Build context with defaults ──────────────────────
@@ -134,7 +140,7 @@ export async function POST(request: NextRequest) {
         }
 
         // ── Save AI response to DB ───────────────────────────
-        if (userId && !skipDbWrite) {
+        if (userId) {
             await supabase.from('chat_messages').insert({
                 user_id: userId,
                 session_id: sessionId || null,
@@ -144,7 +150,6 @@ export async function POST(request: NextRequest) {
                 persona_used: aiContext.persona,
             })
         }
-
         return NextResponse.json({
             reply,
             careMode,

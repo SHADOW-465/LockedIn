@@ -104,18 +104,9 @@ export default function ChatPage() {
         }
         setMessages(prev => [...prev, userMsg])
 
-        // Save user message to DB (client-side, has auth token)
-        const supabase = getSupabase()
-        const isSafeword = message.toUpperCase().includes('MERCY')
-
-        await supabase.from('chat_messages').insert({
-            user_id: user.id,
-            session_id: session?.id || null,
-            sender: 'user',
-            content: message,
-            message_type: isSafeword ? 'safeword_detected' : 'normal',
-            persona_used: profile?.ai_personality || 'Strict Master',
-        })
+        // ── GOAL: API handles all DB writes ──────────────────
+        // We no longer write to Supabase from the client.
+        // This prevents double-writes and race conditions.
 
         try {
             const res = await fetch('/api/chat', {
@@ -126,7 +117,7 @@ export default function ChatPage() {
                     userId: user.id,
                     sessionId: session?.id,
                     safeword: 'MERCY',
-                    skipDbWrite: true, // Tell API not to write to DB
+                    // skipDbWrite removed - API always writes
                     profileSummary: profileSummary || undefined,
                     // Fallback full context if summary not yet built
                     context: profileSummary ? undefined : {
@@ -155,15 +146,7 @@ export default function ChatPage() {
                 }
                 setMessages(prev => [...prev, aiMsg])
 
-                // Save AI reply to DB (client-side)
-                await supabase.from('chat_messages').insert({
-                    user_id: user.id,
-                    session_id: session?.id || null,
-                    sender: 'ai',
-                    content: data.reply,
-                    message_type: data.messageType || 'normal',
-                    persona_used: profile?.ai_personality || 'Strict Master',
-                })
+                // No client-side cleanup needed; DB is consistent via API
             } else {
                 // Show error message
                 const aiMsg: DisplayMessage = {

@@ -378,7 +378,7 @@ export default function TasksPage() {
             } else if (res.status === 429) {
                 const data = await res.json()
                 setDailyLimitReached(true)
-                setDailyTaskCount(data.tasksToday ?? DAILY_LIMIT)
+                setDailyTaskCount(data.tasksToday ?? 5) // Default to 5 if undefined
             }
         } catch (err) {
             console.error('Task generation failed:', err)
