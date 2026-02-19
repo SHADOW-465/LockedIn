@@ -49,7 +49,7 @@ function TaskQuickActions({
         <div className="flex items-center gap-2">
             <Button
                 size="sm"
-                variant="destructive"
+                variant="danger"
                 onClick={(e) => { e.stopPropagation(); onFail() }}
             >
                 <XCircle size={13} className="mr-1" /> Mark Failed
@@ -157,7 +157,7 @@ function TaskDetailModal({
                 {/* Actions */}
                 <div className="p-6 border-t border-white/5 space-y-3 grid grid-cols-2 gap-3">
                     <Button
-                        variant="destructive"
+                        variant="danger"
                         className="w-full"
                         onClick={() => {
                             onFail()
