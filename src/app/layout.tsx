@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   description: 'AI-driven conditioning and behavioral modification platform.',
   manifest: '/manifest.json',
   icons: {
-    icon: '/LockedIn-logo.ico',
-    shortcut: '/LockedIn-logo.ico',
+    icon: '/LockedIn-logo.png',
+    shortcut: '/LockedIn-logo.png',
     apple: '/LockedIn-logo.svg',
   },
   appleWebApp: {

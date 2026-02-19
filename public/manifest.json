@@ -10,9 +10,9 @@
     "theme_color": "#0F1117",
     "icons": [
         {
-            "src": "/LockedIn-logo.ico",
-            "sizes": "64x64 32x32 24x24 16x16",
-            "type": "image/x-icon"
+            "src": "/LockedIn-logo.png",
+            "sizes": "512x512",
+            "type": "image/png"
         },
         {
             "src": "/LockedIn-logo.svg",
