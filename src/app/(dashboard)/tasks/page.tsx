@@ -228,10 +228,83 @@ export default function TasksPage() {
     const completedTasks = (tasks || []).filter((t) => t.status === 'completed' || t.status === 'failed')
     const pendingVerificationTasks = (tasks || []).filter((t) => t.status === 'verification_pending')
 
-    // ... handleGenerateTask ...
-    // ... handleStartTask ...
-    // ... handleCompleteTask ...
-    // ... handleFailTask ...
+    const handleGenerateTask = async () => {
+        if (!user || !profile) return
+        setGenerating(true)
+        try {
+            const res = await fetch('/api/tasks/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    sessionId: session?.id,
+                    tier: profile.tier || 'Beginner',
+                    fetishes: profile.interests || [],
+                    regimens: profile.preferred_regimens || [],
+                    hardLimits: profile.hard_limits || [],
+                    personality: profile.ai_personality || 'Stern Taskmaster'
+                })
+            })
+            const data = await res.json()
+            if (!res.ok) {
+                if (data.error === 'daily_limit_reached') {
+                    setDailyLimitReached(true)
+                }
+                throw new Error(data.message || 'Failed to generate task')
+            }
+            // Realtime will update tasks
+            setDailyTaskCount(data.tasksToday)
+        } catch (error) {
+            console.error(error)
+            alert(error instanceof Error ? error.message : 'Failed to generate task')
+        } finally {
+            setGenerating(false)
+        }
+    }
+
+    const handleStartTask = async (taskId: string) => {
+        await updateTaskStatus(taskId, 'active')
+    }
+
+    const handleCompleteTask = async (taskId: string) => {
+        if (!user) return
+        try {
+            const res = await fetch('/api/tasks/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    taskId,
+                    userId: user.id,
+                    sessionId: session?.id,
+                    selfReport: true
+                })
+            })
+            if (!res.ok) throw new Error('Failed to complete task')
+        } catch (error) {
+            console.error(error)
+            alert('Failed to complete task')
+        }
+    }
+
+    const handleFailTask = async (taskId: string) => {
+        if (!user) return
+        if (!confirm('Are you sure you want to fail this task? Punishment will be applied.')) return
+        try {
+            const res = await fetch('/api/tasks/fail', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    taskId,
+                    userId: user.id,
+                    sessionId: session?.id
+                })
+            })
+            if (!res.ok) throw new Error('Failed to fail task')
+        } catch (error) {
+            console.error(error)
+            alert('Failed to mark task as failed')
+        }
+    }
 
     // (We skipped the handler definitions for brevity in this chunk replacement, but we need to be careful not to delete them if I use a range. 
     // Actually, I should just replace the filter lines and the return statement start.)
