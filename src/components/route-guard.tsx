@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/lib/contexts/auth-context'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 const PUBLIC_PATHS = ['/', '/login', '/signup']
 
@@ -11,13 +11,28 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     const router = useRouter()
     const pathname = usePathname()
 
+    // When a user IS authenticated but their profile hasn't loaded yet,
+    // we must not redirect or render — we wait for the profile.
+    // This prevents a brief user!==null + profile===null state from causing
+    // wrong onboarding redirects or missing-data renders.
+    const [profileSettled, setProfileSettled] = useState(false)
+
     useEffect(() => {
-        if (loading) return
+        // Profile is "settled" once loading is done.
+        // Once settled stays settled (no flicker on re-renders).
+        if (!loading) {
+            setProfileSettled(true)
+        }
+    }, [loading])
+
+    useEffect(() => {
+        // Don't make any routing decisions until both auth and profile are settled.
+        if (loading || !profileSettled) return
 
         const isPublic = PUBLIC_PATHS.includes(pathname)
 
         if (!user && !isPublic) {
-            // Not logged in, trying to access protected route
+            // Confirmed: no session, trying to access a protected route → /login
             router.replace('/login')
             return
         }
@@ -37,10 +52,10 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
             router.replace('/onboarding')
             return
         }
-    }, [user, profile, loading, pathname, router])
+    }, [user, profile, loading, profileSettled, pathname, router])
 
-    // Show nothing while loading auth state
-    if (loading) {
+    // Show loading spinner while auth state or profile is being resolved
+    if (loading || (user && !profileSettled)) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-bg-primary">
                 <div className="flex flex-col items-center gap-4">

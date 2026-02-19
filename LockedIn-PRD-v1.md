@@ -585,7 +585,6 @@ Mandatory at all tiers, with anti-masturbation safeguards:
 ### 7.4 Sexual Punishments
 
 - Extended lock time additions (per §2.7 matrix)
-- Edge marathons: 10 to 200+ edges
 - Orgasm denial extensions
 - Ruined orgasms
 - CEI cycles

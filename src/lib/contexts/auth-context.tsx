@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { getSupabase, resetSupabase } from '@/lib/supabase/client'
 import type { UserProfile } from '@/lib/supabase/schema'
@@ -23,6 +23,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [profile, setProfile] = useState<UserProfile | null>(null)
     const [loading, setLoading] = useState(true)
+
+    // Track whether the initial session check has completed so that the
+    // onAuthStateChange listener never races against initSession to set loading=false.
+    const sessionInitialized = useRef(false)
 
     const fetchProfile = useCallback(async (userId: string) => {
         const supabase = getSupabase()
@@ -49,18 +53,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const supabase = getSupabase()
 
-        // Get the initial session
+        // ── STEP 1: Restore session on mount ───────────────────────────────────
+        // getSession() reads from localStorage (Supabase SSR stores tokens there).
+        // If the access token is expired but a refresh token exists, Supabase
+        // will automatically exchange it before returning — this is what restores
+        // the session when the PWA is reopened after a long time.
         const initSession = async () => {
             try {
-                // Check if Supabase client is initialized (env vars check)
                 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-                    console.error('Supabase env vars missing. Auth initialization skipped.')
-                    setLoading(false)
+                    console.error('[Auth] Supabase env vars missing. Auth initialization skipped.')
                     return
                 }
 
                 const { data, error } = await supabase.auth.getSession()
-                if (error) throw error
+                if (error) {
+                    console.error('[Auth] getSession error:', error.message)
+                    return
+                }
 
                 const currentUser = data.session?.user ?? null
                 setUser(currentUser)
@@ -68,33 +77,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     await fetchProfile(currentUser.id)
                 }
             } catch (err) {
-                console.error('Auth initialization error:', err)
+                console.error('[Auth] initSession error:', err)
             } finally {
+                // setLoading(false) is called EXACTLY ONCE — here, after the full
+                // init path (getSession + optional fetchProfile) is complete.
+                // The onAuthStateChange listener MUST NOT call setLoading(false)
+                // until after this point to avoid the race condition.
+                sessionInitialized.current = true
                 setLoading(false)
             }
         }
 
         initSession()
 
-        // Safety timeout: stop loading after 3s even if Supabase hangs
+        // Safety timeout: if Supabase hangs for >5s (e.g. network offline on open),
+        // force loading=false so the app isn't stuck on the spinner forever.
+        // 5s is long enough to allow token refresh over a slow connection.
         const timeoutId = setTimeout(() => {
-            setLoading(prev => {
-                if (prev) {
-                    console.warn('Auth initialization timed out. Forcing loading=false.')
-                    return false
-                }
-                return prev
-            })
-        }, 3000)
+            if (!sessionInitialized.current) {
+                console.warn('[Auth] initSession timed out after 5s. Forcing loading=false.')
+                sessionInitialized.current = true
+                setLoading(false)
+            }
+        }, 5000)
 
-        // Listen for auth state changes
+        // ── STEP 2: React to future auth events ────────────────────────────────
+        // CRITICAL: Only update state here — never call setLoading(false) until
+        // sessionInitialized is true, to prevent racing with initSession above.
         const { data: listener } = supabase.auth.onAuthStateChange(
-            async (_event: string, session: Session | null) => {
-                if (_event === 'SIGNED_OUT') {
+            async (event: string, session: Session | null) => {
+                if (event === 'SIGNED_OUT') {
                     resetSupabase()
+                    setUser(null)
+                    setProfile(null)
+                    // setLoading only if we're past init (signed-out after init is fine)
+                    if (sessionInitialized.current) {
+                        setLoading(false)
+                    }
+                    return
                 }
+
+                // INITIAL_SESSION fires synchronously on mount. At this point
+                // initSession() is already running; skip to avoid a double update.
+                if (event === 'INITIAL_SESSION') return
+
+                // TOKEN_REFRESHED / SIGNED_IN: update the user and re-fetch profile.
                 const currentUser = session?.user ?? null
                 setUser(currentUser)
+
                 try {
                     if (currentUser) {
                         await Promise.race([
@@ -104,7 +134,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     } else {
                         setProfile(null)
                     }
-                } finally {
+                } catch (err) {
+                    console.error('[Auth] onAuthStateChange fetchProfile error:', err)
+                }
+
+                // Only update loading after initSession has completed, so we don't
+                // accidentally clear the loading state before the initial profile fetch.
+                if (sessionInitialized.current) {
                     setLoading(false)
                 }
             }
