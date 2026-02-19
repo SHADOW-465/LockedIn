@@ -16,3 +16,8 @@ export function getSupabase() {
     }
     return client
 }
+
+/** Call on SIGNED_OUT to clear stale session from the singleton. */
+export function resetSupabase() {
+    client = null
+}

@@ -25,6 +25,14 @@ export const metadata: Metadata = {
     shortcut: '/LockedIn-logo.ico',
     apple: '/LockedIn-logo.svg',
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "LockedIn",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 }
 
 export const viewport: Viewport = {

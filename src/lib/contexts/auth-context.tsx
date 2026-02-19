@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
-import { getSupabase } from '@/lib/supabase/client'
+import { getSupabase, resetSupabase } from '@/lib/supabase/client'
 import type { UserProfile } from '@/lib/supabase/schema'
 
 interface AuthContextType {
@@ -90,15 +90,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Listen for auth state changes
         const { data: listener } = supabase.auth.onAuthStateChange(
             async (_event: string, session: Session | null) => {
+                if (_event === 'SIGNED_OUT') {
+                    resetSupabase()
+                }
                 const currentUser = session?.user ?? null
                 setUser(currentUser)
-
-                if (currentUser) {
-                    await fetchProfile(currentUser.id)
-                } else {
-                    setProfile(null)
+                try {
+                    if (currentUser) {
+                        await Promise.race([
+                            fetchProfile(currentUser.id),
+                            new Promise<void>(resolve => setTimeout(resolve, 5000)),
+                        ])
+                    } else {
+                        setProfile(null)
+                    }
+                } finally {
+                    setLoading(false)
                 }
-                setLoading(false)
             }
         )
 

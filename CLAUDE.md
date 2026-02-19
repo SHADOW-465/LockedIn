@@ -34,7 +34,7 @@ OPENROUTER_API_KEY=
 
 Next.js 16 App Router with three route groups:
 - `(auth)` — `/login`, `/signup` — no layout wrapper
-- `(dashboard)` — `/home`, `/tasks`, `/chat`, `/journal`, `/regimens`, `/achievements`, `/calendar`, `/settings` — wrapped in `src/app/(dashboard)/layout.tsx` with TopBar + BottomNav
+- `(dashboard)` — `/home`, `/tasks`, `/chat`, `/journal`, `/regimens`, `/achievements`, `/calendar`, `/settings`, `/feedback` — wrapped in `src/app/(dashboard)/layout.tsx` (a thin server component pass-through with no auth logic)
 - `onboarding` — 11-step onboarding flow at `/onboarding`
 
 Root route: `src/app/page.tsx` is a **server component** that checks auth via SSR and redirects authenticated users before any HTML is sent. The landing page UI lives in `src/app/landing-page.tsx` (client component, rendered only for unauthenticated visitors).
@@ -52,9 +52,9 @@ API routes under `src/app/api/`:
 
 Two-layer auth guard:
 1. **`src/middleware.ts`** (Edge Runtime) — primary security boundary. Validates JWT via `supabase.auth.getUser()`, then checks `profiles.onboarding_completed`. Caches onboarding status in a 24h httpOnly cookie (`x-onboarding-done`) to skip DB on repeat requests. Root path (`/`) is handled specially: unauthenticated users pass through to the landing page; authenticated users are redirected to `/home` or `/onboarding` at the Edge.
-2. **`src/components/route-guard.tsx`** (client) — UI-layer fallback using `useAuth()`. Handles the brief window before middleware cookie propagates.
+2. **`src/components/route-guard.tsx`** (client) — **sole client-side guard**, lives in the root layout and wraps all pages. Handles redirects for unauthenticated users, incomplete onboarding, and logged-in users on auth pages. Also renders the global loading spinner while `useAuth()` initializes.
 
-> **Note:** Next.js 16 warns that `src/middleware.ts` is deprecated in favour of `src/proxy.ts`. Rename the file if the warning escalates to an error.
+**The `(dashboard)/layout.tsx` has no auth logic** — it is a plain server component that renders `{children}`. Do not add guards there.
 
 Public paths (never hit auth check): `/login`, `/signup`, `/auth/*`, `/api/*`
 
@@ -71,6 +71,8 @@ Public paths (never hit auth check): `/login`, `/signup`, `/auth/*`, `/api/*`
 
 The admin client (`getServerSupabase()`) bypasses RLS — never expose it to the browser. The SSR page pattern requires `await cookies()` (async in Next.js 15+).
 
+`src/lib/supabase/client.ts` also exports `resetSupabase()` — call on `SIGNED_OUT` to null the singleton so the next `getSupabase()` creates a fresh client. This is already wired in `auth-context.tsx`.
+
 ### Supabase Helper Modules
 
 `src/lib/supabase/` contains typed query helpers — prefer these over raw queries:
@@ -80,6 +82,16 @@ The admin client (`getServerSupabase()`) bypasses RLS — never expose it to the
 - `sessions.ts` — session lifecycle management
 - `regimens.ts` — regimen queries
 - `storage.ts` — Supabase Storage for verification photo uploads
+
+### Auth Context (`src/lib/contexts/auth-context.tsx`)
+
+`AuthProvider` exposes `{ user, profile, loading, refreshProfile }` via `useAuth()`.
+
+Key implementation details to preserve:
+- `initSession` has a **3-second safety timeout** that forces `loading=false` if Supabase hangs on startup.
+- `onAuthStateChange` wraps `fetchProfile` in `Promise.race` against a **5-second timeout** and always resolves `setLoading(false)` in a `finally` block — it cannot hang indefinitely.
+- On `SIGNED_OUT`, calls `resetSupabase()` before clearing state.
+- Call `refreshProfile()` after any mutation to the `profiles` row to keep in-memory state in sync.
 
 ### AI Service (`src/lib/ai/ai-service.ts`)
 
@@ -102,7 +114,7 @@ await trackUsage(supabase, userId, 'llama-3.3-70b-versatile', usage, 'chat')
 ### State Management
 
 - **`useAuth()`** (`src/lib/contexts/auth-context.tsx`) — global user + profile state. `profile` is the full `UserProfile` from `profiles` table. Call `refreshProfile()` after any profile mutation.
-- **Onboarding** — Zustand store at `src/lib/stores/onboarding-store.ts` buffers all 11 steps; single DB upsert on completion.
+- **Onboarding** — Zustand store at `src/lib/stores/onboarding-store.ts` buffers all 11 steps; single DB upsert on completion. After saving, calls `refreshProfile()` then `router.replace('/home')`.
 - **Realtime data** — `useRealtimeQuery<T>()` from `src/lib/hooks/use-realtime.ts` subscribes to Postgres changes and auto-refetches. Use the `refetch()` return value for manual refreshes.
 
 ### Business Logic Engines
@@ -123,7 +135,9 @@ await trackUsage(supabase, userId, 'llama-3.3-70b-versatile', usage, 'chat')
 
 Types are in `src/lib/supabase/schema.ts`. Key tables: `profiles`, `sessions`, `tasks`, `chat_messages`, `regimens`, `achievements`, `notifications`, `daily_task_log`, `api_usage`.
 
-The `api_usage` table requires the migration at `supabase/migrations/20260218_add_api_usage.sql` to exist before token tracking works.
+Migrations in `supabase/migrations/`:
+- `20240523000000_update_profiles.sql` — base profiles schema
+- `20260218_add_api_usage.sql` — must be applied before token tracking works. Note: `api_usage` is not in the TypeScript `TableName` union in `schema.ts` but is queried by `trackUsage`.
 
 ### UI Components
 

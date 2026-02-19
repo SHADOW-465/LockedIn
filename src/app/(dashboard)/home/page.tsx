@@ -25,11 +25,7 @@ export default function DashboardPage() {
     const [startingSession, setStartingSession] = useState(false)
 
     useEffect(() => {
-        if (authLoading) return
-        if (!user) {
-            router.replace('/login')
-            return
-        }
+        if (authLoading || !user) return
 
         async function loadDashboard() {
             try {
@@ -47,7 +43,7 @@ export default function DashboardPage() {
         }
 
         loadDashboard()
-    }, [user, authLoading, router])
+    }, [user, authLoading])
 
     const handleStartSession = async () => {
         if (!user || startingSession) return
