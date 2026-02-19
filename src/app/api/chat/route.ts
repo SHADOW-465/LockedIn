@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
 
         // ── Save AI response to DB ───────────────────────────
         if (userId) {
-            await supabase.from('chat_messages').insert({
+            const { error: aiMsgError } = await supabase.from('chat_messages').insert({
                 user_id: userId,
                 session_id: sessionId || null,
                 sender: 'ai',
@@ -149,6 +149,10 @@ export async function POST(request: NextRequest) {
                 message_type: messageType,
                 persona_used: aiContext.persona,
             })
+
+            if (aiMsgError) {
+                console.error('[Chat API] Failed to save AI message:', aiMsgError)
+            }
         }
         return NextResponse.json({
             reply,

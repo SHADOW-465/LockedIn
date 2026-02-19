@@ -4,7 +4,13 @@ import { useAuth } from '@/lib/contexts/auth-context'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-const PUBLIC_PATHS = ['/', '/login', '/signup']
+// Routes that can be accessed without an authenticated session.
+// NOTE: "/" is intentionally NOT public — the middleware SSR redirect and this
+// guard both redirect authenticated users away from "/", and unauthenticated
+// users away from protected paths. Listing "/" here would cause authenticated
+// users to see the landing page if the SW/network ever delivers the root HTML
+// instead of the server's 302 redirect to /home.
+const PUBLIC_PATHS = ['/login', '/signup']
 
 export function RouteGuard({ children }: { children: React.ReactNode }) {
     const { user, profile, loading } = useAuth()
@@ -31,24 +37,36 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
 
         const isPublic = PUBLIC_PATHS.includes(pathname)
 
-        if (!user && !isPublic) {
-            // Confirmed: no session, trying to access a protected route → /login
-            router.replace('/login')
-            return
-        }
-
-        if (user && (pathname === '/login' || pathname === '/signup')) {
-            // Already logged in, redirect away from auth pages
-            if (!profile?.onboarding_completed) {
-                router.replace('/onboarding')
+        // ── Case 1: Root path ("/") ──────────────────────────────────────────
+        // The manifest start_url is now "/home", but the user may still land on "/"
+        // (e.g. typing the URL, old bookmark, SW cache race). Redirect explicitly
+        // rather than falling through to the unauthenticated / protected logic.
+        if (pathname === '/') {
+            if (user) {
+                // Authenticated → send to dashboard or onboarding
+                router.replace(profile?.onboarding_completed ? '/home' : '/onboarding')
             } else {
-                router.replace('/home')
+                // Unauthenticated → send to login (landing page is handled by
+                // the server component, but this is the client-side safety net)
+                router.replace('/login')
             }
             return
         }
 
-        if (user && profile && !profile.onboarding_completed && pathname !== '/onboarding' && !isPublic) {
-            // Logged in but hasn't finished onboarding
+        // ── Case 2: Unauthenticated on a protected route ────────────────────
+        if (!user && !isPublic) {
+            router.replace('/login')
+            return
+        }
+
+        // ── Case 3: Authenticated on an auth-only page ──────────────────────
+        if (user && isPublic) {
+            router.replace(profile?.onboarding_completed ? '/home' : '/onboarding')
+            return
+        }
+
+        // ── Case 4: Authenticated but hasn't finished onboarding ────────────
+        if (user && profile && !profile.onboarding_completed && pathname !== '/onboarding') {
             router.replace('/onboarding')
             return
         }

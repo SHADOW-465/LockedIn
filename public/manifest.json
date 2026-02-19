@@ -1,8 +1,10 @@
 {
+    "id": "/",
     "name": "LockedIn",
     "short_name": "LockedIn",
     "description": "Your 24/7 AI Master",
-    "start_url": "/",
+    "start_url": "/home",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#0F1117",
     "theme_color": "#0F1117",

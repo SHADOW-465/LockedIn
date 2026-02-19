@@ -171,7 +171,7 @@ export default function ChatPage() {
         }
 
         setIsLoading(false)
-    }, [inputValue, isLoading, user, session, profile])
+    }, [inputValue, isLoading, user, session, profile, profileSummary])
 
     const formatTime = (timestamp: string) =>
         new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })

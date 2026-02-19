@@ -54,10 +54,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const supabase = getSupabase()
 
         // ── STEP 1: Restore session on mount ───────────────────────────────────
-        // getSession() reads from localStorage (Supabase SSR stores tokens there).
-        // If the access token is expired but a refresh token exists, Supabase
-        // will automatically exchange it before returning — this is what restores
-        // the session when the PWA is reopened after a long time.
+        // CRITICAL: Use getUser() — NOT getSession().
+        //
+        // getSession() only reads from localStorage. It returns whatever token is
+        // stored there, even if it is expired or from a deleted account. It does NOT
+        // validate the token with the Supabase Auth server.
+        //
+        // getUser() sends the stored access token to the server for validation. If
+        // the access token is expired but a valid refresh token exists in storage,
+        // Supabase automatically calls the refresh endpoint and returns a fresh
+        // session. This is the correct mechanism for restoring auth when the PWA
+        // is reopened after hours or days.
+        //
+        // Failure modes fixed by this change vs. getSession():
+        //  - Expired access token → getUser() triggers refresh, getSession() returns stale user
+        //  - Deleted account     → getUser() returns null, getSession() returns stale user
+        //  - Cleared localStorage→ both return null, but getUser() fails fast with a
+        //    proper network error rather than a silent null that confuses the RouteGuard
         const initSession = async () => {
             try {
                 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -65,22 +78,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     return
                 }
 
-                const { data, error } = await supabase.auth.getSession()
+                const { data, error } = await supabase.auth.getUser()
+
                 if (error) {
-                    console.error('[Auth] getSession error:', error.message)
+                    // AuthSessionMissingError = no session in storage → user is logged out (normal)
+                    // Other errors = network issue, server error, etc.
+                    if (error.name !== 'AuthSessionMissingError') {
+                        console.error('[Auth] getUser error:', error.name, error.message)
+                    }
+                    // Either way: no authenticated user
+                    setUser(null)
+                    setProfile(null)
                     return
                 }
 
-                const currentUser = data.session?.user ?? null
+                const currentUser = data.user ?? null
                 setUser(currentUser)
                 if (currentUser) {
                     await fetchProfile(currentUser.id)
                 }
             } catch (err) {
-                console.error('[Auth] initSession error:', err)
+                console.error('[Auth] initSession unexpected error:', err)
+                setUser(null)
+                setProfile(null)
             } finally {
                 // setLoading(false) is called EXACTLY ONCE — here, after the full
-                // init path (getSession + optional fetchProfile) is complete.
+                // init path (getUser + optional fetchProfile) is complete.
                 // The onAuthStateChange listener MUST NOT call setLoading(false)
                 // until after this point to avoid the race condition.
                 sessionInitialized.current = true
@@ -90,16 +113,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         initSession()
 
-        // Safety timeout: if Supabase hangs for >5s (e.g. network offline on open),
+        // Safety timeout: if Supabase hangs for >8s (e.g. network offline on open),
         // force loading=false so the app isn't stuck on the spinner forever.
-        // 5s is long enough to allow token refresh over a slow connection.
+        // 8s is generous enough for token refresh over a slow mobile connection.
         const timeoutId = setTimeout(() => {
             if (!sessionInitialized.current) {
-                console.warn('[Auth] initSession timed out after 5s. Forcing loading=false.')
+                console.warn('[Auth] initSession timed out after 8s. Forcing loading=false.')
                 sessionInitialized.current = true
+                setUser(null)
+                setProfile(null)
                 setLoading(false)
             }
-        }, 5000)
+        }, 8000)
 
         // ── STEP 2: React to future auth events ────────────────────────────────
         // CRITICAL: Only update state here — never call setLoading(false) until

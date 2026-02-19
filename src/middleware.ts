@@ -133,6 +133,11 @@ export async function middleware(request: NextRequest) {
             response.cookies.set('x-onboarding-done', '1', {
                 maxAge: 60 * 60 * 24,
                 httpOnly: true,
+                // secure must be true in production so the cookie is sent by the
+                // browser in installed PWA context on HTTPS origins. Without this
+                // flag some browsers silently drop it, causing a wasted DB call
+                // (or wrong redirect if that call fails under poor connectivity).
+                secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
                 path: '/',
             })
