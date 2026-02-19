@@ -186,7 +186,7 @@ export default function DashboardPage() {
                                         </div>
                                         <div className="flex gap-3">
                                             <Button variant="primary" className="flex-1" onClick={() => router.push('/tasks')}>
-                                                Submit Proof
+                                                View Tasks
                                             </Button>
                                             <Button variant="ghost" size="sm" onClick={() => router.push('/tasks')}>
                                                 Details
