@@ -12,13 +12,19 @@ export async function createSession(
     const endTime = new Date(now.getTime() + durationHours * 60 * 60 * 1000).toISOString()
     const startTime = now.toISOString()
 
+    // Check for existing active session first to prevent constraint violations
+    const existingSession = await getActiveSession(userId)
+    if (existingSession) {
+        console.log('Returning existing active session')
+        return existingSession
+    }
+
     const { data, error } = await supabase
         .from('sessions')
         .insert({
             user_id: userId,
             tier,
             ai_personality: aiPersonality,
-            // lock_goal_hours: durationHours, // Removed as per spec, use scheduled_end_time
             start_time: startTime,
             scheduled_end_time: endTime,
             status: 'active'
@@ -27,6 +33,10 @@ export async function createSession(
         .single()
 
     if (error) {
+        // Double check if it was a race condition
+        if (error.code === '23505') { // Unique violation
+            return getActiveSession(userId)
+        }
         console.error('Error creating session:', error)
         return null
     }

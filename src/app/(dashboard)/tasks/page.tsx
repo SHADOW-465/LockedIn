@@ -36,54 +36,32 @@ interface VerificationResult {
 }
 
 // ── Quick Action Buttons (per card) ─────────────────────────
-// Each instance owns its own fileRef so cards don't share refs.
 function TaskQuickActions({
     task,
-    isVerifying,
-    onPhotoUpload,
     onSelfComplete,
+    onFail,
 }: {
     task: Task
-    isVerifying: boolean
-    onPhotoUpload: (file: File) => void
     onSelfComplete: () => void
+    onFail: () => void
 }) {
-    const fileRef = useRef<HTMLInputElement>(null)
-
     return (
-        <>
-            <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) onPhotoUpload(file)
-                    e.target.value = ''
-                }}
-            />
-            {task.verification_type === 'self-report' ? (
-                <Button
-                    size="sm"
-                    variant="primary"
-                    disabled={isVerifying}
-                    onClick={(e) => { e.stopPropagation(); onSelfComplete() }}
-                >
-                    <CheckCircle size={13} className="mr-1" /> Mark Done
-                </Button>
-            ) : (
-                <Button
-                    size="sm"
-                    variant="primary"
-                    disabled={isVerifying}
-                    onClick={(e) => { e.stopPropagation(); fileRef.current?.click() }}
-                >
-                    <Camera size={13} className="mr-1" /> Submit Proof
-                </Button>
-            )}
-        </>
+        <div className="flex items-center gap-2">
+            <Button
+                size="sm"
+                variant="destructive"
+                onClick={(e) => { e.stopPropagation(); onFail() }}
+            >
+                <XCircle size={13} className="mr-1" /> Mark Failed
+            </Button>
+            <Button
+                size="sm"
+                variant="primary"
+                onClick={(e) => { e.stopPropagation(); onSelfComplete() }}
+            >
+                <CheckCircle size={13} className="mr-1" /> Mark Done
+            </Button>
+        </div>
     )
 }
 
@@ -91,18 +69,14 @@ function TaskQuickActions({
 function TaskDetailModal({
     task,
     onClose,
-    onSubmitProof,
     onSelfComplete,
-    isVerifying,
+    onFail,
 }: {
     task: Task
     onClose: () => void
-    onSubmitProof: (file: File) => void
     onSelfComplete: () => void
-    isVerifying: boolean
+    onFail: () => void
 }) {
-    const fileRef = useRef<HTMLInputElement>(null)
-
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
             <div className="bg-bg-secondary border border-white/10 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
@@ -134,7 +108,7 @@ function TaskDetailModal({
                     </div>
 
                     {/* Meta Info */}
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
                             <div className="text-lg font-bold font-mono">
                                 {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
@@ -147,23 +121,7 @@ function TaskDetailModal({
                             </div>
                             <div className="text-xs text-text-tertiary">Time Limit</div>
                         </div>
-                        <div className="text-center">
-                            <div className="text-lg font-bold font-mono flex items-center justify-center gap-1">
-                                <Camera size={14} /> {task.verification_type}
-                            </div>
-                            <div className="text-xs text-text-tertiary">Proof Type</div>
-                        </div>
                     </div>
-
-                    {/* Verification Requirement */}
-                    {task.verification_requirement && (
-                        <div className="bg-purple-primary/5 border border-purple-primary/20 rounded-xl p-4">
-                            <h3 className="text-xs font-semibold text-purple-primary uppercase tracking-wide mb-1">
-                                Verification Requirement
-                            </h3>
-                            <p className="text-sm text-text-secondary">{task.verification_requirement}</p>
-                        </div>
-                    )}
 
                     {/* Punishment Warning */}
                     {(task.punishment_hours || task.punishment_additional) && (
@@ -197,126 +155,28 @@ function TaskDetailModal({
                 </div>
 
                 {/* Actions */}
-                <div className="p-6 border-t border-white/5 space-y-3">
-                    <input
-                        ref={fileRef}
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        className="hidden"
-                        onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) onSubmitProof(file)
+                <div className="p-6 border-t border-white/5 space-y-3 grid grid-cols-2 gap-3">
+                    <Button
+                        variant="destructive"
+                        className="w-full"
+                        onClick={() => {
+                            onFail()
+                            onClose()
                         }}
-                    />
-
-                    {task.verification_type === 'self-report' ? (
-                        <Button
-                            variant="primary"
-                            className="w-full"
-                            disabled={isVerifying}
-                            onClick={() => {
-                                onSelfComplete()
-                                onClose()
-                            }}
-                        >
-                            <CheckCircle size={16} className="mr-2" /> Mark Complete (Honor System)
-                        </Button>
-                    ) : (
-                        <Button
-                            variant="primary"
-                            className="w-full"
-                            disabled={isVerifying}
-                            onClick={() => fileRef.current?.click()}
-                        >
-                            {isVerifying ? (
-                                <><Loader2 size={16} className="mr-2 animate-spin" /> Verifying...</>
-                            ) : (
-                                <><Upload size={16} className="mr-2" /> Upload Proof Photo</>
-                            )}
-                        </Button>
-                    )}
+                    >
+                        <XCircle size={16} className="mr-2" /> Mark Failed
+                    </Button>
+                    <Button
+                        variant="primary"
+                        className="w-full"
+                        onClick={() => {
+                            onSelfComplete()
+                            onClose()
+                        }}
+                    >
+                        <CheckCircle size={16} className="mr-2" /> Mark Complete
+                    </Button>
                 </div>
-            </div>
-        </div>
-    )
-}
-
-// ── Verification Result Overlay ──────────────────────────────
-function VerificationOverlay({
-    result,
-    onClose,
-}: {
-    result: VerificationResult
-    onClose: () => void
-}) {
-    return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
-            <div className={`max-w-sm w-full rounded-2xl border-2 p-8 text-center space-y-6 ${result.verified
-                ? 'bg-bg-secondary border-teal-primary/40'
-                : 'bg-bg-secondary border-red-primary/40'
-                }`}>
-                {/* Icon */}
-                <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center ${result.verified
-                    ? 'bg-teal-primary/10 text-teal-primary'
-                    : 'bg-red-primary/10 text-red-primary'
-                    }`}>
-                    {result.verified ? (
-                        <CheckCircle size={48} className="animate-bounce" />
-                    ) : (
-                        <XCircle size={48} className="animate-bounce" />
-                    )}
-                </div>
-
-                {/* Title */}
-                <h2 className={`text-2xl font-bold ${result.verified ? 'text-teal-primary' : 'text-red-primary'}`}>
-                    {result.verified ? 'VERIFIED ✓' : 'FAILED ✗'}
-                </h2>
-
-                {/* Reason */}
-                <p className="text-sm text-text-secondary leading-relaxed line-clamp-4">
-                    {result.reason}
-                </p>
-
-                {/* Reward / Punishment */}
-                {result.verified ? (
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-center gap-2 text-teal-primary">
-                            <Zap size={18} />
-                            <span className="text-lg font-bold">+{result.xpAwarded} XP</span>
-                        </div>
-                        {result.achievements.length > 0 && (
-                            <div className="space-y-1">
-                                {result.achievements.map((a) => (
-                                    <div key={a} className="flex items-center justify-center gap-2 text-tier-slave">
-                                        <Trophy size={14} />
-                                        <span className="text-sm font-medium">{a}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="space-y-2">
-                        {result.punishmentHours > 0 && (
-                            <div className="flex items-center justify-center gap-2 text-red-primary">
-                                <AlertTriangle size={18} />
-                                <span className="text-lg font-bold">+{result.punishmentHours}h Lock Time</span>
-                            </div>
-                        )}
-                        {result.punishmentReason && (
-                            <p className="text-xs text-red-primary/70">{result.punishmentReason}</p>
-                        )}
-                    </div>
-                )}
-
-                <Button
-                    variant={result.verified ? 'primary' : 'ghost'}
-                    className="w-full"
-                    onClick={onClose}
-                >
-                    {result.verified ? 'Continue' : 'Acknowledge'}
-                </Button>
             </div>
         </div>
     )
@@ -327,12 +187,9 @@ export default function TasksPage() {
     const { user, profile } = useAuth()
     const [session, setSession] = useState<Session | null>(null)
     const [generating, setGenerating] = useState(false)
-    const [verifying, setVerifying] = useState<string | null>(null)
     const [detailTask, setDetailTask] = useState<Task | null>(null)
-    const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null)
     const [dailyTaskCount, setDailyTaskCount] = useState(0)
     const [dailyLimitReached, setDailyLimitReached] = useState(false)
-    const [pendingMessage, setPendingMessage] = useState<string | null>(null)
     const DAILY_LIMIT = 5
 
     const { data: tasks, refetch } = useRealtimeQuery<Task>(
@@ -345,8 +202,26 @@ export default function TasksPage() {
     useEffect(() => {
         if (user) {
             getActiveSession(user.id).then(setSession)
+
+            // Check for overdue tasks
+            fetch('/api/tasks/expire', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.id })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.processed > 0) {
+                        // Alert the user about punishment
+                        // Using simple confirm/alert for now, could be upgraded to Toast
+                        const taskNames = data.failedTasks.join(', ')
+                        alert(`PUNISHMENT ALERT!\n\nThe following tasks expired and have been marked as failed:\n${taskNames}\n\nWillpower Lost: ${data.punishment}`)
+                        refetch()
+                    }
+                })
+                .catch(err => console.error('Failed to check expired tasks:', err))
         }
-    }, [user])
+    }, [user, refetch])
 
     const activeTasks = tasks.filter((t) => t.status === 'pending' || t.status === 'active' || t.status === 'verification_pending')
     const completedTasks = tasks.filter((t) => t.status === 'completed' || t.status === 'failed')
@@ -393,8 +268,8 @@ export default function TasksPage() {
         refetch()
     }
 
-    // ── Self-report complete via API (updates willpower) ─────
-    const handleSelfComplete = useCallback(async (taskId: string) => {
+    // ── Complete Task (Simplified) ───────────────────────────
+    const handleCompleteTask = useCallback(async (taskId: string) => {
         const task = tasks.find(t => t.id === taskId)
         if (!task || !user) return
 
@@ -407,71 +282,37 @@ export default function TasksPage() {
                     userId: user.id,
                     sessionId: session?.id,
                     difficulty: task.difficulty,
-                    selfReport: true,
+                    selfReport: true, // Always true for now
                 }),
             })
             refetch()
         } catch (err) {
-            console.error('Self-complete failed:', err)
+            console.error('Task completion failed:', err)
         }
     }, [tasks, user, session, refetch])
 
-    // ── Photo Upload & Verification ──────────────────────────
-    const handlePhotoUpload = async (taskId: string, file: File) => {
-        setVerifying(taskId)
-        setDetailTask(null) // Close detail modal
+    // ── Fail Task (New) ──────────────────────────────────────
+    const handleFailTask = useCallback(async (taskId: string) => {
+        const task = tasks.find(t => t.id === taskId)
+        if (!task || !user) return
+
+        if (!confirm('Are you sure you want to accept punishment for failing this task?')) return
 
         try {
-            setPendingMessage('Uploading proof to secure vault...')
-            const supabase = getSupabase()
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${user?.id}/${taskId}/${Date.now()}.${fileExt}`
-
-            // 1. Upload to Supabase Storage
-            const { error: uploadError } = await supabase.storage
-                .from('verification-proofs')
-                .upload(fileName, file)
-
-            if (uploadError) {
-                throw new Error('Upload failed: ' + uploadError.message)
-            }
-
-            // 2. Call Verify API with storage path
-            setPendingMessage('Submitting your pathetic attempt for review...')
-
-            const task = tasks.find((t) => t.id === taskId)
-
-            const res = await fetch('/api/verify', {
+            await fetch('/api/tasks/fail', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     taskId,
-                    storagePath: fileName,
-                    userId: user?.id,
+                    userId: user.id,
                     sessionId: session?.id,
-                    taskType: task?.verification_type || 'general',
-                    taskDescription: task?.description || '',
-                    tier: profile?.tier || 'Newbie',
                 }),
             })
-
-            if (res.ok) {
-                const data = await res.json()
-                setPendingMessage(null)
-                setVerificationResult(data)
-                refetch()
-            } else {
-                setPendingMessage(null)
-            }
-            setVerifying(null)
-
-        } catch (error) {
-            console.error('Verification failed:', error)
-            setPendingMessage(null)
-            setVerifying(null)
-            alert('Failed to upload proof. Ensure you have permission.')
+            refetch()
+        } catch (err) {
+            console.error('Task failure failed:', err)
         }
-    }
+    }, [tasks, user, session, refetch])
 
     return (
         <>
@@ -516,14 +357,6 @@ export default function TasksPage() {
                             <p className="text-xs text-text-tertiary mt-1">
                                 Come back tomorrow, slave. Your Master decides when you&apos;ve had enough.
                             </p>
-                        </div>
-                    )}
-
-                    {/* Pending message */}
-                    {pendingMessage && (
-                        <div className="mb-4 bg-purple-primary/5 border border-purple-primary/20 rounded-xl p-3 text-center text-sm text-purple-primary font-mono">
-                            <Loader2 size={14} className="inline mr-2 animate-spin" />
-                            {pendingMessage}
                         </div>
                     )}
 
@@ -572,10 +405,6 @@ export default function TasksPage() {
                                         <Clock size={14} />
                                         {task.duration_minutes}min
                                     </span>
-                                    <span className="flex items-center gap-1">
-                                        <Camera size={14} />
-                                        {task.verification_type}
-                                    </span>
                                     <span className="font-mono">
                                         {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
                                     </span>
@@ -601,18 +430,11 @@ export default function TasksPage() {
                                         >
                                             Start Task
                                         </Button>
-                                    ) : task.status === 'verification_pending' ? (
-                                        <Badge variant="locked">
-                                            ⏳ UNDER REVIEW
-                                        </Badge>
-                                    ) : verifying === task.id ? (
-                                        <Badge variant="info">⏳ Verifying...</Badge>
                                     ) : (
                                         <TaskQuickActions
                                             task={task}
-                                            isVerifying={verifying === task.id}
-                                            onPhotoUpload={(file) => handlePhotoUpload(task.id, file)}
-                                            onSelfComplete={() => handleSelfComplete(task.id)}
+                                            onSelfComplete={() => handleCompleteTask(task.id)}
+                                            onFail={() => handleFailTask(task.id)}
                                         />
                                     )}
                                 </div>
@@ -647,8 +469,7 @@ export default function TasksPage() {
                                             <div>
                                                 <p className="text-sm font-medium">{task.title}</p>
                                                 <p className="text-xs text-text-tertiary">
-                                                    {task.status === 'completed' ? '✅ Passed' : '❌ Failed'}
-                                                    {task.ai_verification_reason && ` — ${task.ai_verification_reason.slice(0, 80)}`}
+                                                    {task.status === 'completed' ? '✅ Completed' : '❌ Failed'}
                                                 </p>
                                             </div>
                                             <Badge variant={task.status === 'completed' ? 'info' : 'locked'}>
@@ -668,20 +489,8 @@ export default function TasksPage() {
                 <TaskDetailModal
                     task={detailTask}
                     onClose={() => setDetailTask(null)}
-                    onSubmitProof={(file) => handlePhotoUpload(detailTask.id, file)}
-                    onSelfComplete={() => handleSelfComplete(detailTask.id)}
-                    isVerifying={verifying === detailTask.id}
-                />
-            )}
-
-            {/* Verification Result Overlay */}
-            {verificationResult && (
-                <VerificationOverlay
-                    result={verificationResult}
-                    onClose={() => {
-                        setVerificationResult(null)
-                        refetch()
-                    }}
+                    onSelfComplete={() => handleCompleteTask(detailTask.id)}
+                    onFail={() => handleFailTask(detailTask.id)}
                 />
             )}
 

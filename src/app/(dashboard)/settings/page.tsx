@@ -81,8 +81,17 @@ export default function SettingsPage() {
     }, [user])
 
     const handleSignOut = async () => {
-        await signOut()
-        router.push('/login')
+        try {
+            setProcessing(true)
+            await signOut()
+            // Force a router refresh to clear any server component state
+            router.refresh()
+            // Use replace to prevent back navigation
+            router.replace('/login')
+        } catch (error) {
+            console.error('Sign out failed:', error)
+            setProcessing(false) // Only stop processing on error
+        }
     }
 
     const handleTierSwitch = async (newTier: string) => {
@@ -346,13 +355,15 @@ export default function SettingsPage() {
                     <Card
                         variant="flat"
                         size="sm"
-                        className="!min-h-0 py-4 cursor-pointer hover:bg-bg-tertiary transition-colors"
-                        onClick={handleSignOut}
+                        className={`!min-h-0 py-4 transition-colors ${processing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-bg-tertiary'}`}
+                        onClick={!processing ? handleSignOut : undefined}
                     >
                         <div className="flex items-center gap-3">
                             <LogOut size={20} className="text-text-tertiary" />
                             <div>
-                                <span className="font-medium text-sm">Sign Out</span>
+                                <span className="font-medium text-sm">
+                                    {processing ? 'Signing Out...' : 'Sign Out'}
+                                </span>
                                 <p className="text-xs text-text-tertiary">Log out of your account</p>
                             </div>
                         </div>

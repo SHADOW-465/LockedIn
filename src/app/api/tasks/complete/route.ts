@@ -34,16 +34,18 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
         }
 
-        // Mark task completed
+        if (task.status === 'completed') {
+            return NextResponse.json({ message: 'Task already completed' }, { status: 200 })
+        }
+
+        // Mark task completed (Direct Completion)
         await supabase
             .from('tasks')
             .update({
                 status: 'completed',
                 completed_at: new Date().toISOString(),
-                ai_verification_passed: true,
-                ai_verification_reason: selfReport
-                    ? 'Self-reported completion'
-                    : 'Manually marked complete',
+                // Clear verification pending state if it existed
+                verification_submitted_at: null,
             })
             .eq('id', taskId)
 
@@ -100,8 +102,9 @@ export async function POST(request: NextRequest) {
                 { onConflict: 'user_id,task_date' },
             )
 
-        // Check achievements
-        const achievements = await checkAchievements(supabase, userId)
+        // Check achievements (Temporarily disabled for stability)
+        // const achievements = await checkAchievements(supabase, userId)
+        const achievements: string[] = []
 
         return NextResponse.json({
             success: true,
