@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BottomNav } from '@/components/layout/bottom-nav'
-import { Flame, TrendingUp, AlertTriangle, Calendar, Target, Zap, Play, Trophy, Dumbbell } from 'lucide-react'
+import { Flame, TrendingUp, AlertTriangle, Calendar, Target, Zap, Play, Trophy, Dumbbell, Loader2 } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -322,6 +322,7 @@ export default function DashboardPage() {
                             </div>
                         </BentoItem>
                     </BentoGrid>
+                )}
             </div>
 
             <BottomNav />

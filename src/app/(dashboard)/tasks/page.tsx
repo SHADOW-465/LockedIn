@@ -414,19 +414,23 @@ export default function TasksPage() {
                             </div>
                         )}
                     </div>
-                            </div>
+                    </div>
+                )}
+        </div >
 
-            {/* Task Detail Modal */}
-            {detailTask && (
-                <TaskDetailModal
-                    task={detailTask}
-                    onClose={() => setDetailTask(null)}
-                    onSelfComplete={() => handleCompleteTask(detailTask.id)}
-                    onFail={() => handleFailTask(detailTask.id)}
-                />
-            )}
+            {/* Task Detail Modal */ }
+    {
+        detailTask && (
+            <TaskDetailModal
+                task={detailTask}
+                onClose={() => setDetailTask(null)}
+                onSelfComplete={() => handleCompleteTask(detailTask.id)}
+                onFail={() => handleFailTask(detailTask.id)}
+            />
+        )
+    }
 
-            <BottomNav />
-        </>
-    )
+    <BottomNav />
+            </>
+            )
 }
