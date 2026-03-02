@@ -81,12 +81,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const { data, error } = await supabase.auth.getUser()
 
                 if (error) {
-                    // AuthSessionMissingError = no session in storage → user is logged out (normal)
-                    // Other errors = network issue, server error, etc.
-                    if (error.name !== 'AuthSessionMissingError') {
-                        console.error('[Auth] getUser error:', error.name, error.message)
+                    // AuthSessionMissingError = no session in storage → user is genuinely logged out.
+                    // AuthApiError with status 4xx = invalid/expired token → also logged out.
+                    // Everything else (network error, fetch failure, 5xx) = transient issue.
+                    // For transient errors we still clear the user to be safe, but we log
+                    // them distinctly so they're easy to spot when debugging connectivity issues.
+                    const isSessionMissing = error.name === 'AuthSessionMissingError'
+                    const isAuthError = error.name === 'AuthApiError'
+                    if (!isSessionMissing) {
+                        if (isAuthError) {
+                            console.error('[Auth] getUser auth error (invalid/expired session):', error.message)
+                        } else {
+                            console.warn('[Auth] getUser failed (possible network/connectivity issue):', error.name, error.message)
+                        }
                     }
-                    // Either way: no authenticated user
                     setUser(null)
                     setProfile(null)
                     return

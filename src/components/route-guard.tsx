@@ -38,18 +38,15 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
         const isPublic = PUBLIC_PATHS.includes(pathname)
 
         // ── Case 1: Root path ("/") ──────────────────────────────────────────
-        // The manifest start_url is now "/home", but the user may still land on "/"
-        // (e.g. typing the URL, old bookmark, SW cache race). Redirect explicitly
-        // rather than falling through to the unauthenticated / protected logic.
+        // The server component at page.tsx renders the landing page for
+        // unauthenticated visitors and redirects authenticated users to /home.
+        // The client guard only needs to redirect authenticated users away —
+        // unauthenticated users should stay on "/" to see the landing page.
         if (pathname === '/') {
             if (user) {
-                // Authenticated → send to dashboard or onboarding
                 router.replace(profile?.onboarding_completed ? '/home' : '/onboarding')
-            } else {
-                // Unauthenticated → send to login (landing page is handled by
-                // the server component, but this is the client-side safety net)
-                router.replace('/login')
             }
+            // Unauthenticated users stay on "/" — the landing page is their home.
             return
         }
 
