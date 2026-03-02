@@ -26,7 +26,7 @@ function redirectWithCookies(url: URL, response: NextResponse): NextResponse {
     return redirect
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl
 
     // Always pass through public paths and API routes
@@ -76,7 +76,7 @@ export async function middleware(request: NextRequest) {
         return redirectWithCookies(loginUrl, response)
     }
 
-    // Authenticated on root → redirect to dashboard immediately at the Edge
+    // Authenticated on root → redirect to dashboard
     if (isRootPath) {
         const cachedOnboardingForRoot = request.cookies.get('x-onboarding-done')?.value === '1'
         if (cachedOnboardingForRoot) {
@@ -120,7 +120,7 @@ export async function middleware(request: NextRequest) {
             .eq('id', user.id)
             .single()
 
-        // If the query failed (RLS block, DB error, network issue in Edge Runtime),
+        // If the query failed (RLS block, DB error, network issue),
         // skip onboarding enforcement and let the client-side RouteGuard handle it.
         if (profileError) {
             return response
@@ -133,10 +133,6 @@ export async function middleware(request: NextRequest) {
             response.cookies.set('x-onboarding-done', '1', {
                 maxAge: 60 * 60 * 24,
                 httpOnly: true,
-                // secure must be true in production so the cookie is sent by the
-                // browser in installed PWA context on HTTPS origins. Without this
-                // flag some browsers silently drop it, causing a wasted DB call
-                // (or wrong redirect if that call fails under poor connectivity).
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
                 path: '/',
