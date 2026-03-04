@@ -17,6 +17,86 @@ import { getActiveTasks } from '@/lib/supabase/tasks'
 import type { Session, Task } from '@/lib/supabase/schema'
 import { SessionStartFlow } from '@/components/features/session-start-flow'
 import type { SessionConfig } from '@/components/features/session-start-flow'
+import { getSupabase } from '@/lib/supabase/client'
+import { archiveSession } from '@/lib/local-storage/session-archive'
+
+// ── Session Summary Overlay ──────────────────────────────────
+function SessionSummaryOverlay({
+    summary,
+    isArchiving,
+    onContinue,
+}: {
+    summary: Record<string, unknown>
+    isArchiving: boolean
+    onContinue: () => void
+}) {
+    const grade = typeof summary.performance_grade === 'string' ? summary.performance_grade : ''
+    const compliance = typeof summary.compliance_rate === 'number' ? summary.compliance_rate : null
+    const narrative = typeof summary.narrative === 'string' ? summary.narrative : null
+    const highlights = Array.isArray(summary.highlights) ? (summary.highlights as string[]) : []
+    const improvements = Array.isArray(summary.improvement_areas) ? (summary.improvement_areas as string[]) : []
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 overflow-y-auto">
+            <div className="bg-gray-900 border border-gray-700 rounded-xl max-w-lg w-full p-6 space-y-4 my-4">
+                <div className="text-center">
+                    <div className="text-4xl mb-2">🏁</div>
+                    <h2 className="text-2xl font-bold">Session Complete</h2>
+                    <p className="text-gray-400 text-sm mt-1">
+                        {grade && <>Grade: <span className="text-white font-bold text-lg">{grade}</span>{' · '}</>}
+                        {compliance !== null && <>Compliance: <span className="text-white">{compliance}%</span></>}
+                    </p>
+                </div>
+
+                {narrative && (
+                    <div className="bg-gray-800 rounded-lg p-4 text-sm text-gray-200 italic leading-relaxed">
+                        {narrative}
+                    </div>
+                )}
+
+                {highlights.length > 0 && (
+                    <div>
+                        <p className="text-sm font-semibold text-green-400 mb-2">Highlights</p>
+                        <ul className="space-y-1">
+                            {highlights.map((h, i) => (
+                                <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
+                                    <span className="text-green-400 mt-0.5">✓</span> {h}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {improvements.length > 0 && (
+                    <div>
+                        <p className="text-sm font-semibold text-yellow-400 mb-2">Areas to Improve</p>
+                        <ul className="space-y-1">
+                            {improvements.map((a, i) => (
+                                <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
+                                    <span className="text-yellow-400 mt-0.5">→</span> {a}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {isArchiving && (
+                    <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+                        <Loader2 size={14} className="animate-spin" />
+                        Archiving session data...
+                    </div>
+                )}
+
+                <button
+                    onClick={onContinue}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold transition-colors"
+                >
+                    Continue
+                </button>
+            </div>
+        </div>
+    )
+}
 
 export default function DashboardPage() {
     const { user, profile, loading: authLoading } = useAuth()
@@ -25,6 +105,8 @@ export default function DashboardPage() {
     const [currentTask, setCurrentTask] = useState<Task | null>(null)
     const [loading, setLoading] = useState(true)
     const [showSessionFlow, setShowSessionFlow] = useState(false)
+    const [isArchiving, setIsArchiving] = useState(false)
+    const [sessionSummary, setSessionSummary] = useState<Record<string, unknown> | null>(null)
 
     useEffect(() => {
         if (authLoading || !user) return
@@ -46,6 +128,104 @@ export default function DashboardPage() {
 
         loadDashboard()
     }, [user, authLoading])
+
+    useEffect(() => {
+        if (!session || session.status !== 'completing' || isArchiving) return
+
+        const runArchival = async () => {
+            setIsArchiving(true)
+            try {
+                // 1. Fetch all session data from Supabase
+                const supabase = getSupabase()
+                const [chatRes, tasksRes, eventsRes, proofsRes] = await Promise.all([
+                    supabase.from('chat_messages').select('*').eq('session_id', session.id),
+                    supabase.from('tasks').select('*').eq('session_id', session.id),
+                    supabase.from('session_events').select('*').eq('session_id', session.id),
+                    supabase.from('proof_documents').select('*').eq('session_id', session.id),
+                ])
+
+                // 2. Request persistent storage
+                if (navigator.storage?.persist) {
+                    await navigator.storage.persist()
+                }
+
+                // 3. Archive to IndexedDB
+                await archiveSession(session.id, session.user_id, {
+                    session_data: session as unknown as Record<string, unknown>,
+                    chat_messages: chatRes.data ?? [],
+                    tasks: tasksRes.data ?? [],
+                    session_events: eventsRes.data ?? [],
+                    proof_documents: proofsRes.data ?? [],
+                    summary: null,
+                })
+
+                // 4. Generate AI summary
+                const completedTasks = (tasksRes.data ?? []).filter((t: { status: string }) => t.status === 'completed')
+                const failedTasks = (tasksRes.data ?? []).filter((t: { status: string }) => t.status === 'failed' || t.status === 'overdue')
+                const masterCompleted = (tasksRes.data ?? []).filter((t: { task_type: string; status: string }) => t.task_type === 'master' && t.status === 'completed')
+                const masterFailed = (tasksRes.data ?? []).filter((t: { task_type: string; status: string }) => t.task_type === 'master' && (t.status === 'failed' || t.status === 'overdue'))
+                const punishments = (tasksRes.data ?? []).filter((t: { task_type: string }) => t.task_type === 'punishment')
+
+                const startWillpower = profile?.willpower_score ?? 50
+                const plannedMs = session.total_duration_minutes * 60 * 1000
+                const actualMs = session.actual_end_time
+                    ? new Date(session.actual_end_time).getTime() - new Date(session.start_time).getTime()
+                    : plannedMs
+
+                const summaryRes = await fetch('/api/sessions/summary', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionId: session.id,
+                        userId: session.user_id,
+                        sessionData: {
+                            actual_minutes: Math.floor(actualMs / 60000),
+                            planned_minutes: session.total_duration_minutes,
+                            tasks_completed: completedTasks.length,
+                            tasks_assigned: (tasksRes.data ?? []).length,
+                            tasks_failed: failedTasks.length,
+                            master_completed: masterCompleted.length,
+                            master_failed: masterFailed.length,
+                            punishment_count: punishments.length,
+                            compliance_rate: (tasksRes.data ?? []).length > 0
+                                ? Math.round((completedTasks.length / (tasksRes.data ?? []).length) * 100)
+                                : 100,
+                            willpower_start: startWillpower,
+                            willpower_end: profile?.willpower_score ?? startWillpower,
+                            streak_change: 1,
+                        },
+                    }),
+                })
+
+                if (summaryRes.ok) {
+                    const { summary: aiSummary } = await summaryRes.json()
+                    setSessionSummary(aiSummary)
+                }
+
+                // 5. Purge Supabase heavy data
+                await fetch('/api/sessions/purge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: session.id, userId: session.user_id }),
+                })
+
+                // 6. Mark session completed
+                await fetch('/api/sessions/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: session.id, userId: session.user_id }),
+                })
+
+            } catch (err) {
+                console.error('[Home] Archival error:', err)
+            } finally {
+                setIsArchiving(false)
+            }
+        }
+
+        runArchival()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [session?.status])
 
     const handleStartSession = async (config: SessionConfig) => {
         if (!user) return
@@ -332,6 +512,15 @@ export default function DashboardPage() {
                     </BentoGrid>
                 )}
             </div>
+
+            {/* Session Summary Overlay */}
+            {sessionSummary && (
+                <SessionSummaryOverlay
+                    summary={sessionSummary}
+                    isArchiving={isArchiving}
+                    onContinue={() => { setSessionSummary(null); router.refresh() }}
+                />
+            )}
 
             <BottomNav />
         </>

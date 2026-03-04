@@ -50,7 +50,7 @@ export interface UserProfile {
 export interface Session {
     id: string
     user_id: string
-    status: 'active' | 'completed' | 'emergency' | 'failed'
+    status: 'active' | 'completing' | 'completed' | 'emergency' | 'failed'
     tier: string
     ai_personality: string | null
     lock_goal_hours: number | null

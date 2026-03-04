@@ -25,6 +25,26 @@ function formatTimeLeft(deadline: Date) {
     return `${hours}h ${minutes}m`
 }
 
+function DeadlineTimer({ deadline }: { deadline: Date }) {
+    const [remaining, setRemaining] = useState('')
+
+    useEffect(() => {
+        const tick = () => {
+            const diff = deadline.getTime() - Date.now()
+            if (diff <= 0) { setRemaining('OVERDUE'); return }
+            const h = Math.floor(diff / 3600000)
+            const m = Math.floor((diff % 3600000) / 60000)
+            const s = Math.floor((diff % 60000) / 1000)
+            setRemaining(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`)
+        }
+        tick()
+        const id = setInterval(tick, 1000)
+        return () => clearInterval(id)
+    }, [deadline])
+
+    return <span className={remaining === 'OVERDUE' ? 'text-red-500 font-bold' : ''}>{remaining}</span>
+}
+
 interface VerificationResult {
     verified: boolean
     reason: string
@@ -224,8 +244,12 @@ export default function TasksPage() {
         }
     }, [user, refetch])
 
-    const activeTasks = (tasks || []).filter((t) => t.status === 'pending' || t.status === 'active' || t.status === 'verification_pending')
-    const completedTasks = (tasks || []).filter((t) => t.status === 'completed' || t.status === 'failed')
+    const masterTasks = (tasks || []).filter(t => t.task_type === 'master')
+    const punishmentTasks = (tasks || []).filter(t => t.task_type === 'punishment')
+    const dailyTasksAll = (tasks || []).filter(t => t.task_type === 'daily' || !t.task_type)
+
+    const activeTasks = dailyTasksAll.filter((t) => t.status === 'pending' || t.status === 'active' || t.status === 'verification_pending')
+    const completedTasks = dailyTasksAll.filter((t) => t.status === 'completed' || t.status === 'failed')
     const pendingVerificationTasks = (tasks || []).filter((t) => t.status === 'verification_pending')
 
     const handleGenerateTask = async () => {
@@ -365,8 +389,106 @@ export default function TasksPage() {
                             </div>
                         )}
 
-                        {/* Active Tasks */}
+                        {/* Master Tasks */}
+                        {masterTasks.length > 0 && (
+                            <div className="space-y-3 mb-6">
+                                <h2 className="text-lg font-bold text-red-400 flex items-center gap-2">
+                                    ⚔ Master Tasks
+                                    <span className="text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">
+                                        {masterTasks.filter(t => t.status === 'pending' || t.status === 'active').length} active
+                                    </span>
+                                </h2>
+                                {masterTasks.map(task => (
+                                    <div key={task.id} className="border border-red-500/50 bg-red-500/5 rounded-lg p-4 cursor-pointer hover:bg-red-500/10 transition-colors" onClick={() => setDetailTask(task)}>
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <p className="font-semibold text-white">{task.title}</p>
+                                                <p className="text-sm text-gray-400 mt-1 line-clamp-2">{task.description}</p>
+                                                {(task.punishment_type || task.punishment_hours) && (
+                                                    <div className="mt-2 flex items-center gap-1 text-xs text-red-400">
+                                                        <AlertTriangle size={12} />
+                                                        {task.punishment_hours ? `+${task.punishment_hours}h lock extension on failure` : 'Punishment on failure'}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="text-right text-xs ml-3 shrink-0">
+                                                {task.deadline && (
+                                                    <DeadlineTimer deadline={new Date(task.deadline)} />
+                                                )}
+                                            </div>
+                                        </div>
+                                        {(task.status === 'active') && (
+                                            <div className="mt-3 flex gap-2" onClick={e => e.stopPropagation()}>
+                                                <Button size="sm" variant="danger" onClick={() => handleFailTask(task.id)}>
+                                                    <XCircle size={13} className="mr-1" /> Mark Failed
+                                                </Button>
+                                                <Button size="sm" variant="primary" onClick={() => handleCompleteTask(task.id)}>
+                                                    <CheckCircle size={13} className="mr-1" /> Mark Done
+                                                </Button>
+                                            </div>
+                                        )}
+                                        {task.status === 'pending' && (
+                                            <div className="mt-3" onClick={e => e.stopPropagation()}>
+                                                <Button size="sm" variant="ghost" onClick={() => handleStartTask(task.id)}>
+                                                    Start Task
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Punishment Tasks */}
+                        {punishmentTasks.length > 0 && (
+                            <div className="space-y-3 mb-6">
+                                <h2 className="text-lg font-bold text-orange-400 flex items-center gap-2">
+                                    ⚠ Punishment Tasks
+                                    <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full">
+                                        {punishmentTasks.filter(t => t.status === 'pending' || t.status === 'active').length} active
+                                    </span>
+                                </h2>
+                                {punishmentTasks.map(task => (
+                                    <div key={task.id} className="border border-orange-500/50 bg-orange-500/5 rounded-lg p-4 cursor-pointer hover:bg-orange-500/10 transition-colors" onClick={() => setDetailTask(task)}>
+                                        <p className="font-semibold text-white">{task.title}</p>
+                                        <p className="text-sm text-gray-400 mt-1 line-clamp-2">{task.description}</p>
+                                        {task.deadline && (
+                                            <div className="mt-2 text-xs text-orange-300">
+                                                <DeadlineTimer deadline={new Date(task.deadline)} />
+                                            </div>
+                                        )}
+                                        {task.status === 'active' && (
+                                            <div className="mt-3 flex gap-2" onClick={e => e.stopPropagation()}>
+                                                <Button size="sm" variant="danger" onClick={() => handleFailTask(task.id)}>
+                                                    <XCircle size={13} className="mr-1" /> Mark Failed
+                                                </Button>
+                                                <Button size="sm" variant="primary" onClick={() => handleCompleteTask(task.id)}>
+                                                    <CheckCircle size={13} className="mr-1" /> Mark Done
+                                                </Button>
+                                            </div>
+                                        )}
+                                        {task.status === 'pending' && (
+                                            <div className="mt-3" onClick={e => e.stopPropagation()}>
+                                                <Button size="sm" variant="ghost" onClick={() => handleStartTask(task.id)}>
+                                                    Start Task
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Daily Tasks */}
                         <div className="space-y-4">
+                            {(masterTasks.length > 0 || punishmentTasks.length > 0) && (
+                                <h2 className="text-lg font-bold text-text-secondary flex items-center gap-2">
+                                    Daily Tasks
+                                    <span className="text-xs bg-white/10 text-text-tertiary px-2 py-0.5 rounded-full">
+                                        {activeTasks.length} active
+                                    </span>
+                                </h2>
+                            )}
                             {activeTasks.length === 0 && (
                                 <Card variant="flat" className="text-center py-12">
                                     <p className="text-text-tertiary mb-4">No active tasks. Generate one to begin.</p>
