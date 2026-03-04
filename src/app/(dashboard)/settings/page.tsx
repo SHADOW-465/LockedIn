@@ -145,6 +145,9 @@ export default function SettingsPage() {
         }
         setProcessing(false)
         setShowEmergencyConfirm(false)
+        setHasActiveSession(false)
+        await refreshProfile()
+        router.refresh()
     }
 
     return (
@@ -369,16 +372,7 @@ export default function SettingsPage() {
                         </div>
                     </Card>
 
-                    {/* Settings Lock Overlay */}
-                    {hasActiveSession && (
-                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm rounded-lg p-8 text-center">
-                            <LockIcon size={40} className="text-red-primary mb-4" />
-                            <h3 className="text-xl font-bold mb-2">Settings Locked</h3>
-                            <p className="text-gray-400 text-sm max-w-xs">
-                                Settings are locked during an active session. Your Master controls this space.
-                            </p>
-                        </div>
-                    )}
+
                 </div>
             </div>
 
