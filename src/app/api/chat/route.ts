@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
                 sender: 'user',
                 content: message,
                 message_type: isSafeword ? 'safeword_detected' : 'normal',
-                persona_used: context?.persona || 'Strict Master',
             })
 
             if (msgError) {
@@ -73,7 +72,7 @@ export async function POST(request: NextRequest) {
         // ── Compact system prompt when summary is available ──
         // Reduces per-message system prompt tokens by ~60%
         const compactSystem = profileSummary
-            ? `You are the AI Master of the LockedIn chastity app. NEVER break character.\n\nUser profile: ${profileSummary}\n\nBe dominant, strict, and psychologically engaging. Never violate listed limits.`
+            ? `You are the AI Master of the LockedIn chastity app. NEVER break character.\n\nUser profile: ${profileSummary}\n\nBe dominant, strict, and psychologically engaging. Never violate listed limits.\n\nWhen you decide to assign the user a task, append this machine-readable block on its own line at the very end of your response — nothing after it:\n[TASK:{"title":"...","description":"...","deadline_minutes":120,"difficulty":3,"punishment_hours":4}]\nOnly include this when explicitly assigning a task. Never include it in normal conversation.`
             : undefined
 
         let reply: string
@@ -139,15 +138,68 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // ── Parse and strip master task if present ───────────
+        const TASK_REGEX = /\[TASK:(\{[\s\S]*?\})\]\s*$/
+        const taskMatch = reply.match(TASK_REGEX)
+        const cleanReply = reply.replace(TASK_REGEX, '').trim()
+        let masterTask: { id: string; title: string; deadline: string; difficulty: number } | null = null
+
+        if (taskMatch) {
+            try {
+                const taskData = JSON.parse(taskMatch[1]) as {
+                    title: string
+                    description: string
+                    deadline_minutes: number
+                    difficulty: number
+                    punishment_hours: number
+                }
+
+                const deadline = new Date(Date.now() + (taskData.deadline_minutes || 120) * 60 * 1000)
+
+                const { data: newTask } = await supabase.from('tasks').insert({
+                    user_id: userId,
+                    session_id: sessionId,
+                    task_type: 'master',
+                    source: 'ai_chat',
+                    title: taskData.title,
+                    description: taskData.description || '',
+                    difficulty: taskData.difficulty || 3,
+                    deadline: deadline.toISOString(),
+                    punishment_hours: taskData.punishment_hours || 2,
+                    status: 'pending',
+                    genres: [],
+                    verification_type: 'photo',
+                    verification_requirement: 'Provide photographic proof of completion',
+                }).select().single()
+
+                if (newTask) {
+                    masterTask = {
+                        id: newTask.id,
+                        title: newTask.title,
+                        deadline: newTask.deadline,
+                        difficulty: newTask.difficulty,
+                    }
+
+                    await supabase.from('session_events').insert({
+                        session_id: sessionId,
+                        user_id: userId,
+                        event_type: 'task_assigned',
+                        payload: { task_id: newTask.id, task_type: 'master', title: newTask.title },
+                    })
+                }
+            } catch (parseError) {
+                console.error('[Chat] Failed to parse master task:', parseError)
+            }
+        }
+
         // ── Save AI response to DB ───────────────────────────
         if (userId) {
             const { error: aiMsgError } = await supabase.from('chat_messages').insert({
                 user_id: userId,
                 session_id: sessionId || null,
                 sender: 'ai',
-                content: reply,
+                content: cleanReply,
                 message_type: messageType,
-                persona_used: aiContext.persona,
             })
 
             if (aiMsgError) {
@@ -155,7 +207,8 @@ export async function POST(request: NextRequest) {
             }
         }
         return NextResponse.json({
-            reply,
+            reply: cleanReply,
+            masterTask,
             careMode,
             messageType,
             timestamp: new Date().toISOString(),
