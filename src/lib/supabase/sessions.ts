@@ -116,18 +116,3 @@ export async function addLockTime(sessionId: string, hours: number, reason: stri
     return data
 }
 
-export async function subtractLockTime(sessionId: string, hours: number, reason: string) {
-    const supabase = getSupabase()
-    const { data, error } = await supabase.rpc('subtract_lock_time', {
-        p_session_id: sessionId,
-        p_hours: hours,
-        p_reason: reason,
-    })
-
-    if (error) {
-        console.error('Error subtracting lock time:', error)
-        return null
-    }
-
-    return data
-}

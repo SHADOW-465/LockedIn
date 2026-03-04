@@ -224,7 +224,7 @@ export default function DashboardPage() {
         }
 
         runArchival()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [session?.status])
 
     const handleStartSession = async (config: SessionConfig) => {
@@ -284,6 +284,23 @@ export default function DashboardPage() {
                                     tier={session.tier}
                                     status={session.status}
                                     punishmentActive={(session.total_punishments ?? 0) > 0}
+                                    onAddTime={async (minutes: number) => {
+                                        if (!user || !session) return
+                                        const res = await fetch('/api/sessions/extend', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                sessionId: session.id,
+                                                userId: user.id,
+                                                deltaMinutes: minutes,
+                                                reason: 'User voluntarily added time',
+                                            }),
+                                        })
+                                        if (res.ok) {
+                                            const { session: updatedSession } = await res.json()
+                                            setSession(updatedSession)
+                                        }
+                                    }}
                                 />
                             ) : (
                                 <Card variant="hero" className="text-center py-12">

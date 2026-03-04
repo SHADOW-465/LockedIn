@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
                     delta_minutes: number
                     reason?: string
                 }
-                const deltaMinutes = Math.max(1, Math.round(extendData.delta_minutes || 60))
+                const deltaMinutes = Math.max(1, Math.abs(Math.round(extendData.delta_minutes || 60)))
 
                 const { data: sess } = await supabase
                     .from('sessions')

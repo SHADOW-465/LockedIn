@@ -9,6 +9,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'sessionId, userId, deltaMinutes required' }, { status: 400 })
     }
 
+    if (deltaMinutes <= 0) {
+      return NextResponse.json({ error: 'Timer can only be increased, not decreased' }, { status: 400 })
+    }
+
     const supabase = getServerSupabase()
 
     const { data: session, error: fetchError } = await supabase
