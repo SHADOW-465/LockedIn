@@ -104,10 +104,13 @@ Response format: VALID JSON only. No markdown fences, no explanation.
         const now = new Date()
         const deadlineMs = (typeof taskData.duration_minutes === 'number' ? taskData.duration_minutes : 30) * 60 * 1000
 
-        // Resolve proof_type — default to 'image' for non-self-report tasks
-        const proofType = ['image', 'video', 'audio', 'text'].includes(taskData.proof_type as string)
-            ? taskData.proof_type as string
-            : (finalVerType === 'self-report' || finalVerType === 'none' ? null : 'image')
+        // Resolve proof_type — daily tasks default to null (self-report, Mark Done)
+        // Only assign proof_type if AI explicitly returned one AND verification is not self-report
+        const aiProofType = taskData.proof_type as string | undefined
+        const proofType = (finalVerType !== 'self-report' && finalVerType !== 'none')
+            && ['image', 'video', 'audio', 'text'].includes(aiProofType || '')
+            ? aiProofType as string
+            : null
 
         const { data: savedTask, error } = await supabase
             .from('tasks')

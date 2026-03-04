@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Camera, RotateCcw, Loader2 } from 'lucide-react'
+import { Camera, RotateCcw, Loader2, Check } from 'lucide-react'
 
 interface ImageProofCaptureProps {
     onCapture: (base64: string) => void
@@ -14,7 +14,7 @@ export function ImageProofCapture({ onCapture, disabled }: ImageProofCaptureProp
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const streamRef = useRef<MediaStream | null>(null)
     const [cameraReady, setCameraReady] = useState(false)
-    const [captured, setCaptured] = useState<string | null>(null)
+    const [captured, setCaptured] = useState<{ preview: string; base64: string } | null>(null)
     const [error, setError] = useState<string | null>(null)
 
     const startCamera = useCallback(async () => {
@@ -71,13 +71,20 @@ export function ImageProofCapture({ onCapture, disabled }: ImageProofCaptureProp
         ctx.font = '14px monospace'
         ctx.fillText(`LockedIn — ${timestamp}`, 10, canvas.height - 12)
 
-        const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1]
-        setCaptured(canvas.toDataURL('image/jpeg', 0.8))
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+        const base64 = dataUrl.split(',')[1]
 
-        // Stop camera
+        // Stop camera after capture
         streamRef.current?.getTracks().forEach(t => t.stop())
         setCameraReady(false)
-        onCapture(base64)
+
+        // Store preview + base64 separately — DON'T call onCapture yet
+        setCaptured({ preview: dataUrl, base64 })
+    }
+
+    const confirmPhoto = () => {
+        if (!captured) return
+        onCapture(captured.base64)
     }
 
     const retake = () => {
@@ -101,11 +108,16 @@ export function ImageProofCapture({ onCapture, disabled }: ImageProofCaptureProp
         return (
             <div className="space-y-3">
                 <div className="rounded-[var(--radius-lg)] overflow-hidden border border-white/10">
-                    <img src={captured} alt="Captured proof" className="w-full" />
+                    <img src={captured.preview} alt="Captured proof" className="w-full" />
                 </div>
-                <Button variant="ghost" size="sm" onClick={retake} disabled={disabled} className="w-full">
-                    <RotateCcw size={14} className="mr-1" /> Retake Photo
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                    <Button variant="ghost" size="sm" onClick={retake} disabled={disabled}>
+                        <RotateCcw size={14} className="mr-1" /> Retake
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={confirmPhoto} disabled={disabled}>
+                        <Check size={14} className="mr-1" /> Use This Photo
+                    </Button>
+                </div>
             </div>
         )
     }

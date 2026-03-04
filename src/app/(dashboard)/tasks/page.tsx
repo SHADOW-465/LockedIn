@@ -87,8 +87,8 @@ function TaskQuickActions({
     onFail: () => void
     onSubmitProof?: () => void
 }) {
-    // Master tasks get Submit Proof instead of Mark Done
-    const isMaster = task.task_type === 'master'
+    // Tasks with proof_type get Submit Proof instead of Mark Done
+    const requiresProof = !!task.proof_type
     const isProofPending = ['proof_submitted', 'awaiting_proof'].includes(task.status)
 
     return (
@@ -100,7 +100,7 @@ function TaskQuickActions({
             >
                 <XCircle size={13} className="mr-1" /> Mark Failed
             </Button>
-            {isMaster ? (
+            {requiresProof ? (
                 <Button
                     size="sm"
                     variant="primary"
@@ -218,7 +218,7 @@ function TaskDetailModal({
                 </div>
 
                 {/* Proof Requirement Info for master tasks */}
-                {task.task_type === 'master' && task.proof_type && (
+                {task.proof_type && (
                     <div className="px-6">
                         <div className="bg-purple-primary/5 border border-purple-primary/20 rounded-xl p-4">
                             <p className="text-xs font-bold text-purple-primary uppercase mb-1">
@@ -243,7 +243,7 @@ function TaskDetailModal({
                     >
                         <XCircle size={16} className="mr-2" /> Mark Failed
                     </Button>
-                    {task.task_type === 'master' ? (
+                    {task.proof_type ? (
                         <Button
                             variant="primary"
                             className="w-full"
