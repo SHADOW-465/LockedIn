@@ -1,9 +1,8 @@
 import { getSupabase } from './client'
 import type { Regimen } from './schema'
 
-const supabase = getSupabase()
-
 export async function getUserRegimens(userId: string): Promise<Regimen[]> {
+    const supabase = getSupabase()
     const { data, error } = await supabase
         .from('regimens')
         .select('*')
@@ -24,6 +23,7 @@ export async function createRegimen(
     description: string,
     totalDays: number
 ): Promise<Regimen | null> {
+    const supabase = getSupabase()
     const { data, error } = await supabase
         .from('regimens')
         .insert({
@@ -48,6 +48,7 @@ export async function createRegimen(
 }
 
 export async function advanceRegimenDay(regimenId: string, currentDay: number, totalDays: number): Promise<boolean> {
+    const supabase = getSupabase()
     const isComplete = currentDay >= totalDays
 
     const { error } = await supabase
@@ -68,6 +69,7 @@ export async function advanceRegimenDay(regimenId: string, currentDay: number, t
 }
 
 export async function pauseRegimen(regimenId: string): Promise<boolean> {
+    const supabase = getSupabase()
     const { error } = await supabase
         .from('regimens')
         .update({ status: 'paused' })
@@ -77,6 +79,7 @@ export async function pauseRegimen(regimenId: string): Promise<boolean> {
 }
 
 export async function abandonRegimen(regimenId: string): Promise<boolean> {
+    const supabase = getSupabase()
     const { error } = await supabase
         .from('regimens')
         .update({ status: 'abandoned' })

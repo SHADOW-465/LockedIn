@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyImage } from '@/lib/ai/ai-service'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { getServerSupabase } from '@/lib/supabase/server'
 import { applyPunishment } from '@/lib/engines/punishment'
 import { awardCompletion, checkAchievements, awardStreak } from '@/lib/engines/rewards'
 
@@ -47,27 +46,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'taskId and userId are required' }, { status: 400 })
         }
 
-        const cookieStore = await cookies()
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() {
-                        return cookieStore.getAll()
-                    },
-                    setAll(cookiesToSet) {
-                        try {
-                            cookiesToSet.forEach(({ name, value, options }) =>
-                                cookieStore.set(name, value, options)
-                            )
-                        } catch {
-                            // Ignored
-                        }
-                    },
-                },
-            }
-        )
+        const supabase = getServerSupabase()
 
         let base64Image = body.imageBase64
 
@@ -197,7 +176,7 @@ export async function POST(request: NextRequest) {
             }
         } else {
             // ── FAIL: Apply punishment ───────────────────────
-            const userTier = tier || task?.tier || 'Newbie'
+            const userTier = tier || 'Newbie'
 
             if (actualSessionId) {
                 punishmentResult = await applyPunishment(

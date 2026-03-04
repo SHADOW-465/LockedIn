@@ -121,7 +121,7 @@ export async function awardCompletion(
             user_id: userId,
             type: 'reward',
             title: `✨ XP Earned`,
-            message: `+${xp} XP for completing a difficulty ${difficulty} task!`,
+            body: `+${xp} XP for completing a difficulty ${difficulty} task!`,
             read: false,
         })
 
@@ -171,14 +171,14 @@ export async function awardStreak(
                     user_id: userId,
                     name: def.name,
                     description: def.description,
-                    unlocked_at: new Date().toISOString(),
+                    awarded_at: new Date().toISOString(),
                 })
 
                 await supabase.from('notifications').insert({
                     user_id: userId,
-                    type: 'achievement',
+                    type: 'reward',
                     title: `🏆 Achievement Unlocked!`,
-                    message: `${def.name}: ${def.description}`,
+                    body: `${def.name}: ${def.description}`,
                     read: false,
                 })
 
@@ -239,14 +239,14 @@ export async function checkAchievements(
                     user_id: userId,
                     name: def.name,
                     description: def.description,
-                    unlocked_at: new Date().toISOString(),
+                    awarded_at: new Date().toISOString(),
                 })
 
                 await supabase.from('notifications').insert({
                     user_id: userId,
-                    type: 'achievement',
+                    type: 'reward',
                     title: `🏆 Achievement Unlocked!`,
-                    message: `${def.name}: ${def.description}`,
+                    body: `${def.name}: ${def.description}`,
                     read: false,
                 })
 

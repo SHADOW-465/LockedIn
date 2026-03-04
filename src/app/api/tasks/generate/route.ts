@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateSimpleText, trackUsage } from '@/lib/ai/ai-service'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { getServerSupabase } from '@/lib/supabase/server'
 
 const DAILY_TASK_LIMIT = 5
 
@@ -22,30 +21,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'userId is required' }, { status: 400 })
         }
 
-        const cookieStore = await cookies()
-
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() {
-                        return cookieStore.getAll()
-                    },
-                    setAll(cookiesToSet) {
-                        try {
-                            cookiesToSet.forEach(({ name, value, options }) =>
-                                cookieStore.set(name, value, options)
-                            )
-                        } catch {
-                            // The `setAll` method was called from a Server Component.
-                            // This can be ignored if you have middleware refreshing
-                            // user sessions.
-                        }
-                    },
-                },
-            }
-        )
+        const supabase = getServerSupabase()
         const today = new Date().toISOString().split('T')[0]
 
         // ── Enforce daily 5-task limit ────────────────────────

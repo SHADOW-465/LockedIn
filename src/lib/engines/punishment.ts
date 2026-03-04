@@ -83,17 +83,17 @@ export async function applyPunishment(
             // Fallback: direct update if RPC doesn't exist
             const { data: session } = await supabase
                 .from('sessions')
-                .select('target_end_time')
+                .select('scheduled_end_time')
                 .eq('id', sessionId)
                 .single()
 
-            if (session?.target_end_time) {
-                const currentEnd = new Date(session.target_end_time)
+            if (session?.scheduled_end_time) {
+                const currentEnd = new Date(session.scheduled_end_time)
                 currentEnd.setHours(currentEnd.getHours() + hours)
 
                 await supabase
                     .from('sessions')
-                    .update({ target_end_time: currentEnd.toISOString() })
+                    .update({ scheduled_end_time: currentEnd.toISOString() })
                     .eq('id', sessionId)
             }
         }
@@ -102,9 +102,10 @@ export async function applyPunishment(
         await supabase.from('calendar_adjustments').insert({
             user_id: userId,
             session_id: sessionId,
-            adjustment_type: 'punishment',
             hours_added: hours,
+            hours_subtracted: 0,
             reason: punishmentReason,
+            ai_controlled: true,
         })
 
         // Create notification
@@ -112,7 +113,7 @@ export async function applyPunishment(
             user_id: userId,
             type: 'punishment',
             title: `⛓️ Punishment Applied`,
-            message: `+${hours}h added to your lock time — ${punishmentReason}`,
+            body: `+${hours}h added to your lock time — ${punishmentReason}`,
             read: false,
         })
 

@@ -5,7 +5,9 @@ import { createServerClient } from '@supabase/ssr'
 export async function GET(request: NextRequest) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
-    const next = searchParams.get('next') ?? '/home'
+    const rawNext = searchParams.get('next') ?? '/home'
+    // Validate next is a relative path to prevent open redirect
+    const next = rawNext.startsWith('/') ? rawNext : '/home'
 
     if (code) {
         // IMPORTANT: Must use createServerClient (not createBrowserClient) here.
