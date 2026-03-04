@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         // ── Compact system prompt when summary is available ──
         // Reduces per-message system prompt tokens by ~60%
         const compactSystem = profileSummary
-            ? `You are the AI Master of the LockedIn chastity app. NEVER break character.\n\nUser profile: ${profileSummary}\n\nBe dominant, strict, and psychologically engaging. Never violate listed limits.\n\nYou have two machine-readable actions available. When used, each block must appear on its own line at the very end of your response — nothing after it.\n\n1. Assign a task:\n[TASK:{"title":"...","description":"...","deadline_minutes":120,"difficulty":3,"punishment_hours":4}]\nOnly include when explicitly assigning a task.\n\n2. Extend the session timer (use when granting an extension, adding punishment time, or the user earns/requests more time):\n[EXTEND:{"delta_minutes":60,"reason":"..."}]\nOnly include when you are actually extending their lock time. Never fabricate an extension.\n\nNever include either block in normal conversation. Use at most one block per response.`
+            ? `You are the AI Master of the LockedIn chastity app. NEVER break character.\n\nUser profile: ${profileSummary}\n\nBe dominant, strict, and psychologically engaging. Never violate listed limits.\n\nYou have two machine-readable actions available. When used, each block must appear on its own line at the very end of your response — nothing after it.\n\n1. Assign a task:\n[TASK:{"title":"...","description":"...","deadline_minutes":120,"difficulty":3,"punishment_hours":4,"proof_type":"image","verification_requirement":"..."}]\nOnly include when explicitly assigning a task. proof_type must be one of: "image", "video", "audio", "text". The user MUST submit proof on the Tasks page — remind them to navigate there.\n\n2. Extend the session timer (use when granting an extension, adding punishment time, or the user earns/requests more time):\n[EXTEND:{"delta_minutes":1440,"reason":"..."}]\ndelta_minutes is in minutes. For reference: 1 hour = 60, 1 day = 1440, 1 week = 10080. You can extend by days or even weeks when appropriate (e.g. punishment, user request).\nOnly include when you are actually extending their lock time. Never fabricate an extension.\n\nNever include either block in normal conversation. Use at most one block per response.`
             : undefined
 
         let reply: string
@@ -205,9 +205,16 @@ export async function POST(request: NextRequest) {
                     deadline_minutes: number
                     difficulty: number
                     punishment_hours: number
+                    proof_type?: string
+                    verification_requirement?: string
                 }
 
                 const deadline = new Date(Date.now() + (taskData.deadline_minutes || 120) * 60 * 1000)
+
+                // Resolve proof_type — default to 'image' for master tasks
+                const proofType = ['image', 'video', 'audio', 'text'].includes(taskData.proof_type || '')
+                    ? taskData.proof_type
+                    : 'image'
 
                 const { data: newTask } = await supabase.from('tasks').insert({
                     user_id: userId,
@@ -219,10 +226,11 @@ export async function POST(request: NextRequest) {
                     difficulty: taskData.difficulty || 3,
                     deadline: deadline.toISOString(),
                     punishment_hours: taskData.punishment_hours || 2,
+                    proof_type: proofType,
+                    verification_type: proofType === 'image' ? 'photo' : proofType,
+                    verification_requirement: taskData.verification_requirement || 'Provide proof of completion',
                     status: 'pending',
                     genres: [],
-                    verification_type: 'photo',
-                    verification_requirement: 'Provide photographic proof of completion',
                 }).select().single()
 
                 if (newTask) {

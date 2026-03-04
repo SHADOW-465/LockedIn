@@ -298,7 +298,11 @@ export default function DashboardPage() {
                                         })
                                         if (res.ok) {
                                             const { session: updatedSession } = await res.json()
-                                            setSession(updatedSession)
+                                            // Merge API response into existing session to preserve all fields
+                                            setSession(prev => prev ? { ...prev, ...updatedSession } : updatedSession)
+                                            // Re-fetch from DB as safety net for full consistency
+                                            const fresh = await getActiveSession(user.id)
+                                            if (fresh) setSession(fresh)
                                         }
                                     }}
                                 />

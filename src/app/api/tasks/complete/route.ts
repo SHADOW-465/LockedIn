@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
         // Verify task belongs to userId (server-side ownership check)
         const { data: task, error: taskError } = await supabase
             .from('tasks')
-            .select('id, user_id, difficulty, status, session_id')
+            .select('id, user_id, difficulty, status, session_id, task_type')
             .eq('id', taskId)
             .single()
 
@@ -32,6 +32,14 @@ export async function POST(request: NextRequest) {
 
         if (task.user_id !== userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+
+        // Master tasks require proof submission — cannot be directly completed
+        if (task.task_type === 'master') {
+            return NextResponse.json(
+                { error: 'Master tasks require proof submission. Navigate to Tasks page to submit proof.' },
+                { status: 400 }
+            )
         }
 
         if (task.status === 'completed') {

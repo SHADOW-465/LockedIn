@@ -19,6 +19,7 @@ export function TimerCard({ endTime, startTime, totalDurationMinutes, tier, stat
     const [timeRemaining, setTimeRemaining] = useState('')
     const [progress, setProgress] = useState(0)
     const [showAddTime, setShowAddTime] = useState(false)
+    const [addDays, setAddDays] = useState(0)
     const [addHours, setAddHours] = useState(1)
     const [addMinutes, setAddMinutes] = useState(0)
     const [isAdding, setIsAdding] = useState(false)
@@ -65,12 +66,13 @@ export function TimerCard({ endTime, startTime, totalDurationMinutes, tier, stat
         }` as 'tier1'
 
     const handleAddTime = async () => {
-        const totalMinutesToAdd = addHours * 60 + addMinutes
+        const totalMinutesToAdd = addDays * 24 * 60 + addHours * 60 + addMinutes
         if (totalMinutesToAdd <= 0 || !onAddTime) return
         setIsAdding(true)
         try {
             await onAddTime(totalMinutesToAdd)
             setShowAddTime(false)
+            setAddDays(0)
             setAddHours(1)
             setAddMinutes(0)
         } finally {
@@ -175,15 +177,26 @@ export function TimerCard({ endTime, startTime, totalDurationMinutes, tier, stat
                                         <X size={16} />
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-text-tertiary">Days</label>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            max={30}
+                                            value={addDays}
+                                            onChange={e => setAddDays(Math.max(0, parseInt(e.target.value) || 0))}
+                                            className="w-full bg-bg-tertiary border border-white/10 rounded-[var(--radius-md)] p-2 text-center text-white text-sm focus:border-red-primary focus:outline-none transition-colors"
+                                        />
+                                    </div>
                                     <div className="space-y-1">
                                         <label className="text-xs text-text-tertiary">Hours</label>
                                         <input
                                             type="number"
                                             min={0}
-                                            max={168}
+                                            max={23}
                                             value={addHours}
-                                            onChange={e => setAddHours(Math.max(0, parseInt(e.target.value) || 0))}
+                                            onChange={e => setAddHours(Math.max(0, Math.min(23, parseInt(e.target.value) || 0)))}
                                             className="w-full bg-bg-tertiary border border-white/10 rounded-[var(--radius-md)] p-2 text-center text-white text-sm focus:border-red-primary focus:outline-none transition-colors"
                                         />
                                     </div>
@@ -199,14 +212,14 @@ export function TimerCard({ endTime, startTime, totalDurationMinutes, tier, stat
                                         />
                                     </div>
                                 </div>
-                                {(addHours * 60 + addMinutes) > 0 && (
+                                {(addDays * 24 * 60 + addHours * 60 + addMinutes) > 0 && (
                                     <p className="text-xs text-center text-text-tertiary">
-                                        Adding {addHours > 0 ? `${addHours}h ` : ''}{addMinutes > 0 ? `${addMinutes}m` : ''}
+                                        Adding {addDays > 0 ? `${addDays}d ` : ''}{addHours > 0 ? `${addHours}h ` : ''}{addMinutes > 0 ? `${addMinutes}m` : ''}
                                     </p>
                                 )}
                                 <button
                                     onClick={handleAddTime}
-                                    disabled={isAdding || (addHours * 60 + addMinutes) <= 0}
+                                    disabled={isAdding || (addDays * 24 * 60 + addHours * 60 + addMinutes) <= 0}
                                     className="w-full py-2.5 rounded-[var(--radius-pill)] bg-red-primary text-white font-semibold text-sm uppercase tracking-wide hover:bg-red-hover transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
                                 >
                                     {isAdding ? (

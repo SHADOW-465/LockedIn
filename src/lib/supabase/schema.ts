@@ -89,12 +89,13 @@ export interface Task {
 
     verification_type: 'photo' | 'video' | 'audio' | 'text' | 'self-report' | 'none'
     verification_requirement: string
+    proof_type: 'text' | 'image' | 'video' | 'audio' | null
 
     punishment_type: string | null
     punishment_hours: number | null
     punishment_additional: string | null
 
-    status: 'pending' | 'active' | 'completed' | 'failed' | 'skipped' | 'verification_pending'
+    status: 'pending' | 'active' | 'completed' | 'failed' | 'skipped' | 'verification_pending' | 'awaiting_proof' | 'proof_submitted' | 'verified' | 'overdue'
 
     assigned_at: string
     deadline: string | null

@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
             .from('tasks')
             .select('id, title, difficulty, status')
             .eq('user_id', userId)
-            .in('status', ['pending', 'active'])
+            .in('status', ['pending', 'active', 'awaiting_proof'])
             .lt('deadline', now)
 
         if (fetchError) {

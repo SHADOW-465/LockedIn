@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TopBar } from '@/components/layout/top-bar'
 import { BottomNav } from '@/components/layout/bottom-nav'
+import { ProofCaptureModal } from '@/components/features/proof/proof-capture-modal'
 import {
     Clock, Camera, AlertTriangle, Sparkles, Upload, Loader2,
     CheckCircle, XCircle, X, Trophy, Zap
@@ -16,6 +17,25 @@ import { getSupabase } from '@/lib/supabase/client'
 import { getActiveSession } from '@/lib/supabase/sessions'
 import { updateTaskStatus } from '@/lib/supabase/tasks'
 import type { Task, Session } from '@/lib/supabase/schema'
+
+const PROOF_TYPE_ICONS: Record<string, string> = {
+    image: '📸',
+    video: '🎥',
+    audio: '🎤',
+    text: '📝',
+}
+
+function ProofStatusBadge({ task }: { task: Task }) {
+    const statusMap: Record<string, { label: string; variant: 'info' | 'locked' | 'genre' }> = {
+        awaiting_proof: { label: '⏳ AWAITING PROOF', variant: 'genre' },
+        proof_submitted: { label: '🔄 VERIFYING...', variant: 'info' },
+        verified: { label: '✅ VERIFIED', variant: 'info' },
+        overdue: { label: '⏰ OVERDUE', variant: 'locked' },
+    }
+    const config = statusMap[task.status]
+    if (!config) return null
+    return <Badge variant={config.variant}>{config.label}</Badge>
+}
 
 function formatTimeLeft(deadline: Date) {
     const diff = deadline.getTime() - Date.now()
@@ -60,11 +80,17 @@ function TaskQuickActions({
     task,
     onSelfComplete,
     onFail,
+    onSubmitProof,
 }: {
     task: Task
     onSelfComplete: () => void
     onFail: () => void
+    onSubmitProof?: () => void
 }) {
+    // Master tasks get Submit Proof instead of Mark Done
+    const isMaster = task.task_type === 'master'
+    const isProofPending = ['proof_submitted', 'awaiting_proof'].includes(task.status)
+
     return (
         <div className="flex items-center gap-2">
             <Button
@@ -74,13 +100,28 @@ function TaskQuickActions({
             >
                 <XCircle size={13} className="mr-1" /> Mark Failed
             </Button>
-            <Button
-                size="sm"
-                variant="primary"
-                onClick={(e) => { e.stopPropagation(); onSelfComplete() }}
-            >
-                <CheckCircle size={13} className="mr-1" /> Mark Done
-            </Button>
+            {isMaster ? (
+                <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={(e) => { e.stopPropagation(); onSubmitProof?.() }}
+                    disabled={task.status === 'proof_submitted'}
+                >
+                    {task.status === 'proof_submitted' ? (
+                        <><Loader2 size={13} className="mr-1 animate-spin" /> Verifying...</>
+                    ) : (
+                        <><Upload size={13} className="mr-1" /> Submit Proof</>
+                    )}
+                </Button>
+            ) : (
+                <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={(e) => { e.stopPropagation(); onSelfComplete() }}
+                >
+                    <CheckCircle size={13} className="mr-1" /> Mark Done
+                </Button>
+            )}
         </div>
     )
 }
@@ -91,11 +132,13 @@ function TaskDetailModal({
     onClose,
     onSelfComplete,
     onFail,
+    onSubmitProof,
 }: {
     task: Task
     onClose: () => void
     onSelfComplete: () => void
     onFail: () => void
+    onSubmitProof?: () => void
 }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
@@ -174,6 +217,20 @@ function TaskDetailModal({
                     )}
                 </div>
 
+                {/* Proof Requirement Info for master tasks */}
+                {task.task_type === 'master' && task.proof_type && (
+                    <div className="px-6">
+                        <div className="bg-purple-primary/5 border border-purple-primary/20 rounded-xl p-4">
+                            <p className="text-xs font-bold text-purple-primary uppercase mb-1">
+                                {PROOF_TYPE_ICONS[task.proof_type]} Proof Required: {task.proof_type.toUpperCase()}
+                            </p>
+                            {task.verification_requirement && (
+                                <p className="text-sm text-text-secondary">{task.verification_requirement}</p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* Actions */}
                 <div className="p-6 border-t border-white/5 space-y-3 grid grid-cols-2 gap-3">
                     <Button
@@ -186,16 +243,31 @@ function TaskDetailModal({
                     >
                         <XCircle size={16} className="mr-2" /> Mark Failed
                     </Button>
-                    <Button
-                        variant="primary"
-                        className="w-full"
-                        onClick={() => {
-                            onSelfComplete()
-                            onClose()
-                        }}
-                    >
-                        <CheckCircle size={16} className="mr-2" /> Mark Complete
-                    </Button>
+                    {task.task_type === 'master' ? (
+                        <Button
+                            variant="primary"
+                            className="w-full"
+                            onClick={() => {
+                                onSubmitProof?.()
+                                onClose()
+                            }}
+                            disabled={task.status === 'proof_submitted'}
+                        >
+                            <Upload size={16} className="mr-2" />
+                            {task.status === 'proof_submitted' ? 'Verifying...' : 'Submit Proof'}
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="primary"
+                            className="w-full"
+                            onClick={() => {
+                                onSelfComplete()
+                                onClose()
+                            }}
+                        >
+                            <CheckCircle size={16} className="mr-2" /> Mark Complete
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>
@@ -208,6 +280,7 @@ export default function TasksPage() {
     const [session, setSession] = useState<Session | null>(null)
     const [generating, setGenerating] = useState(false)
     const [detailTask, setDetailTask] = useState<Task | null>(null)
+    const [proofTask, setProofTask] = useState<Task | null>(null)
     const [dailyTaskCount, setDailyTaskCount] = useState(0)
     const [dailyLimitReached, setDailyLimitReached] = useState(false)
     const DAILY_LIMIT = 5
@@ -248,9 +321,9 @@ export default function TasksPage() {
     const punishmentTasks = (tasks || []).filter(t => t.task_type === 'punishment')
     const dailyTasksAll = (tasks || []).filter(t => t.task_type === 'daily' || !t.task_type)
 
-    const activeTasks = dailyTasksAll.filter((t) => t.status === 'pending' || t.status === 'active' || t.status === 'verification_pending')
-    const completedTasks = dailyTasksAll.filter((t) => t.status === 'completed' || t.status === 'failed')
-    const pendingVerificationTasks = (tasks || []).filter((t) => t.status === 'verification_pending')
+    const activeTasks = dailyTasksAll.filter((t) => ['pending', 'active', 'verification_pending', 'awaiting_proof', 'proof_submitted'].includes(t.status))
+    const completedTasks = [...dailyTasksAll, ...masterTasks, ...punishmentTasks].filter((t) => ['completed', 'failed', 'verified'].includes(t.status))
+    const pendingVerificationTasks = (tasks || []).filter((t) => ['verification_pending', 'proof_submitted', 'awaiting_proof'].includes(t.status))
 
     const handleGenerateTask = async () => {
         if (!user || !profile) return
@@ -395,14 +468,21 @@ export default function TasksPage() {
                                 <h2 className="text-lg font-bold text-red-400 flex items-center gap-2">
                                     ⚔ Master Tasks
                                     <span className="text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">
-                                        {masterTasks.filter(t => t.status === 'pending' || t.status === 'active').length} active
+                                        {masterTasks.filter(t => ['pending', 'active', 'awaiting_proof', 'proof_submitted'].includes(t.status)).length} active
                                     </span>
                                 </h2>
                                 {masterTasks.map(task => (
                                     <div key={task.id} className="border border-red-500/50 bg-red-500/5 rounded-lg p-4 cursor-pointer hover:bg-red-500/10 transition-colors" onClick={() => setDetailTask(task)}>
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
-                                                <p className="font-semibold text-white">{task.title}</p>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <p className="font-semibold text-white">{task.title}</p>
+                                                    {task.proof_type && (
+                                                        <span className="text-xs bg-purple-primary/20 text-purple-primary px-2 py-0.5 rounded-full">
+                                                            {PROOF_TYPE_ICONS[task.proof_type]} {task.proof_type.toUpperCase()}
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <p className="text-sm text-gray-400 mt-1 line-clamp-2">{task.description}</p>
                                                 {(task.punishment_type || task.punishment_hours) && (
                                                     <div className="mt-2 flex items-center gap-1 text-xs text-red-400">
@@ -411,20 +491,26 @@ export default function TasksPage() {
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="text-right text-xs ml-3 shrink-0">
+                                            <div className="text-right text-xs ml-3 shrink-0 space-y-1">
+                                                <ProofStatusBadge task={task} />
                                                 {task.deadline && (
-                                                    <DeadlineTimer deadline={new Date(task.deadline)} />
+                                                    <div><DeadlineTimer deadline={new Date(task.deadline)} /></div>
                                                 )}
                                             </div>
                                         </div>
-                                        {(task.status === 'active') && (
+                                        {(['active', 'awaiting_proof'].includes(task.status)) && (
                                             <div className="mt-3 flex gap-2" onClick={e => e.stopPropagation()}>
                                                 <Button size="sm" variant="danger" onClick={() => handleFailTask(task.id)}>
                                                     <XCircle size={13} className="mr-1" /> Mark Failed
                                                 </Button>
-                                                <Button size="sm" variant="primary" onClick={() => handleCompleteTask(task.id)}>
-                                                    <CheckCircle size={13} className="mr-1" /> Mark Done
+                                                <Button size="sm" variant="primary" onClick={() => setProofTask(task)}>
+                                                    <Upload size={13} className="mr-1" /> Submit Proof
                                                 </Button>
+                                            </div>
+                                        )}
+                                        {task.status === 'proof_submitted' && (
+                                            <div className="mt-3 flex items-center gap-2 text-xs text-purple-primary" onClick={e => e.stopPropagation()}>
+                                                <Loader2 size={14} className="animate-spin" /> Verifying proof...
                                             </div>
                                         )}
                                         {task.status === 'pending' && (
@@ -596,11 +682,11 @@ export default function TasksPage() {
                                                 <div>
                                                     <p className="text-sm font-medium">{task.title}</p>
                                                     <p className="text-xs text-text-tertiary">
-                                                        {task.status === 'completed' ? '✅ Completed' : '❌ Failed'}
+                                                        {task.status === 'completed' || task.status === 'verified' ? '✅ Completed' : '❌ Failed'}
                                                     </p>
                                                 </div>
-                                                <Badge variant={task.status === 'completed' ? 'info' : 'locked'}>
-                                                    {task.status.toUpperCase()}
+                                                <Badge variant={task.status === 'completed' || task.status === 'verified' ? 'info' : 'locked'}>
+                                                    {task.status === 'verified' ? '✅ VERIFIED' : task.status.toUpperCase()}
                                                 </Badge>
                                             </div>
                                         </Card>
@@ -613,16 +699,25 @@ export default function TasksPage() {
             </div>
 
             {/* Task Detail Modal */}
-            {
-                detailTask && (
-                    <TaskDetailModal
-                        task={detailTask}
-                        onClose={() => setDetailTask(null)}
-                        onSelfComplete={() => handleCompleteTask(detailTask.id)}
-                        onFail={() => handleFailTask(detailTask.id)}
-                    />
-                )
-            }
+            {detailTask && (
+                <TaskDetailModal
+                    task={detailTask}
+                    onClose={() => setDetailTask(null)}
+                    onSelfComplete={() => handleCompleteTask(detailTask.id)}
+                    onFail={() => handleFailTask(detailTask.id)}
+                    onSubmitProof={() => { setDetailTask(null); setProofTask(detailTask) }}
+                />
+            )}
+
+            {proofTask && user && (
+                <ProofCaptureModal
+                    task={proofTask}
+                    userId={user.id}
+                    sessionId={session?.id}
+                    onClose={() => setProofTask(null)}
+                    onSubmitted={() => { setProofTask(null); refetch() }}
+                />
+            )}
 
             <BottomNav />
         </>

@@ -65,6 +65,7 @@ Response format: VALID JSON only. No markdown fences, no explanation.
   "cage_status": "caged" or "uncaged" or "semi-caged",
   "verification_type": "photo" or "self-report" or "text",
   "verification_requirement": "What the proof photo must show",
+  "proof_type": "image" or "video" or "audio" or "text",
   "punishment_hours": 2-48,
   "punishment_additional": "Additional punishment description if failed"
 }`
@@ -103,6 +104,11 @@ Response format: VALID JSON only. No markdown fences, no explanation.
         const now = new Date()
         const deadlineMs = (typeof taskData.duration_minutes === 'number' ? taskData.duration_minutes : 30) * 60 * 1000
 
+        // Resolve proof_type — default to 'image' for non-self-report tasks
+        const proofType = ['image', 'video', 'audio', 'text'].includes(taskData.proof_type as string)
+            ? taskData.proof_type as string
+            : (finalVerType === 'self-report' || finalVerType === 'none' ? null : 'image')
+
         const { data: savedTask, error } = await supabase
             .from('tasks')
             .insert({
@@ -115,6 +121,7 @@ Response format: VALID JSON only. No markdown fences, no explanation.
                 genres: Array.isArray(taskData.genres) ? taskData.genres : ['obedience'],
                 cage_status: taskData.cage_status || 'caged',
                 verification_type: finalVerType,
+                proof_type: proofType,
                 verification_requirement: taskData.verification_requirement || '',
                 punishment_type: 'task_failed',
                 punishment_hours: taskData.punishment_hours || 4,
