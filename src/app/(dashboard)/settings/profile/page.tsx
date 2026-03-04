@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { TopBar } from '@/components/layout/top-bar'
 import { BottomNav } from '@/components/layout/bottom-nav'
-import { ArrowLeft, Save, Loader2, User } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, User, Lock as LockIcon } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { getSupabase } from '@/lib/supabase/client'
+import { getActiveSession } from '@/lib/supabase/sessions'
 import Link from 'next/link'
 
 const PERSONALITIES = [
@@ -22,6 +23,7 @@ export default function ProfileEditPage() {
     const [aiPersonality, setAiPersonality] = useState('')
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
+    const [isLocked, setIsLocked] = useState(false)
 
     // Preferences
     const [hardLimits, setHardLimits] = useState<string[]>([])
@@ -33,6 +35,14 @@ export default function ProfileEditPage() {
             setAiPersonality(profile.ai_personality ?? 'Cruel Mistress')
         }
     }, [profile])
+
+    // Check for active session — settings locked during session
+    useEffect(() => {
+        if (!user) return
+        getActiveSession(user.id).then((session) => {
+            setIsLocked(!!session)
+        })
+    }, [user])
 
     useEffect(() => {
         if (!user) return
@@ -51,7 +61,7 @@ export default function ProfileEditPage() {
     }, [user])
 
     async function handleSave() {
-        if (!user) return
+        if (!user || isLocked) return
         setSaving(true)
         const supabase = getSupabase()
 
@@ -110,6 +120,19 @@ export default function ProfileEditPage() {
                         </h1>
                     </div>
 
+                    {/* Session Lock Banner */}
+                    {isLocked && (
+                        <Card variant="flat" size="sm" className="!min-h-0 border-red-primary/30 bg-red-primary/5">
+                            <div className="flex items-center gap-3">
+                                <LockIcon size={18} className="text-red-primary shrink-0" />
+                                <div>
+                                    <p className="text-sm font-semibold text-red-primary">Settings Locked</p>
+                                    <p className="text-xs text-text-tertiary">Profile edits are disabled during an active session.</p>
+                                </div>
+                            </div>
+                        </Card>
+                    )}
+
                     {/* Username */}
                     <Card variant="hero">
                         <div className="space-y-4">
@@ -119,8 +142,9 @@ export default function ProfileEditPage() {
                                     type="text"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
+                                    disabled={isLocked}
                                     placeholder="Enter your username..."
-                                    className="w-full bg-bg-tertiary border border-white/10 rounded-[var(--radius-md)] p-3 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-purple-primary/50 transition-colors"
+                                    className="w-full bg-bg-tertiary border border-white/10 rounded-[var(--radius-md)] p-3 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-purple-primary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
 
@@ -131,11 +155,12 @@ export default function ProfileEditPage() {
                                     {PERSONALITIES.map((p) => (
                                         <button
                                             key={p}
-                                            onClick={() => setAiPersonality(p)}
-                                            className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-colors cursor-pointer border ${aiPersonality === p
+                                            onClick={() => !isLocked && setAiPersonality(p)}
+                                            disabled={isLocked}
+                                            className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-colors border ${aiPersonality === p
                                                 ? 'bg-purple-primary text-white border-purple-primary'
                                                 : 'bg-bg-tertiary hover:bg-bg-hover border-white/5'
-                                                }`}
+                                                } ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                         >
                                             {p}
                                         </button>
@@ -202,7 +227,7 @@ export default function ProfileEditPage() {
                     <Button
                         variant="primary"
                         onClick={handleSave}
-                        disabled={saving}
+                        disabled={saving || isLocked}
                         className="w-full"
                     >
                         {saving ? (

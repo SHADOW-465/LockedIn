@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { TopBar } from '@/components/layout/top-bar'
 import { BottomNav } from '@/components/layout/bottom-nav'
-import { Bell, Moon, Sun, Check, ChevronLeft, Loader2 } from 'lucide-react'
+import { Bell, Moon, Sun, Check, ChevronLeft, Loader2, Lock as LockIcon } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { getSupabase } from '@/lib/supabase/client'
+import { getActiveSession } from '@/lib/supabase/sessions'
 import Link from 'next/link'
 
 const frequencies = [
@@ -28,6 +29,15 @@ export default function NotificationSettingsPage() {
     const [quietEnabled, setQuietEnabled] = useState(true)
     const [saving, setSaving] = useState(false)
     const [loaded, setLoaded] = useState(false)
+    const [isLocked, setIsLocked] = useState(false)
+
+    // Check for active session — settings locked during session
+    useEffect(() => {
+        if (!user) return
+        getActiveSession(user.id).then((session) => {
+            setIsLocked(!!session)
+        })
+    }, [user])
 
     // Load current preferences
     useEffect(() => {
@@ -54,7 +64,7 @@ export default function NotificationSettingsPage() {
     }, [user])
 
     const handleSave = async () => {
-        if (!user) return
+        if (!user || isLocked) return
         setSaving(true)
         const supabase = getSupabase()
         await supabase
@@ -80,6 +90,19 @@ export default function NotificationSettingsPage() {
                         </Link>
                         <h1 className="text-2xl font-bold">Notifications</h1>
                     </div>
+
+                    {/* Session Lock Banner */}
+                    {isLocked && (
+                        <Card variant="flat" size="sm" className="!min-h-0 border-red-primary/30 bg-red-primary/5">
+                            <div className="flex items-center gap-3">
+                                <LockIcon size={18} className="text-red-primary shrink-0" />
+                                <div>
+                                    <p className="text-sm font-semibold text-red-primary">Settings Locked</p>
+                                    <p className="text-xs text-text-tertiary">Notification settings are disabled during an active session.</p>
+                                </div>
+                            </div>
+                        </Card>
+                    )}
 
                     {/* Frequency */}
                     <div className="space-y-3">
@@ -161,7 +184,7 @@ export default function NotificationSettingsPage() {
                         size="lg"
                         className="w-full"
                         onClick={handleSave}
-                        disabled={saving}
+                        disabled={saving || isLocked}
                     >
                         {saving ? (
                             <span className="flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> Saving...</span>

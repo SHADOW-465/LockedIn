@@ -152,7 +152,7 @@ export default function SettingsPage() {
             <TopBar />
 
             <div className="min-h-screen pb-24 lg:pb-8 p-4">
-                <div className="max-w-2xl mx-auto space-y-6">
+                <div className="relative max-w-2xl mx-auto space-y-6">
                     <h1 className="text-3xl font-bold">Settings</h1>
 
                     {/* Session Active Banner */}
@@ -368,6 +368,17 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     </Card>
+
+                    {/* Settings Lock Overlay */}
+                    {hasActiveSession && (
+                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm rounded-lg p-8 text-center">
+                            <LockIcon size={40} className="text-red-primary mb-4" />
+                            <h3 className="text-xl font-bold mb-2">Settings Locked</h3>
+                            <p className="text-gray-400 text-sm max-w-xs">
+                                Settings are locked during an active session. Your Master controls this space.
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
 
