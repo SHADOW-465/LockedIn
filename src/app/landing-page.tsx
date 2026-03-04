@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Lock } from 'lucide-react'
+import Image from 'next/image'
 
 export default function LandingPage() {
   const router = useRouter()
@@ -31,8 +32,8 @@ export default function LandingPage() {
       >
         {/* Lock Icon */}
         <div className="flex justify-center">
-          <div className="w-20 h-20 rounded-full bg-bg-secondary shadow-raised flex items-center justify-center border border-white/5 animate-lock-glow">
-            <Lock size={36} className="text-red-primary" />
+          <div className="w-20 h-20 rounded-full bg-bg-secondary shadow-raised flex items-center justify-center border border-white/5 animate-lock-glow overflow-hidden">
+            <Image src="/LockedIn-logo.png" alt="LockedIn Logo" width={48} height={48} />
           </div>
         </div>
 

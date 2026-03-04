@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, ListTodo, MessageSquare, BookOpen, Settings, Lock } from 'lucide-react'
+import { Home, ListTodo, MessageSquare, BookOpen, Settings } from 'lucide-react'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/contexts/auth-context'
@@ -40,7 +41,7 @@ export function TopBar() {
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 {/* Logo */}
                 <div className="flex items-center gap-2">
-                    <Lock size={20} className="text-red-primary animate-lock-glow" />
+                    <Image src="/LockedIn-logo.png" alt="LockedIn Logo" width={24} height={24} className="animate-lock-glow rounded-full" />
                     <h1 className="text-xl font-bold font-mono tracking-tight">
                         Locked<span className="text-red-primary">In</span>
                     </h1>

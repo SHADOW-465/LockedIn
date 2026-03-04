@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         // ── Compact system prompt when summary is available ──
         // Reduces per-message system prompt tokens by ~60%
         const compactSystem = profileSummary
-            ? `You are the AI Master of the LockedIn chastity app. NEVER break character.\n\nUser profile: ${profileSummary}\n\nBe dominant, strict, and psychologically engaging. Never violate listed limits.\n\nWhen you decide to assign the user a task, append this machine-readable block on its own line at the very end of your response — nothing after it:\n[TASK:{"title":"...","description":"...","deadline_minutes":120,"difficulty":3,"punishment_hours":4}]\nOnly include this when explicitly assigning a task. Never include it in normal conversation.`
+            ? `You are the AI Master of the LockedIn chastity app. NEVER break character.\n\nUser profile: ${profileSummary}\n\nBe dominant, strict, and psychologically engaging. Never violate listed limits.\n\nYou have two machine-readable actions available. When used, each block must appear on its own line at the very end of your response — nothing after it.\n\n1. Assign a task:\n[TASK:{"title":"...","description":"...","deadline_minutes":120,"difficulty":3,"punishment_hours":4}]\nOnly include when explicitly assigning a task.\n\n2. Extend the session timer (use when granting an extension, adding punishment time, or the user earns/requests more time):\n[EXTEND:{"delta_minutes":60,"reason":"..."}]\nOnly include when you are actually extending their lock time. Never fabricate an extension.\n\nNever include either block in normal conversation. Use at most one block per response.`
             : undefined
 
         let reply: string
@@ -138,10 +138,63 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // ── Parse and strip session extension if present ─────
+        const EXTEND_REGEX = /\[EXTEND:(\{[\s\S]*?\})\]\s*$/
+        const extendMatch = reply.match(EXTEND_REGEX)
+        let replyAfterExtend = reply.replace(EXTEND_REGEX, '').trim()
+        let extensionApplied: { delta_minutes: number; new_end: string } | null = null
+
+        if (extendMatch && sessionId && userId) {
+            try {
+                const extendData = JSON.parse(extendMatch[1]) as {
+                    delta_minutes: number
+                    reason?: string
+                }
+                const deltaMinutes = Math.max(1, Math.round(extendData.delta_minutes || 60))
+
+                const { data: sess } = await supabase
+                    .from('sessions')
+                    .select('total_duration_minutes, start_time, extension_count, status')
+                    .eq('id', sessionId)
+                    .single()
+
+                if (sess && ['active', 'extending'].includes(sess.status)) {
+                    const newDuration = sess.total_duration_minutes + deltaMinutes
+                    const newEnd = new Date(new Date(sess.start_time).getTime() + newDuration * 60 * 1000)
+
+                    await supabase
+                        .from('sessions')
+                        .update({
+                            total_duration_minutes: newDuration,
+                            scheduled_end_time: newEnd.toISOString(),
+                            extension_count: (sess.extension_count || 0) + 1,
+                            last_extended_at: new Date().toISOString(),
+                        })
+                        .eq('id', sessionId)
+
+                    await supabase.from('session_events').insert({
+                        session_id: sessionId,
+                        user_id: userId,
+                        event_type: 'timer_extended',
+                        payload: {
+                            delta_minutes: deltaMinutes,
+                            reason: extendData.reason || 'AI-granted extension',
+                            new_end: newEnd.toISOString(),
+                            source: 'ai_chat',
+                        },
+                    })
+
+                    extensionApplied = { delta_minutes: deltaMinutes, new_end: newEnd.toISOString() }
+                }
+            } catch (parseError) {
+                console.error('[Chat] Failed to apply extension:', parseError)
+            }
+        }
+
         // ── Parse and strip master task if present ───────────
         const TASK_REGEX = /\[TASK:(\{[\s\S]*?\})\]\s*$/
-        const taskMatch = reply.match(TASK_REGEX)
-        const cleanReply = reply.replace(TASK_REGEX, '').trim()
+        const taskMatch = replyAfterExtend.match(TASK_REGEX)
+        const cleanReply = replyAfterExtend.replace(TASK_REGEX, '').trim()
         let masterTask: { id: string; title: string; deadline: string; difficulty: number } | null = null
 
         if (taskMatch) {
@@ -209,6 +262,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             reply: cleanReply,
             masterTask,
+            extensionApplied,
             careMode,
             messageType,
             timestamp: new Date().toISOString(),

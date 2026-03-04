@@ -16,7 +16,7 @@ npm run test       # Run all tests (vitest)
 npx vitest run src/__tests__/your-file.test.ts
 ```
 
-Tests live in `src/__tests__/` and use Vitest with Node environment. The config alias `@/` maps to `src/`. Current test files: `chat-api`, `onboarding`, `punishment`, `rewards`, `task-generation`, `verification`.
+Tests live in `src/__tests__/` and use Vitest with Node environment. The config alias `@/` maps to `src/`. Current test files: `chat-api`, `onboarding`, `punishment`, `rewards`, `task-generation`, `verification`, `session-start`.
 
 ## Required Environment Variables
 
@@ -32,7 +32,7 @@ OPENROUTER_API_KEY=
 
 ### App Structure
 
-Next.js 16 App Router with three route groups:
+Next.js 15 App Router with three route groups:
 - `(auth)` — `/login`, `/signup` — no layout wrapper
 - `(dashboard)` — `/home`, `/tasks`, `/chat`, `/journal`, `/regimens`, `/achievements`, `/calendar`, `/settings`, `/feedback` — wrapped in `src/app/(dashboard)/layout.tsx` (a thin server component pass-through with no auth logic)
 - `onboarding` — 11-step onboarding flow at `/onboarding`
@@ -40,13 +40,19 @@ Next.js 16 App Router with three route groups:
 Root route: `src/app/page.tsx` is a **server component** that checks auth via SSR and redirects authenticated users before any HTML is sent. The landing page UI lives in `src/app/landing-page.tsx` (client component, rendered only for unauthenticated visitors).
 
 API routes under `src/app/api/`:
-- `POST /api/chat` — AI chat with persona, safeword detection, care mode
+- `POST /api/chat` — AI chat with persona, safeword detection, care mode, master task `[TASK:{...}]` parsing
 - `POST /api/tasks/generate` — AI task generation (5/day limit via `daily_task_log`)
 - `POST /api/tasks/complete` — Mark task complete, update willpower score
 - `POST /api/verify` — Vision AI proof photo verification
 - `POST /api/regimens/complete-day` — AI-gated regimen advancement
 - `GET  /api/usage` — Token usage meter
 - `POST /api/punish` — Apply punishment
+- `POST /api/sessions/start` — Create session with config, writes `session_started` event; returns 409 `active_session_exists` if a session is already running
+- `POST /api/sessions/extend` — Add minutes to session, recalculate `scheduled_end_time`, write `timer_extended` event
+- `POST /api/sessions/complete` — Finalize session after client archival (status → `completed`)
+- `POST /api/sessions/purge` — Delete `chat_messages`, `proof_documents`, `calendar_adjustments`, `session_events` for a session post-archival
+- `POST /api/sessions/emergency` — Emergency release (status → `emergency`)
+- `POST /api/sessions/summary` — Generate AI session recap JSON via `generateSimpleText`
 
 ### Auth & Routing
 
@@ -73,6 +79,8 @@ The admin client (`getServerSupabase()`) bypasses RLS — never expose it to the
 
 `src/lib/supabase/client.ts` also exports `resetSupabase()` — call on `SIGNED_OUT` to null the singleton so the next `getSupabase()` creates a fresh client. This is already wired in `auth-context.tsx`.
 
+`src/lib/supabase/session-guard.ts` exports `getActiveSessionId(userId)` — returns the active session ID or null. Use this in any API route that must 403 during an active session (e.g., profile mutations).
+
 ### Supabase Helper Modules
 
 `src/lib/supabase/` contains typed query helpers — prefer these over raw queries:
@@ -80,8 +88,9 @@ The admin client (`getServerSupabase()`) bypasses RLS — never expose it to the
 - `auth.ts` — `signIn()`, `signUp()`, `signOut()`, `getSession()`
 - `tasks.ts` — task CRUD, status updates
 - `sessions.ts` — session lifecycle management
-- `regimens.ts` — regimen queries
+- `regimens.ts` — regimen queries (each function calls `getSupabase()` internally; do not call it at module scope)
 - `storage.ts` — Supabase Storage for verification photo uploads
+- `session-guard.ts` — `getActiveSessionId(userId)` for settings lock enforcement
 
 ### Auth Context (`src/lib/contexts/auth-context.tsx`)
 
@@ -131,17 +140,73 @@ await trackUsage(supabase, userId, 'llama-3.3-70b-versatile', usage, 'chat')
 - **Compliance streak** (`profiles.compliance_streak`): via `awardStreak()`.
 - **Achievements**: via `checkAchievements()` — checks against `ACHIEVEMENT_DEFS` array in `rewards.ts`.
 
+### Session Lifecycle
+
+Sessions follow a server-authoritative state machine: `idle → active → extending → completing → completed | emergency`
+
+**Only API routes write `status`.** The client reads status via Realtime and reacts.
+
+Key fields on `sessions`:
+- `total_duration_minutes` — authoritative session length (not the old `lock_goal_hours`)
+- `scheduled_end_time` — always equal to `start_time + total_duration_minutes`; recalculated on every extension
+- `session_config` — JSONB snapshot of the config selected at session start (tier, personality, limits, regimens, duration)
+- `extension_count`, `last_extended_at` — extension tracking
+
+Every state transition writes to `session_events` before updating `sessions`. Event types: `session_started`, `session_completed`, `session_emergency`, `task_assigned`, `task_completed`, `task_failed`, `task_overdue`, `punishment_applied`, `timer_extended`.
+
+**Timer rendering (client):**
+```typescript
+const remaining_ms = new Date(session.scheduled_end_time).getTime() - Date.now()
+const progress     = elapsed_ms / (session.total_duration_minutes * 60000) * 100
+```
+Never hardcode 7 days. `TimerCard` (`src/components/features/timer/timer-card.tsx`) accepts `totalDurationMinutes` and `status` props and renders distinct UI for `completing`, `completed`, `emergency` states.
+
+**Session completion flow** (triggered when home page detects `status === 'completing'` via Realtime):
+1. Fetch all session data from Supabase
+2. `navigator.storage.persist()` — request persistent storage
+3. `archiveSession()` — write full snapshot to IndexedDB
+4. `POST /api/sessions/summary` — generate AI recap
+5. `POST /api/sessions/purge` — delete heavy data from Supabase
+6. `POST /api/sessions/complete` — status → `completed`
+
+**Auto-expiry:** The `session-cron` Edge Function (deployed to Supabase, `supabase/functions/session-cron/index.ts`) runs every minute, marks expired sessions `completing`, and triggers punishments for overdue master tasks. It requires `SITE_URL` and `CRON_SECRET` env vars in Supabase secrets. The pg_cron schedule must be set up manually via the Supabase dashboard.
+
+### Task Types
+
+Tasks have `task_type: 'daily' | 'master' | 'punishment'` and `source: 'ai_chat' | 'auto' | 'system'`.
+
+**Master tasks** are assigned through chat: the AI appends `[TASK:{...}]` JSON markers to chat responses. `/api/chat` parses these with `TASK_REGEX = /\[TASK:([\s\S]*?)\]\s*$/`, strips the marker from the reply, creates the task row, and returns `masterTask` alongside `reply` in the response body.
+
+**Punishment tasks** are created by `/api/punish` from four sources: overdue master tasks (cron), failed verification (`/api/verify`), failed daily task (`/api/tasks/fail`), and AI rudeness detection (`/api/chat`).
+
+### Local Storage Architecture
+
+Heavy data (chat history, images, videos) is **never retained on the server post-session**. It lives on-device permanently.
+
+`src/lib/local-storage/` (all browser-only, import only from client components):
+- `db.ts` — Dexie.js IndexedDB schema. Tables: `chat_messages`, `session_archives`, `journal_entries`, `proof_metadata`. Exports singleton `db`.
+- `opfs.ts` — OPFS utilities. Files stored at `/{userId}/{sessionId}/proofs/{filename}` and `/videos/{filename}`. Key exports: `saveFileToOPFS`, `readFileFromOPFS`, `listSessionFiles`, `deleteSessionFiles`, `requestPersistentStorage`.
+- `chat-archive.ts` — Rolling 500-message window helpers. `checkRollingWindow(sessionId, supabaseCount)` returns `{ shouldFlush, flushCount }` when Supabase exceeds 500 messages; `flushMessagesToLocal(messages)` bulk-puts them to IndexedDB.
+- `session-archive.ts` — `archiveSession()` writes full session snapshot to IndexedDB before Supabase purge. `getSessionArchive(sessionId)`, `listUserArchives(userId)` for retrieval.
+- `export.ts` — `exportSessionZip(sessionId, userId)` — reads IndexedDB archive + OPFS files, generates a ZIP via `fflate`, triggers browser download.
+
 ### Database Schema
 
-Types are in `src/lib/supabase/schema.ts`. Key tables: `profiles`, `sessions`, `tasks`, `chat_messages`, `regimens`, `achievements`, `notifications`, `daily_task_log`, `api_usage`.
+Types are in `src/lib/supabase/schema.ts`. Key tables: `profiles`, `sessions`, `tasks`, `chat_messages`, `session_events`, `proof_documents`, `regimens`, `achievements`, `notifications`, `daily_task_log`, `api_usage`.
 
-Migrations in `supabase/migrations/`:
+Migrations in `supabase/migrations/` (applied in order):
 - `20240523000000_update_profiles.sql` — base profiles schema
-- `20260218_add_api_usage.sql` — must be applied before token tracking works. Note: `api_usage` is not in the TypeScript `TableName` union in `schema.ts` but is queried by `trackUsage`.
+- `20260218_add_api_usage.sql` — `api_usage` table. Note: not in the TypeScript `TableName` union but queried by `trackUsage`.
+- `20260305_session_lifecycle.sql` — adds `total_duration_minutes`, `session_config`, `extension_count`, `last_extended_at` to `sessions`; `task_type`, `source` to `tasks`
+- `20260305_session_events_proof_docs.sql` — creates `session_events` and `proof_documents` tables
 
 ### UI Components
 
 Primitive components in `src/components/ui/` (`Button`, `Card`, `Badge`, `Input`) all use `class-variance-authority` for variants. Feature components in `src/components/features/`. Layout components (`TopBar`, `BottomNav`, `BentoGrid`) in `src/components/layout/`. Onboarding step components in `src/components/onboarding/`.
+
+`src/components/features/session-start-flow.tsx` — 6-step session configuration wizard (tier, personality, hard limits, soft limits, regimens, duration). Exports `SessionConfig` interface. Replaces direct `createSession()` calls on the home page.
+
+`src/components/features/timer/timer-card.tsx` — session countdown. Props: `endTime`, `startTime`, `totalDurationMinutes`, `tier`, `status`, `punishmentActive`. Progress calculated from `totalDurationMinutes`, never hardcoded.
 
 ### Prompt Registry
 

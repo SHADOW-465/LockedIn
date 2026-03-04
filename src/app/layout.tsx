@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   icons: {
     icon: '/LockedIn-logo.png',
     shortcut: '/LockedIn-logo.png',
-    apple: '/LockedIn-logo.svg',
+    apple: '/LockedIn-logo.png',
   },
   appleWebApp: {
     capable: true,
