@@ -34,6 +34,7 @@ export interface UserProfile {
     // Stats
     willpower_score: number
     compliance_streak: number
+    xp_total: number
     total_sessions: number
     total_denial_hours: number
     total_edges: number
@@ -64,6 +65,11 @@ export interface Session {
     total_rewards: number
     care_mode_active: boolean
 
+    total_duration_minutes: number
+    session_config: Record<string, unknown> | null
+    extension_count: number
+    last_extended_at: string | null
+
     created_at: string
     updated_at: string
 }
@@ -72,7 +78,8 @@ export interface Task {
     id: string
     user_id: string
     session_id: string
-    task_type: string
+    task_type: 'daily' | 'master' | 'punishment'
+    source: 'ai_chat' | 'auto' | 'system'
     genres: string[]
     title: string
     description: string
@@ -182,6 +189,27 @@ export interface Notification {
     created_at: string
 }
 
+export interface SessionEvent {
+    id: string
+    session_id: string
+    user_id: string
+    event_type: string
+    payload: Record<string, unknown> | null
+    created_at: string
+}
+
+export interface ProofDocument {
+    id: string
+    task_id: string
+    user_id: string
+    session_id: string | null
+    file_type: 'image' | 'video' | 'text' | 'audio'
+    local_storage_key: string | null
+    verification_status: 'pending' | 'passed' | 'failed'
+    verified_at: string | null
+    created_at: string
+}
+
 // Table names for type-safe query helpers
 export type TableName =
     | 'profiles'
@@ -195,3 +223,5 @@ export type TableName =
     | 'notifications'
     | 'regimens'
     | 'calendar_adjustments'
+    | 'session_events'
+    | 'proof_documents'
