@@ -3,33 +3,42 @@
 import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { CheckCircle, AlertTriangle } from 'lucide-react'
 
 interface TimerCardProps {
     endTime: Date
+    startTime: Date
+    totalDurationMinutes: number
     tier: string
-    status: 'locked' | 'punishment' | 'lockdown'
+    status: 'active' | 'extending' | 'completing' | 'completed' | 'emergency' | string
+    punishmentActive?: boolean
 }
 
-export function TimerCard({ endTime, tier, status }: TimerCardProps) {
+export function TimerCard({ endTime, startTime, totalDurationMinutes, tier, status, punishmentActive }: TimerCardProps) {
     const [timeRemaining, setTimeRemaining] = useState('')
     const [progress, setProgress] = useState(0)
 
+    const isComplete = status === 'completed' || status === 'emergency' || status === 'completing'
+
     useEffect(() => {
-        const interval = setInterval(() => {
+        if (isComplete) {
+            setTimeRemaining('00d 00h 00m 00s')
+            setProgress(100)
+            return
+        }
+
+        const tick = () => {
             const now = new Date()
             const diff = endTime.getTime() - now.getTime()
 
             if (diff <= 0) {
                 setTimeRemaining('00d 00h 00m 00s')
                 setProgress(100)
-                clearInterval(interval)
                 return
             }
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-            const hours = Math.floor(
-                (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-            )
+            const days    = Math.floor(diff / (1000 * 60 * 60 * 24))
+            const hours   = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
             const seconds = Math.floor((diff % (1000 * 60)) / 1000)
 
@@ -37,20 +46,52 @@ export function TimerCard({ endTime, tier, status }: TimerCardProps) {
                 `${String(days).padStart(2, '0')}d ${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`
             )
 
-            // Calculate rough progress (assuming 7-day total)
-            const total = 7 * 24 * 60 * 60 * 1000
-            const elapsed = total - diff
-            setProgress(Math.min(100, (elapsed / total) * 100))
-        }, 1000)
+            const totalMs   = totalDurationMinutes * 60 * 1000
+            const elapsedMs = totalMs - diff
+            setProgress(Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100)))
+        }
 
+        tick()
+        const interval = setInterval(tick, 1000)
         return () => clearInterval(interval)
-    }, [endTime])
+    }, [endTime, totalDurationMinutes, isComplete])
+
+    const tierVariant = `tier${
+        tier === 'Newbie' ? '1' : tier === 'Slave' ? '2' : tier === 'Hardcore' ? '3' : tier === 'Extreme' ? '4' : '5'
+    }` as 'tier1'
+
+    if (status === 'completing') {
+        return (
+            <Card variant="hero" className="relative overflow-hidden text-center py-8">
+                <div className="space-y-3">
+                    <AlertTriangle size={40} className="mx-auto text-yellow-500 animate-pulse" />
+                    <h2 className="text-2xl font-bold font-mono">Session Ending...</h2>
+                    <p className="text-text-secondary text-sm">Archiving your session data. Please wait.</p>
+                </div>
+            </Card>
+        )
+    }
+
+    if (status === 'completed' || status === 'emergency') {
+        return (
+            <Card variant="hero" className="relative overflow-hidden text-center py-8">
+                <div className="space-y-3">
+                    <CheckCircle size={40} className="mx-auto text-teal-primary" />
+                    <h2 className="text-2xl font-bold font-mono">
+                        {status === 'emergency' ? 'Emergency Release' : 'Session Complete'}
+                    </h2>
+                    <p className="text-text-secondary text-sm">
+                        {status === 'emergency' ? 'You have been released.' : 'Your session has ended. Summary available below.'}
+                    </p>
+                </div>
+            </Card>
+        )
+    }
 
     return (
         <Card
             variant="hero"
-            className={`relative overflow-hidden ${status === 'punishment' ? 'animate-timer-pulse' : ''
-                }`}
+            className={`relative overflow-hidden ${punishmentActive ? 'animate-timer-pulse' : ''}`}
         >
             {/* Background gradient effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-red-primary/5 to-purple-primary/5 pointer-events-none" />
@@ -66,14 +107,7 @@ export function TimerCard({ endTime, tier, status }: TimerCardProps) {
             <div className="relative z-10">
                 <div className="flex items-start justify-between mb-6">
                     <Badge variant="locked">🔒 LOCKED IN</Badge>
-                    <Badge
-                        variant={
-                            `tier${tier === 'Newbie' ? '1' : tier === 'Slave' ? '2' : tier === 'Hardcore' ? '3' : tier === 'Extreme' ? '4' : '5'
-                            }` as 'tier1'
-                        }
-                    >
-                        {tier.toUpperCase()}
-                    </Badge>
+                    <Badge variant={tierVariant}>{tier.toUpperCase()}</Badge>
                 </div>
 
                 <div className="text-center py-4">
@@ -83,10 +117,18 @@ export function TimerCard({ endTime, tier, status }: TimerCardProps) {
                     <p className="text-text-secondary text-sm">Time Remaining Until Release</p>
                 </div>
 
-                {status === 'punishment' && (
+                {punishmentActive && (
                     <div className="mt-4 text-center">
                         <Badge variant="locked" className="animate-pulse">
                             ⚠ PUNISHMENT MODE ACTIVE
+                        </Badge>
+                    </div>
+                )}
+
+                {status === 'extending' && (
+                    <div className="mt-4 text-center">
+                        <Badge className="animate-pulse bg-yellow-600 text-white">
+                            ⏱ SESSION EXTENDED
                         </Badge>
                     </div>
                 )}

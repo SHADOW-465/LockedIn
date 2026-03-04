@@ -12,9 +12,11 @@ import { Flame, TrendingUp, AlertTriangle, Calendar, Target, Zap, Play, Trophy, 
 import { useAuth } from '@/lib/contexts/auth-context'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { getActiveSession, createSession } from '@/lib/supabase/sessions'
+import { getActiveSession } from '@/lib/supabase/sessions'
 import { getActiveTasks } from '@/lib/supabase/tasks'
 import type { Session, Task } from '@/lib/supabase/schema'
+import { SessionStartFlow } from '@/components/features/session-start-flow'
+import type { SessionConfig } from '@/components/features/session-start-flow'
 
 export default function DashboardPage() {
     const { user, profile, loading: authLoading } = useAuth()
@@ -22,7 +24,7 @@ export default function DashboardPage() {
     const [session, setSession] = useState<Session | null>(null)
     const [currentTask, setCurrentTask] = useState<Task | null>(null)
     const [loading, setLoading] = useState(true)
-    const [startingSession, setStartingSession] = useState(false)
+    const [showSessionFlow, setShowSessionFlow] = useState(false)
 
     useEffect(() => {
         if (authLoading || !user) return
@@ -45,26 +47,25 @@ export default function DashboardPage() {
         loadDashboard()
     }, [user, authLoading])
 
-    const handleStartSession = async () => {
-        if (!user || startingSession) return
-        setStartingSession(true)
-        try {
-            const newSession = await createSession(
-                user.id,
-                profile?.tier ?? 'Newbie',
-                168,
-                profile?.ai_personality ?? null
-            )
-            if (newSession) {
-                setSession(newSession)
-            } else {
-                alert('Failed to start session. Please try again or refresh.')
+    const handleStartSession = async (config: SessionConfig) => {
+        if (!user) return
+        const res = await fetch('/api/sessions/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, config }),
+        })
+        if (!res.ok) {
+            const err = await res.json()
+            if (err.error === 'active_session_exists') {
+                // Session already exists - just close the flow and refresh
+                setShowSessionFlow(false)
+                router.refresh()
+                return
             }
-        } catch (error) {
-            console.error('Failed to start session:', error)
-        } finally {
-            setStartingSession(false)
+            throw new Error(err.error || 'Failed to start session')
         }
+        router.refresh()
+        setShowSessionFlow(false)
     }
 
     const tier = profile?.tier ?? 'Newbie'
@@ -90,8 +91,11 @@ export default function DashboardPage() {
                             {session ? (
                                 <TimerCard
                                     endTime={new Date(session.scheduled_end_time)}
-                                    tier={tier}
-                                    status={session.total_punishments > 0 ? 'punishment' : 'locked'}
+                                    startTime={new Date(session.start_time)}
+                                    totalDurationMinutes={session.total_duration_minutes ?? 10080}
+                                    tier={session.tier}
+                                    status={session.status}
+                                    punishmentActive={(session.total_punishments ?? 0) > 0}
                                 />
                             ) : (
                                 <Card variant="hero" className="text-center py-12">
