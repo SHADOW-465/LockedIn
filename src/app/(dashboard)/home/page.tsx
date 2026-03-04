@@ -77,6 +77,14 @@ export default function DashboardPage() {
         <>
             <TopBar />
 
+            {showSessionFlow && profile && (
+                <SessionStartFlow
+                    profile={profile}
+                    onStart={handleStartSession}
+                    onCancel={() => setShowSessionFlow(false)}
+                />
+            )}
+
             <div className="min-h-screen pb-24 lg:pb-8">
                 {/* Progressive Onboarding Banner removed */}
 
@@ -104,9 +112,9 @@ export default function DashboardPage() {
                                         <p className="text-text-secondary text-sm">
                                             Start a new lock session to begin your training.
                                         </p>
-                                        <Button variant="primary" onClick={handleStartSession} className="mx-auto" disabled={startingSession}>
-                                            {startingSession ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Play size={16} className="mr-2" />}
-                                            {startingSession ? 'Starting...' : 'Start Session'}
+                                        <Button variant="primary" onClick={() => setShowSessionFlow(true)} className="mx-auto">
+                                            <Play size={16} className="mr-2" />
+                                            Start Session
                                         </Button>
                                     </div>
                                 </Card>
