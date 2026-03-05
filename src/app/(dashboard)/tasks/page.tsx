@@ -219,7 +219,7 @@ function TaskDetailModal({
 
                 {/* Proof Requirement Info for master tasks */}
                 {task.proof_type && (
-                    <div className="px-6">
+                    <div className="px-6 space-y-3 mb-6">
                         <div className="bg-purple-primary/5 border border-purple-primary/20 rounded-xl p-4">
                             <p className="text-xs font-bold text-purple-primary uppercase mb-1">
                                 {PROOF_TYPE_ICONS[task.proof_type]} Proof Required: {task.proof_type.toUpperCase()}
@@ -228,6 +228,12 @@ function TaskDetailModal({
                                 <p className="text-sm text-text-secondary">{task.verification_requirement}</p>
                             )}
                         </div>
+                        {task.status === 'awaiting_proof' && task.ai_verification_reason && task.ai_verification_reason.toUpperCase().includes('FAIL') && (
+                            <div className="bg-red-primary/10 border border-red-primary/30 rounded-xl p-4">
+                                <p className="text-xs font-bold text-red-500 uppercase mb-1">Proof Rejected</p>
+                                <p className="text-sm text-red-200 whitespace-pre-line">{task.ai_verification_reason}</p>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -499,14 +505,22 @@ export default function TasksPage() {
                                             </div>
                                         </div>
                                         {(['active', 'awaiting_proof'].includes(task.status)) && (
-                                            <div className="mt-3 flex gap-2" onClick={e => e.stopPropagation()}>
-                                                <Button size="sm" variant="danger" onClick={() => handleFailTask(task.id)}>
-                                                    <XCircle size={13} className="mr-1" /> Mark Failed
-                                                </Button>
-                                                <Button size="sm" variant="primary" onClick={() => setProofTask(task)}>
-                                                    <Upload size={13} className="mr-1" /> Submit Proof
-                                                </Button>
-                                            </div>
+                                            <>
+                                                {task.status === 'awaiting_proof' && task.ai_verification_reason && task.ai_verification_reason.toUpperCase().includes('FAIL') && (
+                                                    <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                                                        <p className="text-xs text-red-400 font-semibold mb-1">Proof Rejected:</p>
+                                                        <p className="text-xs text-red-200 line-clamp-2">{task.ai_verification_reason}</p>
+                                                    </div>
+                                                )}
+                                                <div className="mt-3 flex gap-2" onClick={e => e.stopPropagation()}>
+                                                    <Button size="sm" variant="danger" onClick={() => handleFailTask(task.id)}>
+                                                        <XCircle size={13} className="mr-1" /> Mark Failed
+                                                    </Button>
+                                                    <Button size="sm" variant="primary" onClick={() => setProofTask(task)}>
+                                                        <Upload size={13} className="mr-1" /> Submit Proof
+                                                    </Button>
+                                                </div>
+                                            </>
                                         )}
                                         {task.status === 'proof_submitted' && (
                                             <div className="mt-3 flex items-center gap-2 text-xs text-purple-primary" onClick={e => e.stopPropagation()}>
@@ -648,9 +662,18 @@ export default function TasksPage() {
                                                 task={task}
                                                 onSelfComplete={() => handleCompleteTask(task.id)}
                                                 onFail={() => handleFailTask(task.id)}
+                                                onSubmitProof={() => setProofTask(task)}
                                             />
                                         )}
                                     </div>
+
+                                    {/* Proof Rejection Warning */}
+                                    {task.status === 'awaiting_proof' && task.ai_verification_reason && task.ai_verification_reason.toUpperCase().includes('FAIL') && (
+                                        <div className="bg-red-primary/10 border border-red-primary/30 rounded-[var(--radius-md)] p-3">
+                                            <p className="text-xs font-bold text-red-500 uppercase mb-1">Proof Rejected</p>
+                                            <p className="text-xs text-red-200 line-clamp-2">{task.ai_verification_reason}</p>
+                                        </div>
+                                    )}
 
                                     {/* Punishment Warning */}
                                     {(task.punishment_type || task.punishment_hours) && (

@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
                 user_id: userId,
                 session_id: sessionId || task.session_id || null,
                 file_type: proofType,
+                text_content: proofType === 'text' ? textContent : null,
                 local_storage_key: localStorageKey || null,
                 verification_status: 'pending',
             })
