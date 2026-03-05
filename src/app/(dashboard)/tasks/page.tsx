@@ -291,7 +291,7 @@ export default function TasksPage() {
     const [dailyLimitReached, setDailyLimitReached] = useState(false)
     const DAILY_LIMIT = 5
 
-    const { data: tasks, refetch } = useRealtimeQuery<Task>(
+    const { data: tasks, refetch, setData: setTasks } = useRealtimeQuery<Task>(
         'tasks',
         user ? { user_id: user.id } : {},
         'created_at',
@@ -323,12 +323,15 @@ export default function TasksPage() {
         }
     }, [user, refetch])
 
-    const masterTasks = (tasks || []).filter(t => t.task_type === 'master')
-    const punishmentTasks = (tasks || []).filter(t => t.task_type === 'punishment')
+    const activeStatuses = ['pending', 'active', 'verification_pending', 'awaiting_proof', 'proof_submitted']
+    const masterTasks = (tasks || []).filter(t => t.task_type === 'master' && activeStatuses.includes(t.status))
+    const punishmentTasks = (tasks || []).filter(t => t.task_type === 'punishment' && activeStatuses.includes(t.status))
     const dailyTasksAll = (tasks || []).filter(t => t.task_type === 'daily' || !t.task_type)
 
-    const activeTasks = dailyTasksAll.filter((t) => ['pending', 'active', 'verification_pending', 'awaiting_proof', 'proof_submitted'].includes(t.status))
-    const completedTasks = [...dailyTasksAll, ...masterTasks, ...punishmentTasks].filter((t) => ['completed', 'failed', 'verified'].includes(t.status))
+    const activeTasks = dailyTasksAll.filter((t) => activeStatuses.includes(t.status))
+    const completedTasks = (tasks || []).filter((t) => ['completed', 'verified'].includes(t.status))
+    const failedTasks = (tasks || []).filter((t) => t.status === 'failed')
+    const overdueTasks = (tasks || []).filter((t) => t.status === 'overdue')
     const pendingVerificationTasks = (tasks || []).filter((t) => ['verification_pending', 'proof_submitted', 'awaiting_proof'].includes(t.status))
 
     const handleGenerateTask = async () => {
@@ -366,11 +369,20 @@ export default function TasksPage() {
     }
 
     const handleStartTask = async (taskId: string) => {
-        await updateTaskStatus(taskId, 'active')
+        // Optimistic update
+        setTasks((prev: Task[]) => prev.map(t => t.id === taskId ? { ...t, status: 'active' } : t))
+        try {
+            await updateTaskStatus(taskId, 'active')
+        } catch (err) {
+            console.error(err)
+            refetch()
+        }
     }
 
     const handleCompleteTask = async (taskId: string) => {
         if (!user) return
+        // Optimistic update
+        setTasks((prev: Task[]) => prev.map(t => t.id === taskId ? { ...t, status: 'completed' } : t))
         try {
             const res = await fetch('/api/tasks/complete', {
                 method: 'POST',
@@ -386,12 +398,15 @@ export default function TasksPage() {
         } catch (error) {
             console.error(error)
             alert('Failed to complete task')
+            refetch()
         }
     }
 
     const handleFailTask = async (taskId: string) => {
         if (!user) return
         if (!confirm('Are you sure you want to fail this task? Punishment will be applied.')) return
+        // Optimistic update
+        setTasks((prev: Task[]) => prev.map(t => t.id === taskId ? { ...t, status: 'failed' } : t))
         try {
             const res = await fetch('/api/tasks/fail', {
                 method: 'POST',
@@ -406,6 +421,7 @@ export default function TasksPage() {
         } catch (error) {
             console.error(error)
             alert('Failed to mark task as failed')
+            refetch()
         }
     }
 
@@ -474,7 +490,7 @@ export default function TasksPage() {
                                 <h2 className="text-lg font-bold text-red-400 flex items-center gap-2">
                                     ⚔ Master Tasks
                                     <span className="text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">
-                                        {masterTasks.filter(t => ['pending', 'active', 'awaiting_proof', 'proof_submitted'].includes(t.status)).length} active
+                                        {masterTasks.length} active
                                     </span>
                                 </h2>
                                 {masterTasks.map(task => (
@@ -545,7 +561,7 @@ export default function TasksPage() {
                                 <h2 className="text-lg font-bold text-orange-400 flex items-center gap-2">
                                     ⚠ Punishment Tasks
                                     <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full">
-                                        {punishmentTasks.filter(t => t.status === 'pending' || t.status === 'active').length} active
+                                        {punishmentTasks.length} active
                                     </span>
                                 </h2>
                                 {punishmentTasks.map(task => (
@@ -694,29 +710,80 @@ export default function TasksPage() {
                             ))}
                         </div>
 
-                        {/* Completed Tasks */}
-                        {completedTasks.length > 0 && (
-                            <div className="mt-8">
-                                <h2 className="text-xl font-semibold mb-4 text-text-tertiary">Completed</h2>
-                                <div className="space-y-3 opacity-70">
-                                    {completedTasks.slice(0, 10).map((task) => (
-                                        <Card key={task.id} variant="flat" size="sm" className="!min-h-0">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-sm font-medium">{task.title}</p>
-                                                    <p className="text-xs text-text-tertiary">
-                                                        {task.status === 'completed' || task.status === 'verified' ? '✅ Completed' : '❌ Failed'}
-                                                    </p>
+                        {/* History Sections */}
+                        <div className="mt-8 space-y-8">
+                            {/* Overdue Tasks */}
+                            {overdueTasks.length > 0 && (
+                                <div>
+                                    <h2 className="text-lg font-semibold mb-3 text-orange-400">Overdue</h2>
+                                    <div className="space-y-3 opacity-70">
+                                        {overdueTasks.slice(0, 5).map((task) => (
+                                            <Card key={task.id} variant="flat" size="sm" className="!min-h-0 border-orange-500/30">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm font-medium">{task.title}</p>
+                                                        <p className="text-xs text-orange-400/70">
+                                                            ⏰ Time expired before completion
+                                                        </p>
+                                                    </div>
+                                                    <Badge variant="locked">
+                                                        OVERDUE
+                                                    </Badge>
                                                 </div>
-                                                <Badge variant={task.status === 'completed' || task.status === 'verified' ? 'info' : 'locked'}>
-                                                    {task.status === 'verified' ? '✅ VERIFIED' : task.status.toUpperCase()}
-                                                </Badge>
-                                            </div>
-                                        </Card>
-                                    ))}
+                                            </Card>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+
+                            {/* Failed Tasks */}
+                            {failedTasks.length > 0 && (
+                                <div>
+                                    <h2 className="text-lg font-semibold mb-3 text-red-500">Failed / Rejected</h2>
+                                    <div className="space-y-3 opacity-70">
+                                        {failedTasks.slice(0, 5).map((task) => (
+                                            <Card key={task.id} variant="flat" size="sm" className="!min-h-0 border-red-500/30">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm font-medium">{task.title}</p>
+                                                        <p className="text-xs text-red-400/70">
+                                                            ❌ Failed validation or marked failed
+                                                        </p>
+                                                    </div>
+                                                    <Badge variant="locked">
+                                                        FAILED
+                                                    </Badge>
+                                                </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Completed Tasks */}
+                            {completedTasks.length > 0 && (
+                                <div>
+                                    <h2 className="text-lg font-semibold mb-3 text-text-tertiary">Completed</h2>
+                                    <div className="space-y-3 opacity-70">
+                                        {completedTasks.slice(0, 10).map((task) => (
+                                            <Card key={task.id} variant="flat" size="sm" className="!min-h-0">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm font-medium">{task.title}</p>
+                                                        <p className="text-xs text-text-tertiary">
+                                                            ✅ Successfully completed
+                                                        </p>
+                                                    </div>
+                                                    <Badge variant="info">
+                                                        {task.status === 'verified' ? '✅ VERIFIED' : 'COMPLETED'}
+                                                    </Badge>
+                                                </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

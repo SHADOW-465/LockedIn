@@ -73,7 +73,7 @@ export function useRealtimeQuery<T>(
         }
     }, [fetchData])
 
-    return { data, loading, error, refetch: fetchData }
+    return { data, loading, error, refetch: fetchData, setData }
 }
 
 /**
@@ -138,5 +138,5 @@ export function useRealtimeSingle<T>(
         }
     }, [fetchData])
 
-    return { data, loading, error, refetch: fetchData }
+    return { data, loading, error, refetch: fetchData, setData }
 }
