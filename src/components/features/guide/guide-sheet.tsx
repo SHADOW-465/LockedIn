@@ -1,0 +1,240 @@
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { X } from 'lucide-react'
+
+interface NavCard {
+  href: string
+  label: string
+  description: string
+}
+
+interface GuideMessage {
+  role: 'user' | 'assistant'
+  content: string
+  navCard?: NavCard
+  error?: boolean
+}
+
+interface Props {
+  onClose: () => void
+}
+
+const QUICK_TOPICS = [
+  'How does proof work?',
+  'What are punishments?',
+  'How do sessions work?',
+  'What is the mood check-in?',
+  'How do I use the calendar?',
+  'Where is my session history?',
+]
+
+export function GuideSheet({ onClose }: Props) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const [messages, setMessages] = useState<GuideMessage[]>([])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || loading) return
+
+    const history = messages
+      .filter((m) => !m.error)
+      .slice(-6)
+      .map((m) => ({ role: m.role, content: m.content }))
+
+    setMessages((prev) => [...prev, { role: 'user', content: text }])
+    setInput('')
+    setLoading(true)
+
+    try {
+      const res = await fetch('/api/guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, currentPage: pathname, history }),
+      })
+
+      if (res.status === 429) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: 'Slow down — try again in a moment.', error: true },
+        ])
+        return
+      }
+
+      if (!res.ok) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: 'Something went wrong. Try again.', error: true },
+        ])
+        return
+      }
+
+      const data = await res.json()
+      if (data.error) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: data.error, error: true },
+        ])
+        return
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: data.reply, navCard: data.navCard },
+      ])
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: 'Something went wrong. Try again.', error: true },
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleNavCard = (href: string) => {
+    onClose()
+    router.push(href)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Sheet */}
+      <div className="relative z-10 flex flex-col bg-[#13131c] border-t border-white/10 rounded-t-2xl max-h-[78vh]">
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-8 h-1 rounded-full bg-white/20" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center gap-3 px-4 py-2 border-b border-white/5 shrink-0">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-700 to-pink-600 flex items-center justify-center text-xs shrink-0">
+            👤
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-white">The Master</p>
+            <p className="text-[10px] text-white/40">App Guide · In character</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="ml-auto text-white/30 hover:text-white/60 transition-colors"
+            aria-label="Close guide"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Quick topic pills — only shown before any conversation */}
+        {messages.length === 0 && (
+          <div className="flex gap-2 flex-wrap px-4 py-3 shrink-0">
+            {QUICK_TOPICS.map((topic) => (
+              <button
+                key={topic}
+                onClick={() => sendMessage(topic)}
+                className="bg-white/5 border border-white/10 rounded-full px-3 py-1 text-[11px] text-white/50 hover:text-white/80 hover:bg-white/10 transition-all whitespace-nowrap"
+              >
+                {topic}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Message list */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div className="max-w-[85%]">
+                <div
+                  className={`rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+                    msg.role === 'user'
+                      ? 'bg-purple-900/30 text-white rounded-br-sm'
+                      : msg.error
+                      ? 'bg-red-900/20 text-red-300 rounded-bl-sm'
+                      : 'bg-purple-950/60 text-purple-100 rounded-bl-sm'
+                  }`}
+                >
+                  {msg.content}
+                </div>
+                {msg.navCard && (
+                  <div className="mt-2 bg-black/40 border border-purple-800/50 rounded-xl p-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-purple-300 truncate">
+                        {msg.navCard.label}
+                      </p>
+                      <p className="text-[10px] text-white/40 truncate">
+                        {msg.navCard.description}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleNavCard(msg.navCard!.href)}
+                      className="shrink-0 bg-purple-700 hover:bg-purple-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      Go →
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {/* Typing indicator */}
+          {loading && (
+            <div className="flex justify-start">
+              <div className="bg-purple-950/60 rounded-2xl rounded-bl-sm px-4 py-3">
+                <div className="flex gap-1 items-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400/60 animate-bounce [animation-delay:0ms]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400/60 animate-bounce [animation-delay:150ms]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400/60 animate-bounce [animation-delay:300ms]" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div ref={bottomRef} />
+        </div>
+
+        {/* Input row */}
+        <div className="flex gap-2 items-center px-4 py-3 border-t border-white/5 shrink-0">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                sendMessage(input)
+              }
+            }}
+            placeholder="Ask anything about the app…"
+            className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 transition-colors"
+            disabled={loading}
+          />
+          <button
+            onClick={() => sendMessage(input)}
+            disabled={!input.trim() || loading}
+            className="w-8 h-8 rounded-full bg-purple-700 disabled:bg-white/10 disabled:cursor-not-allowed flex items-center justify-center text-white text-sm transition-colors hover:bg-purple-600"
+            aria-label="Send message"
+          >
+            ↑
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

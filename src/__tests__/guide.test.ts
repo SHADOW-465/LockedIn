@@ -87,7 +87,8 @@ describe('Guide: parseNavCard()', () => {
 // ── Route handler tests ──────────────────────────────────────────────────
 
 describe('Guide: POST /api/guide', () => {
-  let POST: (req: Request) => Promise<Response>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let POST: (req: any) => Promise<Response>
 
   beforeEach(async () => {
     vi.clearAllMocks()
