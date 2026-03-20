@@ -16,7 +16,7 @@ npm run test       # Run all tests (vitest)
 npx vitest run src/__tests__/your-file.test.ts
 ```
 
-Tests live in `src/__tests__/` and use Vitest with Node environment. The config alias `@/` maps to `src/`. Current test files: `chat-api`, `onboarding`, `punishment`, `rewards`, `task-generation`, `verification`, `session-start`.
+Tests live in `src/__tests__/` and use Vitest with Node environment. The config alias `@/` maps to `src/`. Current test files: `chat-api`, `onboarding`, `punishment`, `rewards`, `task-generation`, `verification`, `session-start`, `mood-checkin`, `punishment-pool`, `punishment-wheel`, `guide`.
 
 ## Required Environment Variables
 
@@ -34,7 +34,7 @@ OPENROUTER_API_KEY=
 
 Next.js 15 App Router with three route groups:
 - `(auth)` — `/login`, `/signup` — no layout wrapper
-- `(dashboard)` — `/home`, `/tasks`, `/chat`, `/journal`, `/regimens`, `/achievements`, `/calendar`, `/settings`, `/feedback` — wrapped in `src/app/(dashboard)/layout.tsx` (a thin server component pass-through with no auth logic)
+- `(dashboard)` — `/home`, `/tasks`, `/chat`, `/journal`, `/regimens`, `/achievements`, `/calendar`, `/history`, `/settings`, `/feedback` — wrapped in `src/app/(dashboard)/layout.tsx`, which also mounts `<GuideFab />` (the floating `?` app guide button)
 - `onboarding` — 11-step onboarding flow at `/onboarding`
 
 Root route: `src/app/page.tsx` is a **server component** that checks auth via SSR and redirects authenticated users before any HTML is sent. The landing page UI lives in `src/app/landing-page.tsx` (client component, rendered only for unauthenticated visitors).
@@ -43,10 +43,21 @@ API routes under `src/app/api/`:
 - `POST /api/chat` — AI chat with persona, safeword detection, care mode, master task `[TASK:{...}]` parsing
 - `POST /api/tasks/generate` — AI task generation (5/day limit via `daily_task_log`)
 - `POST /api/tasks/complete` — Mark task complete, update willpower score
+- `POST /api/tasks/fail` — Mark task failed, apply punishment
+- `POST /api/tasks/expire` — Expire overdue tasks (called from cron)
+- `POST /api/tasks/user-create` — Slave-created tasks
 - `POST /api/verify` — Vision AI proof photo verification
+- `POST /api/proof/submit` — Submit proof document for a task
 - `POST /api/regimens/complete-day` — AI-gated regimen advancement
 - `GET  /api/usage` — Token usage meter
 - `POST /api/punish` — Apply punishment
+- `GET/POST /api/punishment-pool` — Read/create custom punishment pool entries (max 20 custom)
+- `DELETE /api/punishment-pool/[id]` — Remove a custom entry
+- `POST /api/punishment-wheel/spin` — Spin punishment wheel, returns AI-narrated result
+- `POST /api/mood/checkin` — Submit mood check-in (energy/stress/arousal/submission sliders + tags); triggers care mode if extreme values
+- `POST /api/checkin/ensure` — Ensures a daily check-in row exists
+- `POST /api/profile/update` — Update profile fields (blocked during active session)
+- `POST /api/guide` — AI Master app guide: accepts `{ message, currentPage, history[] }`, returns `{ reply, navCard? }`. Auth via SSR cookie client. Rate-limited (20 req/min in-memory).
 - `POST /api/sessions/start` — Create session with config, writes `session_started` event; returns 409 `active_session_exists` if a session is already running
 - `POST /api/sessions/extend` — Add minutes to session, recalculate `scheduled_end_time`, write `timer_extended` event
 - `POST /api/sessions/complete` — Finalize session after client archival (status → `completed`)
@@ -57,10 +68,10 @@ API routes under `src/app/api/`:
 ### Auth & Routing
 
 Two-layer auth guard:
-1. **`src/middleware.ts`** (Edge Runtime) — primary security boundary. Validates JWT via `supabase.auth.getUser()`, then checks `profiles.onboarding_completed`. Caches onboarding status in a 24h httpOnly cookie (`x-onboarding-done`) to skip DB on repeat requests. Root path (`/`) is handled specially: unauthenticated users pass through to the landing page; authenticated users are redirected to `/home` or `/onboarding` at the Edge.
+1. **`src/proxy.ts`** (Next.js 15 proxy, Node.js runtime) — primary security boundary. Validates JWT via `supabase.auth.getUser()`, then checks `profiles.onboarding_completed`. Caches onboarding status in a 24h httpOnly cookie (`x-onboarding-done`) to skip DB on repeat requests. Root path (`/`) is handled specially: unauthenticated users pass through to the landing page; authenticated users are redirected to `/home` or `/onboarding`.
 2. **`src/components/route-guard.tsx`** (client) — **sole client-side guard**, lives in the root layout and wraps all pages. Handles redirects for unauthenticated users, incomplete onboarding, and logged-in users on auth pages. Also renders the global loading spinner while `useAuth()` initializes.
 
-**The `(dashboard)/layout.tsx` has no auth logic** — it is a plain server component that renders `{children}`. Do not add guards there.
+**The `(dashboard)/layout.tsx` has no auth logic** — do not add guards there. It only renders `{children}` and `<GuideFab />`.
 
 Public paths (never hit auth check): `/login`, `/signup`, `/auth/*`, `/api/*`
 
@@ -72,7 +83,7 @@ Public paths (never hit auth check): `/login`, `/signup`, `/auth/*`, `/api/*`
 |--------|------|-----|-----|
 | Browser (anon) | `src/lib/supabase/client.ts` → `getSupabase()` | anon key | Client components, hooks |
 | Server admin | `src/lib/supabase/server.ts` → `getServerSupabase()` | service_role | API routes — bypasses RLS |
-| SSR middleware | `createServerClient` from `@supabase/ssr` | anon key | `src/middleware.ts` only |
+| SSR proxy | `createServerClient` from `@supabase/ssr` | anon key | `src/proxy.ts` and API routes that need `auth.getUser()` |
 | SSR page | `createServerClient` + `await cookies()` | anon key | Server components (e.g., `src/app/page.tsx`) |
 
 The admin client (`getServerSupabase()`) bypasses RLS — never expose it to the browser. The SSR page pattern requires `await cookies()` (async in Next.js 15+).
@@ -109,7 +120,10 @@ All AI functions return `GenerateResult { text: string; usage: TokenUsage }` —
 ```typescript
 const { text, usage } = await generateText(prompt, aiContext, systemOverride?)
 const { text, usage } = await generateSimpleText(systemPrompt, userPrompt)
+const { text, usage } = await generateWithHistory(systemPrompt, history, userMessage)
 ```
+
+`generateWithHistory` is for multi-turn conversations — accepts `history: { role: 'user' | 'assistant'; content: string }[]` and uses `max_tokens: 1024`. Used by `/api/guide`.
 
 After each call, track tokens:
 ```typescript
@@ -117,6 +131,8 @@ await trackUsage(supabase, userId, 'llama-3.3-70b-versatile', usage, 'chat')
 ```
 
 **AI routing:** Groq (`llama-3.3-70b-versatile`) is primary. Falls back to OpenRouter (`google/gemini-2.0-flash-exp:free`) on error. Vision uses OpenRouter (`llama-3.2-11b-vision-instruct:free`).
+
+**Guide system:** `src/lib/ai/guide-knowledge.ts` exports `APP_KNOWLEDGE` (static feature reference string) and `buildGuidePrompt(currentPage)`. Nav card parsing (`[NAV:/path|Label|Description]` markers) lives in `src/app/api/guide/parse-nav-card.ts` as an exported pure function. The UI is `src/components/features/guide/guide-fab.tsx` (floating `?` button) + `src/components/features/guide/guide-sheet.tsx` (slide-up chat sheet). Auth in `/api/guide` uses the SSR cookie client (`createServerClient` + `await cookies()`), not `getServerSupabase()`.
 
 **Token optimisation:** `src/lib/ai/context-builder.ts` `buildProfileSummary()` builds a compact ~80-token profile string. Pass it as `profileSummary` to the chat API instead of the full `AIContext` (~60% token reduction).
 
@@ -132,6 +148,7 @@ await trackUsage(supabase, userId, 'llama-3.3-70b-versatile', usage, 'chat')
 
 - **`rewards.ts`** — `awardCompletion(supabase, userId, difficulty)` grants XP (5/10/20/40/80 for difficulty 1–5) and creates a `reward` notification. `checkAchievements(supabase, userId)` evaluates all achievement conditions. `awardStreak(supabase, userId, streak)` checks streak milestones.
 - **`punishment.ts`** — punishment application logic called from `/api/punish`.
+- **`punishment-wheel.ts`** — wheel spin logic: selects from the merged pool (system + custom entries), returns the result. Called from `/api/punishment-wheel/spin`.
 
 ### Scoring System
 
@@ -192,13 +209,16 @@ Heavy data (chat history, images, videos) is **never retained on the server post
 
 ### Database Schema
 
-Types are in `src/lib/supabase/schema.ts`. Key tables: `profiles`, `sessions`, `tasks`, `chat_messages`, `session_events`, `proof_documents`, `regimens`, `achievements`, `notifications`, `daily_task_log`, `api_usage`.
+Types are in `src/lib/supabase/schema.ts`. Key tables: `profiles`, `sessions`, `tasks`, `chat_messages`, `session_events`, `proof_documents`, `regimens`, `achievements`, `notifications`, `daily_task_log`, `api_usage`, `mood_checkins`, `punishment_pool`.
 
 Migrations in `supabase/migrations/` (applied in order):
 - `20240523000000_update_profiles.sql` — base profiles schema
 - `20260218_add_api_usage.sql` — `api_usage` table. Note: not in the TypeScript `TableName` union but queried by `trackUsage`.
 - `20260305_session_lifecycle.sql` — adds `total_duration_minutes`, `session_config`, `extension_count`, `last_extended_at` to `sessions`; `task_type`, `source` to `tasks`
 - `20260305_session_events_proof_docs.sql` — creates `session_events` and `proof_documents` tables
+- `20260320_task_types_and_user_source.sql` — adds `user_create` to the `source` enum
+- `20260320_mood_checkins.sql` — creates `mood_checkins` table (energy, stress, arousal, submission, tags)
+- `20260320_punishment_pool.sql` — creates `punishment_pool` table (user_id, title, description, severity, requires_proof, is_system)
 
 ### UI Components
 
