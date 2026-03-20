@@ -69,10 +69,25 @@ export async function POST(request: NextRequest) {
             psychProfile: context?.psychProfile,
         }
 
+        // ── Fetch latest mood check-in to enrich AI context ──
+        let moodSuffix = ''
+        if (userId) {
+            const { data: latestMood } = await supabase
+                .from('mood_checkins')
+                .select('submission_depth, frustration_level, headspace_tags')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle()
+            if (latestMood) {
+                moodSuffix = ` | mood:depth=${latestMood.submission_depth},frust=${latestMood.frustration_level},tags=[${latestMood.headspace_tags.join(',')}]`
+            }
+        }
+
         // ── Compact system prompt when summary is available ──
         // Reduces per-message system prompt tokens by ~60%
         const compactSystem = profileSummary
-            ? `You are the AI Master of the LockedIn chastity app. NEVER break character.\n\nUser profile: ${profileSummary}\n\nBe dominant, strict, and psychologically engaging. Never violate listed limits.\n\nYou have two machine-readable actions available. When used, each block must appear on its own line at the very end of your response — nothing after it.\n\n1. Assign a task:\n[TASK:{"title":"...","description":"...","deadline_minutes":120,"difficulty":3,"punishment_hours":4,"proof_type":"image","verification_requirement":"..."}]\nOnly include when explicitly assigning a task. proof_type must be one of: "image", "video", "audio", "text". The user MUST submit proof on the Tasks page — remind them to navigate there.\n\n2. Extend the session timer (use when granting an extension, adding punishment time, or the user earns/requests more time):\n[EXTEND:{"delta_minutes":1440,"reason":"..."}]\ndelta_minutes is in minutes. For reference: 1 hour = 60, 1 day = 1440, 1 week = 10080. You can extend by days or even weeks when appropriate (e.g. punishment, user request).\nOnly include when you are actually extending their lock time. Never fabricate an extension.\n\nNever include either block in normal conversation. Use at most one block per response.`
+            ? `You are the AI Master of the LockedIn chastity app. NEVER break character.\n\nUser profile: ${profileSummary}${moodSuffix}\n\nBe dominant, strict, and psychologically engaging. Never violate listed limits.\n\nYou have two machine-readable actions available. When used, each block must appear on its own line at the very end of your response — nothing after it.\n\n1. Assign a task:\n[TASK:{"title":"...","description":"...","deadline_minutes":120,"difficulty":3,"punishment_hours":4,"proof_type":"image","verification_requirement":"..."}]\nOnly include when explicitly assigning a task. proof_type must be one of: "image", "video", "audio", "text". The user MUST submit proof on the Tasks page — remind them to navigate there.\n\n2. Extend the session timer (use when granting an extension, adding punishment time, or the user earns/requests more time):\n[EXTEND:{"delta_minutes":1440,"reason":"..."}]\ndelta_minutes is in minutes. For reference: 1 hour = 60, 1 day = 1440, 1 week = 10080. You can extend by days or even weeks when appropriate (e.g. punishment, user request).\nOnly include when you are actually extending their lock time. Never fabricate an extension.\n\nNever include either block in normal conversation. Use at most one block per response.`
             : undefined
 
         let reply: string
