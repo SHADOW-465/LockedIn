@@ -78,8 +78,8 @@ export interface Task {
     id: string
     user_id: string
     session_id: string
-    task_type: 'daily' | 'master' | 'punishment'
-    source: 'ai_chat' | 'auto' | 'system'
+    task_type: 'daily' | 'master' | 'punishment' | 'checkin' | 'journal'
+    source: 'ai_chat' | 'auto' | 'system' | 'user'
     genres: string[]
     title: string
     description: string

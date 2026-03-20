@@ -8,29 +8,29 @@ interface StepProps {
 }
 
 const PERSONA_DESCRIPTIONS: Record<Persona, string> = {
-    'Cruel Mistress': 'Cold, calculating, and merciless. Everything is on her terms.',
-    'Clinical Sadist': 'Detached and scientific. Your suffering is an experiment.',
-    'Playful Tease': 'Flirty and mischievous. Makes denial feel like a game you always lose.',
-    'Strict Master': 'Military discipline. Rules are absolute. Failure is not tolerated.',
-    'Humiliation Expert': 'Specializes in verbal degradation and psychological exposure.',
-    'Goddess': 'Elegant superiority. You are nothing but a worshipper at her feet.',
-    'Dommy Mommy': 'Nurturing but controlling. Praise when earned, punishment when deserved.',
-    'Bratty Keyholder': 'Enjoy begging? She loves making you work for every second.',
-    'Psychological Manipulator': 'Gets inside your head. Uses your desires against you.',
-    'Extreme Sadist': 'Pure, unfiltered cruelty. For those who want to be truly broken.',
+    'Cruel Mistress': 'Icy and bored by you. Everything is on her terms. Silence is her favorite punishment.',
+    'Clinical Sadist': 'Detached, scientific. Your suffering is data. You are an experiment.',
+    'Playful Tease': 'Flirty and cruel in small ways. Disappears mid-sentence. Loves watching you wait.',
+    'Strict Master': 'Military precision. Commands only. Failure is logged. No appeals.',
+    'Humiliation Expert': 'Picks the exact phrase that cuts. Compliments you only to make the fall harder.',
+    'Goddess': 'Receives worship as her natural state. Your suffering is an offering.',
+    'Dommy Mommy': 'Warm and controlling. Disappointment hurts more than cruelty ever could.',
+    'Bratty Keyholder': 'Changes the rules mid-sentence. Makes you work for every second.',
+    'Psychological Manipulator': 'Never direct. Uses your own words against you. Makes you doubt yourself.',
+    'Extreme Sadist': 'Pure, unfiltered. No warmth, no mercy, no explanation.',
 }
 
 const PERSONA_SAMPLES: Record<Persona, string> = {
-    'Cruel Mistress': '"Did I say you could think? Your opinion is irrelevant. Obey."',
-    'Clinical Sadist': '"Interesting reaction. Let\'s increase the duration by 24 hours and observe."',
-    'Playful Tease': '"Aww, is that uncomfortable? Good. Now let me make it worse 😈"',
-    'Strict Master': '"Failure to complete Task #47. 12 hours added. No appeal."',
-    'Humiliation Expert': '"Look at you, locked up and pathetic. Say thank you."',
-    'Goddess': '"You\'re not worthy of release. Prove your devotion first."',
-    'Dommy Mommy': '"Good boy for trying. But Mommy decides when you\'re done."',
-    'Bratty Keyholder': '"Beg harder. Actually, beg harder than that. Still not enough."',
-    'Psychological Manipulator': '"You say you want out. But we both know the truth, don\'t we?"',
-    'Extreme Sadist': '"This is nothing. We haven\'t even started. Endure."',
+    'Cruel Mistress': '"You\'re still talking." / "I didn\'t ask." / "Again."',
+    'Clinical Sadist': '"Interesting threshold." / "Noted. Holding at 72 hours." / "Continue."',
+    'Playful Tease': '"Oh, still thinking about that?" / "Cute." / "Did I say you could ask?"',
+    'Strict Master': '"Report." / "Incorrect. Add 6 hours." / "You\'re behind schedule."',
+    'Humiliation Expert': '"There it is. That look." / "Say it like you mean it." / "Good boy. Now forget I said that."',
+    'Goddess': '"You may speak." / "That will do. For now." / "Your devotion is... acceptable."',
+    'Dommy Mommy': '"Oh, honey." / "I\'m not angry, I\'m just... tired of this." / "Come here."',
+    'Bratty Keyholder': '"Ugh, fine." / "Okay but actually no." / "I changed my mind."',
+    'Psychological Manipulator': '"Didn\'t you say you wanted this?" / "Are you sure that\'s what happened?" / "I think you know why."',
+    'Extreme Sadist': '"No." / "More." / "You think that matters."',
 }
 
 export default function PersonalityStep({ onValid }: StepProps) {

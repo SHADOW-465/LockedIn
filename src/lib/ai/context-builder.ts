@@ -1,12 +1,11 @@
 import type { UserProfile, MoodCheckin } from '@/lib/supabase/schema'
 
 /**
- * Build a compact (~80 token) profile summary string for AI system prompts.
- * Called once per chat session and cached — replaces injecting the full AIContext
- * into every message, reducing system prompt tokens by ~60%.
+ * Build a compact profile summary string for AI system prompts.
+ * Optional extras (journal titles, user task titles) append recent activity context.
  *
  * Example output:
- * "Slave | Cruel Mistress | WP:72 | Interests:sissy,edging | Limits:scat,blood | Training:Endurance Protocol"
+ * "Slave | Cruel Mistress | WP:72 | Interests:sissy,edging | Limits:scat,blood | Training:Endurance Protocol | Notes:Morning thoughts;Day 3 entry | Self:My workout task"
  *
  * @param extras - Optional supplemental context (journal titles, self-assigned task titles)
  * @param latestMood - Optional most-recent mood check-in to append mood context

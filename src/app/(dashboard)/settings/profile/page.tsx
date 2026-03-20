@@ -6,103 +6,81 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { TopBar } from '@/components/layout/top-bar'
 import { BottomNav } from '@/components/layout/bottom-nav'
-import { ArrowLeft, Save, Loader2, User, Lock as LockIcon } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, User, Lock as LockIcon, X } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
-import { getSupabase } from '@/lib/supabase/client'
 import { getActiveSession } from '@/lib/supabase/sessions'
 import Link from 'next/link'
-
-const PERSONALITIES = [
-    'Cruel Mistress', 'Strict Governess', 'Sadistic Queen',
-    'Cold Domme', 'Teasing Brat', 'Caring Domme',
-]
+import { PERSONAS, TIERS, FETISH_GENRES } from '@/lib/stores/onboarding-store'
 
 export default function ProfileEditPage() {
-    const { user, profile } = useAuth()
-    const [username, setUsername] = useState('')
-    const [aiPersonality, setAiPersonality] = useState('')
+    const { user, profile, refreshProfile } = useAuth()
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
     const [isLocked, setIsLocked] = useState(false)
 
-    // Preferences
+    // Profile fields
+    const [tier, setTier] = useState('')
+    const [aiPersonality, setAiPersonality] = useState('')
+    const [interests, setInterests] = useState<string[]>([])
     const [hardLimits, setHardLimits] = useState<string[]>([])
     const [softLimits, setSoftLimits] = useState<string[]>([])
+    const [limitInput, setLimitInput] = useState('')
+    const [softInput, setSoftInput] = useState('')
 
     useEffect(() => {
         if (profile) {
-            setUsername(profile.username ?? '')
-            setAiPersonality(profile.ai_personality ?? 'Cruel Mistress')
+            setTier(profile.tier ?? 'Newbie')
+            setAiPersonality(profile.ai_personality ?? 'Strict Master')
+            setInterests(profile.interests ?? [])
+            setHardLimits(profile.hard_limits ?? [])
+            setSoftLimits(profile.soft_limits ?? [])
         }
     }, [profile])
 
-    // Check for active session — settings locked during session
     useEffect(() => {
         if (!user) return
-        getActiveSession(user.id).then((session) => {
-            setIsLocked(!!session)
-        })
-    }, [user])
-
-    useEffect(() => {
-        if (!user) return
-        const supabase = getSupabase()
-        supabase
-            .from('user_preferences')
-            .select('hard_limits, soft_limits')
-            .eq('user_id', user.id)
-            .single()
-            .then(({ data }: { data: { hard_limits: string[]; soft_limits: string[] } | null }) => {
-                if (data) {
-                    setHardLimits(data.hard_limits ?? [])
-                    setSoftLimits(data.soft_limits ?? [])
-                }
-            })
+        getActiveSession(user.id).then(sess => setIsLocked(!!sess))
     }, [user])
 
     async function handleSave() {
         if (!user || isLocked) return
         setSaving(true)
-        const supabase = getSupabase()
-
-        // Update profile
-        await supabase
-            .from('profiles')
-            .update({
-                username: username.trim() || null,
-                ai_personality: aiPersonality,
+        try {
+            await fetch('/api/profile/update', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    tier,
+                    ai_personality: aiPersonality,
+                    interests,
+                    hard_limits: hardLimits,
+                    soft_limits: softLimits,
+                }),
             })
-            .eq('id', user.id)
-
-        // Update preferences
-        await supabase
-            .from('user_preferences')
-            .update({
-                hard_limits: hardLimits,
-                soft_limits: softLimits,
-            })
-            .eq('user_id', user.id)
-
-        setSaving(false)
-        setSaved(true)
-        setTimeout(() => setSaved(false), 2000)
-    }
-
-    function handleLimitChange(type: 'hard' | 'soft', value: string) {
-        const setter = type === 'hard' ? setHardLimits : setSoftLimits
-        const current = type === 'hard' ? hardLimits : softLimits
-        if (current.includes(value)) {
-            setter(current.filter((l) => l !== value))
-        } else {
-            setter([...current, value])
+            await refreshProfile()
+            setSaved(true)
+            setTimeout(() => setSaved(false), 2000)
+        } finally {
+            setSaving(false)
         }
     }
 
-    const LIMIT_OPTIONS = [
-        'Blood', 'Permanent marks', 'Public exposure', 'Minors',
-        'Animals', 'Financial', 'Extreme pain', 'Humiliation (public)',
-        'Scat', 'Vomit', 'Choking', 'Needles',
-    ]
+    const toggleInterest = (g: string) => {
+        setInterests(prev => prev.includes(g) ? prev.filter(i => i !== g) : [...prev, g])
+    }
+
+    const addLimit = (type: 'hard' | 'soft') => {
+        const val = (type === 'hard' ? limitInput : softInput).trim()
+        if (!val) return
+        if (type === 'hard') {
+            setHardLimits(prev => [...new Set([...prev, val])])
+            setLimitInput('')
+        } else {
+            setSoftLimits(prev => [...new Set([...prev, val])])
+            setSoftInput('')
+        }
+    }
 
     return (
         <>
@@ -110,17 +88,16 @@ export default function ProfileEditPage() {
 
             <div className="min-h-screen pb-24 lg:pb-8 p-4">
                 <div className="max-w-2xl mx-auto space-y-6">
+
                     <div className="flex items-center gap-3">
                         <Link href="/settings" className="text-text-tertiary hover:text-text-primary transition-colors">
                             <ArrowLeft size={20} />
                         </Link>
                         <h1 className="text-3xl font-bold flex items-center gap-2">
-                            <User size={28} className="text-purple-primary" />
-                            Edit Profile
+                            <User size={28} className="text-purple-primary" /> Training Profile
                         </h1>
                     </div>
 
-                    {/* Session Lock Banner */}
                     {isLocked && (
                         <Card variant="flat" size="sm" className="!min-h-0 border-red-primary/30 bg-red-primary/5">
                             <div className="flex items-center gap-3">
@@ -133,39 +110,71 @@ export default function ProfileEditPage() {
                         </Card>
                     )}
 
-                    {/* Username */}
+                    {/* Tier */}
                     <Card variant="hero">
-                        <div className="space-y-4">
-                            <div>
-                                <label className="text-xs text-text-tertiary mb-2 block">Username</label>
-                                <input
-                                    type="text"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    disabled={isLocked}
-                                    placeholder="Enter your username..."
-                                    className="w-full bg-bg-tertiary border border-white/10 rounded-[var(--radius-md)] p-3 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-purple-primary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                />
-                            </div>
-
-                            {/* AI Personality */}
-                            <div>
-                                <label className="text-xs text-text-tertiary mb-2 block">AI Personality</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {PERSONALITIES.map((p) => (
-                                        <button
-                                            key={p}
-                                            onClick={() => !isLocked && setAiPersonality(p)}
-                                            disabled={isLocked}
-                                            className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-colors border ${aiPersonality === p
+                        <div className="space-y-3">
+                            <label className="text-xs font-semibold text-text-tertiary uppercase tracking-wide block">Tier</label>
+                            <div className="flex flex-wrap gap-2">
+                                {TIERS.map(t => (
+                                    <button
+                                        key={t}
+                                        onClick={() => !isLocked && setTier(t)}
+                                        disabled={isLocked}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                                            tier === t
                                                 ? 'bg-purple-primary text-white border-purple-primary'
-                                                : 'bg-bg-tertiary hover:bg-bg-hover border-white/5'
-                                                } ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                        >
-                                            {p}
-                                        </button>
-                                    ))}
-                                </div>
+                                                : 'bg-bg-tertiary border-white/5 hover:bg-bg-hover'
+                                        } ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    >
+                                        {t}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* AI Persona */}
+                    <Card variant="raised">
+                        <div className="space-y-3">
+                            <label className="text-xs font-semibold text-text-tertiary uppercase tracking-wide block">AI Persona</label>
+                            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                                {PERSONAS.map(p => (
+                                    <button
+                                        key={p}
+                                        onClick={() => !isLocked && setAiPersonality(p)}
+                                        disabled={isLocked}
+                                        className={`w-full text-left px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                                            aiPersonality === p
+                                                ? 'border-purple-primary/40 bg-bg-secondary text-purple-primary'
+                                                : 'border-white/5 bg-bg-secondary/50 hover:bg-bg-secondary'
+                                        } ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    >
+                                        {p}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Fetishes / Interests */}
+                    <Card variant="raised">
+                        <div className="space-y-3">
+                            <label className="text-xs font-semibold text-text-tertiary uppercase tracking-wide block">Interests & Fetishes</label>
+                            <div className="flex flex-wrap gap-2">
+                                {FETISH_GENRES.map(g => (
+                                    <button
+                                        key={g}
+                                        onClick={() => !isLocked && toggleInterest(g)}
+                                        disabled={isLocked}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                                            interests.includes(g)
+                                                ? 'bg-purple-primary/20 text-purple-primary border-purple-primary/50'
+                                                : 'bg-bg-tertiary border-white/5 hover:bg-bg-hover'
+                                        } ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    >
+                                        {g}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     </Card>
@@ -174,24 +183,34 @@ export default function ProfileEditPage() {
                     <Card variant="raised">
                         <div className="space-y-3">
                             <div className="flex items-center gap-2">
-                                <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">Hard Limits</h3>
-                                <Badge variant="locked">Always Safe</Badge>
+                                <label className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">Hard Limits</label>
+                                <Badge variant="locked">Always enforced</Badge>
                             </div>
-                            <p className="text-xs text-text-tertiary">These are absolute boundaries. The AI will never cross them.</p>
-                            <div className="flex flex-wrap gap-2">
-                                {LIMIT_OPTIONS.map((opt) => (
-                                    <button
-                                        key={`hard-${opt}`}
-                                        onClick={() => handleLimitChange('hard', opt)}
-                                        className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-colors cursor-pointer border ${hardLimits.includes(opt)
-                                            ? 'bg-red-primary/20 text-red-primary border-red-primary/50'
-                                            : 'bg-bg-tertiary hover:bg-bg-hover border-white/5'
-                                            }`}
-                                    >
-                                        {hardLimits.includes(opt) ? '🚫 ' : ''}{opt}
-                                    </button>
+                            <div className="flex flex-wrap gap-2 min-h-[32px]">
+                                {hardLimits.map(l => (
+                                    <span key={l} className="flex items-center gap-1 px-2 py-1 bg-red-primary/10 text-red-primary border border-red-primary/30 rounded-full text-xs">
+                                        {l}
+                                        {!isLocked && (
+                                            <button onClick={() => setHardLimits(prev => prev.filter(i => i !== l))} className="hover:text-red-300 transition-colors">
+                                                <X size={10} />
+                                            </button>
+                                        )}
+                                    </span>
                                 ))}
                             </div>
+                            {!isLocked && (
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Add hard limit..."
+                                        value={limitInput}
+                                        onChange={e => setLimitInput(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && addLimit('hard')}
+                                        className="flex-1 bg-bg-tertiary border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-primary/50 placeholder:text-text-tertiary"
+                                    />
+                                    <Button size="sm" variant="ghost" onClick={() => addLimit('hard')}>Add</Button>
+                                </div>
+                            )}
                         </div>
                     </Card>
 
@@ -199,31 +218,37 @@ export default function ProfileEditPage() {
                     <Card variant="raised">
                         <div className="space-y-3">
                             <div className="flex items-center gap-2">
-                                <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">Soft Limits</h3>
+                                <label className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">Soft Limits</label>
                                 <Badge variant="warning">Negotiable</Badge>
                             </div>
-                            <p className="text-xs text-text-tertiary">The AI may push these boundaries at higher tiers.</p>
-                            <div className="flex flex-wrap gap-2">
-                                {LIMIT_OPTIONS.map((opt) => (
-                                    <button
-                                        key={`soft-${opt}`}
-                                        onClick={() => handleLimitChange('soft', opt)}
-                                        disabled={hardLimits.includes(opt)}
-                                        className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-colors cursor-pointer border ${softLimits.includes(opt)
-                                            ? 'bg-tier-slave/20 text-tier-slave border-tier-slave/50'
-                                            : hardLimits.includes(opt)
-                                                ? 'opacity-30 cursor-not-allowed bg-bg-tertiary border-white/5'
-                                                : 'bg-bg-tertiary hover:bg-bg-hover border-white/5'
-                                            }`}
-                                    >
-                                        {softLimits.includes(opt) ? '⚠️ ' : ''}{opt}
-                                    </button>
+                            <div className="flex flex-wrap gap-2 min-h-[32px]">
+                                {softLimits.map(l => (
+                                    <span key={l} className="flex items-center gap-1 px-2 py-1 bg-tier-slave/10 text-tier-slave border border-tier-slave/30 rounded-full text-xs">
+                                        {l}
+                                        {!isLocked && (
+                                            <button onClick={() => setSoftLimits(prev => prev.filter(i => i !== l))} className="hover:opacity-70 transition-opacity">
+                                                <X size={10} />
+                                            </button>
+                                        )}
+                                    </span>
                                 ))}
                             </div>
+                            {!isLocked && (
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Add soft limit..."
+                                        value={softInput}
+                                        onChange={e => setSoftInput(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && addLimit('soft')}
+                                        className="flex-1 bg-bg-tertiary border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-primary/50 placeholder:text-text-tertiary"
+                                    />
+                                    <Button size="sm" variant="ghost" onClick={() => addLimit('soft')}>Add</Button>
+                                </div>
+                            )}
                         </div>
                     </Card>
 
-                    {/* Save Button */}
                     <Button
                         variant="primary"
                         onClick={handleSave}
@@ -238,6 +263,7 @@ export default function ProfileEditPage() {
                             <><Save size={14} className="mr-2" /> Save Changes</>
                         )}
                     </Button>
+
                 </div>
             </div>
 

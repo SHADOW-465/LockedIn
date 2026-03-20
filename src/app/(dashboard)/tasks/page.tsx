@@ -9,7 +9,7 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { ProofCaptureModal } from '@/components/features/proof/proof-capture-modal'
 import {
     Clock, Camera, AlertTriangle, Sparkles, Upload, Loader2,
-    CheckCircle, XCircle, X, Trophy, Zap
+    CheckCircle, XCircle, X, Trophy, Zap, Plus, BookOpen
 } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { useRealtimeQuery } from '@/lib/hooks/use-realtime'
@@ -290,6 +290,12 @@ export default function TasksPage() {
     const [dailyTaskCount, setDailyTaskCount] = useState(0)
     const [dailyLimitReached, setDailyLimitReached] = useState(false)
     const DAILY_LIMIT = 5
+    const [showCreateForm, setShowCreateForm] = useState(false)
+    const [createType, setCreateType] = useState<'task' | 'journal'>('journal')
+    const [createTitle, setCreateTitle] = useState('')
+    const [createNotes, setCreateNotes] = useState('')
+    const [createDifficulty, setCreateDifficulty] = useState(2)
+    const [creating, setCreating] = useState(false)
 
     const { data: tasks, refetch, setData: setTasks } = useRealtimeQuery<Task>(
         'tasks',
@@ -301,7 +307,20 @@ export default function TasksPage() {
     useEffect(() => {
         if (authLoading) return
         if (user) {
-            getActiveSession(user.id).then(setSession)
+            getActiveSession(user.id).then(sess => {
+            setSession(sess)
+            if (sess) {
+                fetch('/api/checkin/ensure', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        sessionId: sess.id,
+                        date: new Date().toISOString().split('T')[0],
+                    }),
+                }).then(() => refetch()).catch(console.error)
+            }
+        })
 
             // Check for overdue tasks
             fetch('/api/tasks/expire', {
@@ -326,6 +345,9 @@ export default function TasksPage() {
     const activeStatuses = ['pending', 'active', 'verification_pending', 'awaiting_proof', 'proof_submitted']
     const masterTasks = (tasks || []).filter(t => t.task_type === 'master' && activeStatuses.includes(t.status))
     const punishmentTasks = (tasks || []).filter(t => t.task_type === 'punishment' && activeStatuses.includes(t.status))
+    const checkinTasks = (tasks || []).filter(t => t.task_type === 'checkin')
+    const morningCheckin = checkinTasks.find(t => t.title === 'Morning Check-in') ?? null
+    const nightCheckin = checkinTasks.find(t => t.title === 'Night Check-in') ?? null
     const dailyTasksAll = (tasks || []).filter(t => t.task_type === 'daily' || !t.task_type)
 
     const activeTasks = dailyTasksAll.filter((t) => activeStatuses.includes(t.status))
@@ -425,13 +447,35 @@ export default function TasksPage() {
         }
     }
 
-    // (We skipped the handler definitions for brevity in this chunk replacement, but we need to be careful not to delete them if I use a range. 
-    // Actually, I should just replace the filter lines and the return statement start.)
-
-    // Wait, the previous tool call might have shifted lines. Best to target specific blocks. 
-    // Let's just do the filter lines first.
-
-    // Changing approach to just replace the filter lines.
+    const handleCreateEntry = async () => {
+        if (!user || !createTitle.trim()) return
+        setCreating(true)
+        try {
+            const res = await fetch('/api/tasks/user-create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    sessionId: session?.id,
+                    type: createType,
+                    title: createTitle.trim(),
+                    notes: createNotes.trim(),
+                    difficulty: createDifficulty,
+                }),
+            })
+            if (!res.ok) throw new Error('Failed to create')
+            setShowCreateForm(false)
+            setCreateTitle('')
+            setCreateNotes('')
+            setCreateDifficulty(2)
+            refetch()
+        } catch (err) {
+            console.error(err)
+            alert('Failed to create entry')
+        } finally {
+            setCreating(false)
+        }
+    }
 
     return (
         <>
@@ -457,6 +501,13 @@ export default function TasksPage() {
                                     {dailyTaskCount}/{DAILY_LIMIT}
                                 </div>
                                 <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowCreateForm(true)}
+                                >
+                                    <Plus size={14} className="mr-1" /> Create
+                                </Button>
+                                <Button
                                     variant="primary"
                                     size="sm"
                                     onClick={handleGenerateTask}
@@ -481,6 +532,55 @@ export default function TasksPage() {
                                 <p className="text-xs text-text-tertiary mt-1">
                                     Come back tomorrow, slave. Your Master decides when you&apos;ve had enough.
                                 </p>
+                            </div>
+                        )}
+
+                        {/* Daily Check-ins */}
+                        {(morningCheckin || nightCheckin || session) && (
+                            <div className="space-y-3 mb-6">
+                                <h2 className="text-sm font-bold text-teal-400 uppercase tracking-wide flex items-center gap-2">
+                                    🔒 Daily Check-ins
+                                </h2>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {([
+                                        { label: 'Morning', window: '6am–10am', task: morningCheckin },
+                                        { label: 'Night', window: '8pm–midnight', task: nightCheckin },
+                                    ] as const).map(({ label, window, task }) => {
+                                        const statusColor = !task
+                                            ? 'text-text-tertiary'
+                                            : task.status === 'completed' || task.status === 'verified'
+                                                ? 'text-green-400'
+                                                : task.status === 'failed'
+                                                    ? 'text-red-400'
+                                                    : 'text-yellow-400'
+                                        const statusLabel = !task
+                                            ? 'Not yet'
+                                            : task.status === 'completed' || task.status === 'verified'
+                                                ? '✅ Done'
+                                                : task.status === 'failed'
+                                                    ? '❌ Missed'
+                                                    : task.status === 'proof_submitted'
+                                                        ? '🔄 Verifying'
+                                                        : '⏳ Pending'
+                                        return (
+                                            <div key={label} className="bg-bg-secondary border border-teal-400/20 rounded-xl p-3 space-y-2">
+                                                <p className="text-xs font-semibold text-text-tertiary uppercase">{label}</p>
+                                                <p className="text-[10px] text-text-tertiary">{window}</p>
+                                                <p className={`text-sm font-bold ${statusColor}`}>{statusLabel}</p>
+                                                {task && task.status === 'pending' && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="primary"
+                                                        className="w-full !py-1 !text-xs"
+                                                        onClick={() => setProofTask(task)}
+                                                    >
+                                                        <Camera size={11} className="mr-1" /> Submit Photo
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
                             </div>
                         )}
 
@@ -807,6 +907,76 @@ export default function TasksPage() {
                     onClose={() => setProofTask(null)}
                     onSubmitted={() => { setProofTask(null); refetch() }}
                 />
+            )}
+
+            {/* Create Entry Modal */}
+            {showCreateForm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-bg-secondary border border-white/10 rounded-2xl max-w-md w-full p-6 space-y-5">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-bold flex items-center gap-2">
+                                <Plus size={18} className="text-purple-primary" /> New Entry
+                            </h2>
+                            <button onClick={() => setShowCreateForm(false)} className="p-2 hover:bg-white/5 rounded-lg transition-colors">
+                                <X size={18} className="text-text-tertiary" />
+                            </button>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setCreateType('journal')}
+                                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${createType === 'journal' ? 'bg-purple-primary/20 border-purple-primary/50 text-purple-primary' : 'bg-bg-tertiary border-white/5 text-text-tertiary'}`}
+                            >
+                                <BookOpen size={14} className="inline mr-1" /> Journal
+                            </button>
+                            <button
+                                onClick={() => setCreateType('task')}
+                                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${createType === 'task' ? 'bg-purple-primary/20 border-purple-primary/50 text-purple-primary' : 'bg-bg-tertiary border-white/5 text-text-tertiary'}`}
+                            >
+                                <CheckCircle size={14} className="inline mr-1" /> Self Task
+                            </button>
+                        </div>
+                        <div className="space-y-3">
+                            <input
+                                type="text"
+                                placeholder={createType === 'journal' ? 'Entry title...' : 'Task title...'}
+                                value={createTitle}
+                                onChange={e => setCreateTitle(e.target.value)}
+                                className="w-full bg-bg-tertiary border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-purple-primary/50 placeholder:text-text-tertiary"
+                            />
+                            <textarea
+                                placeholder={createType === 'journal' ? 'Write your thoughts...' : 'Describe the task...'}
+                                value={createNotes}
+                                onChange={e => setCreateNotes(e.target.value)}
+                                rows={4}
+                                className="w-full bg-bg-tertiary border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-purple-primary/50 placeholder:text-text-tertiary resize-none"
+                            />
+                            {createType === 'task' && (
+                                <div>
+                                    <label className="text-xs text-text-tertiary mb-1 block">Difficulty: {createDifficulty}/5</label>
+                                    <input
+                                        type="range"
+                                        min={1}
+                                        max={5}
+                                        value={createDifficulty}
+                                        onChange={e => setCreateDifficulty(Number(e.target.value))}
+                                        className="w-full accent-purple-500"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                        <Button
+                            variant="primary"
+                            className="w-full"
+                            onClick={handleCreateEntry}
+                            disabled={creating || !createTitle.trim()}
+                        >
+                            {creating
+                                ? <><Loader2 size={14} className="mr-2 animate-spin" /> Saving...</>
+                                : createType === 'journal' ? 'Save Journal Entry' : 'Create Task'
+                            }
+                        </Button>
+                    </div>
+                </div>
             )}
 
             <BottomNav />

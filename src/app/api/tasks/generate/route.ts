@@ -63,9 +63,9 @@ Response format: VALID JSON only. No markdown fences, no explanation.
   "duration_minutes": 10-120,
   "genres": ["genre1", "genre2"],
   "cage_status": "caged" or "uncaged" or "semi-caged",
-  "verification_type": "photo" or "self-report" or "text",
+  "verification_type": "photo" or "self-report",
   "verification_requirement": "What the proof photo must show",
-  "proof_type": "image" or "video" or "audio" or "text",
+  "proof_type": "image" or "video" or "audio",
   "punishment_hours": 2-48,
   "punishment_additional": "Additional punishment description if failed"
 }`

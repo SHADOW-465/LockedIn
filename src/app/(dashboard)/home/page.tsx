@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BottomNav } from '@/components/layout/bottom-nav'
-import { Flame, TrendingUp, AlertTriangle, Calendar, Target, Zap, Play, Trophy, Dumbbell, Loader2 } from 'lucide-react'
+import { Flame, TrendingUp, Calendar, Target, Zap, Play, Trophy, Dumbbell, Loader2 } from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -488,29 +488,6 @@ export default function DashboardPage() {
                                     {session ? 'Based on current compliance. Subject to AI adjustments.' : 'Start a session to see your release date.'}
                                 </p>
                                 <Badge variant="info">Dynamic</Badge>
-                            </div>
-                        </BentoItem>
-
-                        {/* Future Crime Prediction */}
-                        <BentoItem>
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-2">
-                                    <AlertTriangle size={16} className="text-tier-slave" />
-                                    <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">
-                                        Future Crime
-                                    </h3>
-                                </div>
-                                <p className="text-sm text-red-primary font-medium">
-                                    {willpowerScore < 40
-                                        ? 'High violation risk detected'
-                                        : 'Late night check-in predicted'}
-                                </p>
-                                <p className="text-xs text-text-tertiary">
-                                    AI predicts next violation window: 11 PM – 2 AM
-                                </p>
-                                <Badge variant={willpowerScore < 40 ? 'locked' : 'warning'}>
-                                    {willpowerScore < 40 ? 'High Risk' : 'Medium Risk'}
-                                </Badge>
                             </div>
                         </BentoItem>
 

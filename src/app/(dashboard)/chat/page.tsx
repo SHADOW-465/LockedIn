@@ -71,12 +71,21 @@ export default function ChatPage() {
         }
     }, [user])
 
-    // Build compact profile summary once when profile loads
+    // Build compact profile summary — includes recent journal entries and self-assigned tasks for AI context
     useEffect(() => {
-        if (profile) {
+        if (!profile || !user) return
+        const supabase = getSupabase()
+        Promise.all([
+            supabase.from('tasks').select('title').eq('user_id', user.id).eq('task_type', 'journal').order('created_at', { ascending: false }).limit(5),
+            supabase.from('tasks').select('title').eq('user_id', user.id).eq('source', 'user').neq('task_type', 'journal').order('created_at', { ascending: false }).limit(3),
+        ]).then(([journalRes, selfRes]) => {
+            const journalTitles = (journalRes.data || []).map((t: { title: string }) => t.title)
+            const userTaskTitles = (selfRes.data || []).map((t: { title: string }) => t.title)
+            setProfileSummary(buildProfileSummary(profile, { journalTitles, userTaskTitles }))
+        }).catch(() => {
             setProfileSummary(buildProfileSummary(profile))
-        }
-    }, [profile])
+        })
+    }, [profile, user])
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
