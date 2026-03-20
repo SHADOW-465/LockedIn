@@ -63,6 +63,18 @@ export async function POST(request: NextRequest) {
       payload: { config, duration_minutes: config.desired_duration_minutes },
     })
 
+    // Seed default punishment pool (idempotent — unique(user_id, title, is_custom) ignores duplicates)
+    try {
+      const { DEFAULT_POOL_SEED } = await import('@/lib/engines/punishment-wheel')
+      await supabase.from('punishment_pool').upsert(
+        DEFAULT_POOL_SEED.map((entry) => ({ ...entry, user_id: userId })),
+        { onConflict: 'user_id,title,is_custom', ignoreDuplicates: true }
+      )
+    } catch (seedError) {
+      // Non-fatal — don't block session creation
+      console.warn('[Sessions/Start] Pool seed error:', seedError)
+    }
+
     return NextResponse.json({ session }, { status: 201 })
   } catch (error) {
     console.error('[Sessions/Start] Error:', error)
