@@ -119,7 +119,7 @@ export function SessionDetail({ archive, userId }: Props) {
                     {event.created_at ? format(new Date(String(event.created_at)), 'HH:mm') : ''}
                   </span>
                 </div>
-                {event.payload && typeof event.payload === 'object' && (
+                {typeof event.payload === 'object' && event.payload !== null && (
                   <p className="text-[11px] text-text-tertiary mt-0.5 line-clamp-2">
                     {JSON.stringify(event.payload)}
                   </p>
