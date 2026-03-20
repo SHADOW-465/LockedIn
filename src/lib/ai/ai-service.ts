@@ -142,6 +142,53 @@ export async function generateSimpleText(
     }
 }
 
+/**
+ * Multi-turn text generation for guide conversations.
+ * Accepts full history array; uses max_tokens 1024 for longer explanations.
+ */
+export async function generateWithHistory(
+    systemPrompt: string,
+    history: { role: 'user' | 'assistant'; content: string }[],
+    userMessage: string,
+): Promise<GenerateResult> {
+    const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
+        { role: 'system', content: systemPrompt },
+        ...history,
+        { role: 'user', content: userMessage },
+    ];
+
+    try {
+        const completion = await getGroq().chat.completions.create({
+            messages,
+            model: 'llama-3.3-70b-versatile',
+            temperature: 0.85,
+            max_tokens: 1024,
+        });
+        const text = completion.choices[0]?.message?.content;
+        if (text) {
+            return {
+                text,
+                usage: {
+                    promptTokens: completion.usage?.prompt_tokens ?? 0,
+                    completionTokens: completion.usage?.completion_tokens ?? 0,
+                    totalTokens: completion.usage?.total_tokens ?? 0,
+                },
+            };
+        }
+    } catch (err) {
+        console.warn('[AI] Groq failed (generateWithHistory), falling back:', (err as Error).message);
+    }
+
+    try {
+        const text = await openRouterChatWithHistory(messages, OPENROUTER_MODELS.textFallback);
+        return { text, usage: ZERO_USAGE };
+    } catch (err) {
+        console.error('[AI] OpenRouter fallback also failed:', (err as Error).message);
+    }
+
+    return { text: 'The AI Master is momentarily silent. Try again.', usage: ZERO_USAGE };
+}
+
 // ── Usage Tracking ───────────────────────────────────────────
 
 /**
@@ -225,6 +272,23 @@ export async function verifyImage(
 }
 
 // ── Helpers ──────────────────────────────────────────────────
+
+async function openRouterChatWithHistory(
+    messages: { role: string; content: string }[],
+    model: string,
+): Promise<string> {
+    const response = await fetch(OPENROUTER_BASE, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ model, messages }),
+    });
+    if (!response.ok) throw new Error(`OpenRouter ${response.status}`);
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '';
+}
 
 async function openRouterChat(system: string, user: string, model: string): Promise<string> {
     const response = await fetch(OPENROUTER_BASE, {
