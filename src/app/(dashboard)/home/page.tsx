@@ -19,6 +19,7 @@ import { SessionStartFlow } from '@/components/features/session-start-flow'
 import type { SessionConfig } from '@/components/features/session-start-flow'
 import { getSupabase } from '@/lib/supabase/client'
 import { archiveSession } from '@/lib/local-storage/session-archive'
+import { MoodCheckinModal } from '@/components/features/mood/mood-checkin-modal'
 
 // ── Session Summary Overlay ──────────────────────────────────
 function SessionSummaryOverlay({
@@ -107,6 +108,7 @@ export default function DashboardPage() {
     const [showSessionFlow, setShowSessionFlow] = useState(false)
     const [isArchiving, setIsArchiving] = useState(false)
     const [sessionSummary, setSessionSummary] = useState<Record<string, unknown> | null>(null)
+    const [showMoodModal, setShowMoodModal] = useState(false)
 
     useEffect(() => {
         if (authLoading || !user) return
@@ -119,6 +121,23 @@ export default function DashboardPage() {
                 const tasks = await getActiveTasks(user!.id)
                 const active = tasks.find((t) => t.status === 'active') ?? tasks[0] ?? null
                 setCurrentTask(active)
+
+                // Auto-show mood modal if active session and not skipped/checked-in today
+                if (activeSession) {
+                    const skipKey = `mood_skip_${activeSession.id}`
+                    const alreadySkipped = sessionStorage.getItem(skipKey) === '1'
+                    if (!alreadySkipped) {
+                        const today = new Date().toISOString().slice(0, 10)
+                        const supabase = getSupabase()
+                        const { data: existing } = await supabase
+                            .from('mood_checkins')
+                            .select('id')
+                            .eq('user_id', user!.id)
+                            .eq('date', today)
+                            .maybeSingle()
+                        if (!existing) setShowMoodModal(true)
+                    }
+                }
             } catch (err) {
                 console.error('[Home] loadDashboard error:', err)
             } finally {
@@ -262,6 +281,15 @@ export default function DashboardPage() {
                     profile={profile}
                     onStart={handleStartSession}
                     onCancel={() => setShowSessionFlow(false)}
+                />
+            )}
+
+            {showMoodModal && session && user && (
+                <MoodCheckinModal
+                    userId={user.id}
+                    sessionId={session.id}
+                    onClose={() => setShowMoodModal(false)}
+                    onSubmit={() => setShowMoodModal(false)}
                 />
             )}
 
@@ -527,6 +555,15 @@ export default function DashboardPage() {
                                         <Dumbbell size={16} className="text-purple-primary" />
                                         <span className="text-sm font-medium">Regimens</span>
                                     </Link>
+                                    {session && (
+                                        <button
+                                            onClick={() => setShowMoodModal(true)}
+                                            className="p-3 bg-bg-tertiary hover:bg-bg-hover rounded-[var(--radius-md)] border border-white/5 transition-colors flex items-center gap-2"
+                                        >
+                                            <Zap size={16} className="text-teal-primary" />
+                                            <span className="text-sm font-medium">Check In</span>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </BentoItem>
