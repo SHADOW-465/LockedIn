@@ -84,4 +84,98 @@ describe('Guide: parseNavCard()', () => {
   })
 })
 
-// ── Route handler tests — added in Task 4 ───────────────────────────────
+// ── Route handler tests ──────────────────────────────────────────────────
+
+describe('Guide: POST /api/guide', () => {
+  let POST: (req: Request) => Promise<Response>
+
+  beforeEach(async () => {
+    vi.clearAllMocks()
+
+    // Restore createServerClient mock — vi.clearAllMocks() wipes it
+    const { createServerClient } = await import('@supabase/ssr')
+    vi.mocked(createServerClient).mockReturnValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-123' } } }),
+      },
+    } as ReturnType<typeof createServerClient>)
+
+    // Restore generateWithHistory default
+    vi.mocked(generateWithHistory).mockResolvedValue({
+      text: 'Plain reply.',
+      usage: { promptTokens: 10, completionTokens: 5, totalTokens: 15 },
+    })
+
+    // Dynamically import to get the module each time (rate limit state persists across tests)
+    const mod = await import('@/app/api/guide/route')
+    POST = mod.POST
+  })
+
+  const makeReq = (body: unknown) =>
+    new Request('http://localhost/api/guide', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+
+  it('returns 400 when message is missing', async () => {
+    const res = await POST(makeReq({ currentPage: '/tasks', history: [] }))
+    expect(res.status).toBe(400)
+  })
+
+  it('returns reply and navCard when AI reply contains marker', async () => {
+    vi.mocked(generateWithHistory).mockResolvedValueOnce({
+      text: 'Submit from here. [NAV:/tasks|Tasks Page|Where you submit proof]',
+      usage: { promptTokens: 10, completionTokens: 5, totalTokens: 15 },
+    })
+    const res = await POST(makeReq({ message: 'How do I submit proof?', currentPage: '/home', history: [] }))
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.navCard).toBeDefined()
+    expect(data.navCard.href).toBe('/tasks')
+    expect(data.reply).not.toContain('[NAV:')
+  })
+
+  it('returns reply only (no navCard key) when no marker in reply', async () => {
+    const res = await POST(makeReq({ message: 'Hello?', currentPage: '/home', history: [] }))
+    const data = await res.json()
+    expect(data.navCard).toBeUndefined()
+    expect(data.reply).toBe('Plain reply.')
+  })
+
+  it('returns 500 when AI throws', async () => {
+    vi.mocked(generateWithHistory).mockRejectedValueOnce(new Error('AI unavailable'))
+    const res = await POST(makeReq({ message: 'Hello?', currentPage: '/home', history: [] }))
+    expect(res.status).toBe(500)
+  })
+
+  it('truncates history to last 6 items server-side', async () => {
+    const captured: unknown[] = []
+    vi.mocked(generateWithHistory).mockImplementationOnce(async (_sys, hist, _msg) => {
+      captured.push(hist)
+      return { text: 'ok', usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 } }
+    })
+    const history = Array.from({ length: 8 }, (_, i) => ({
+      role: i % 2 === 0 ? 'user' : 'assistant',
+      content: `msg ${i}`,
+    }))
+    await POST(makeReq({ message: 'Hello?', currentPage: '/home', history }))
+    expect((captured[0] as unknown[]).length).toBe(6)
+  })
+
+  it('returns 429 after 20 calls in the same window for same user', async () => {
+    // Use a unique userId to avoid cross-test state pollution from the shared in-memory rateLimitMap
+    const { createServerClient } = await import('@supabase/ssr')
+    const uniqueId = 'rate-test-' + Date.now()
+    vi.mocked(createServerClient).mockReturnValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: uniqueId } } }),
+      },
+    } as ReturnType<typeof createServerClient>)
+    for (let i = 0; i < 20; i++) {
+      await POST(makeReq({ message: 'Hello?', currentPage: '/home', history: [] }))
+    }
+    const res = await POST(makeReq({ message: 'Hello?', currentPage: '/home', history: [] }))
+    expect(res.status).toBe(429)
+  })
+})
