@@ -47,6 +47,41 @@ describe('Guide: buildGuidePrompt()', () => {
   })
 })
 
-// ── parseNavCard tests — added in Task 3 ────────────────────────────────
+// ── parseNavCard tests ───────────────────────────────────────────────────
+
+import { parseNavCard } from '@/app/api/guide/parse-nav-card'
+
+describe('Guide: parseNavCard()', () => {
+  it('parses a valid NAV marker', () => {
+    const text = 'Here is the info. [NAV:/tasks|Tasks Page|Where you submit proof]'
+    const result = parseNavCard(text)
+    expect(result.navCard).toEqual({
+      href: '/tasks',
+      label: 'Tasks Page',
+      description: 'Where you submit proof',
+    })
+    expect(result.reply).not.toContain('[NAV:')
+  })
+
+  it('returns undefined navCard for marker with missing parts', () => {
+    const text = 'Info. [NAV:/tasks|Tasks Page]'
+    const result = parseNavCard(text)
+    expect(result.navCard).toBeUndefined()
+  })
+
+  it('returns undefined navCard when no marker present', () => {
+    const text = 'Just a regular reply with no marker.'
+    const result = parseNavCard(text)
+    expect(result.navCard).toBeUndefined()
+    expect(result.reply).toBe(text)
+  })
+
+  it('only parses the first marker when two are present', () => {
+    const text = 'Info [NAV:/tasks|Tasks Page|Do tasks] more [NAV:/home|Home|Go home]'
+    const result = parseNavCard(text)
+    expect(result.navCard?.href).toBe('/tasks')
+    expect(result.reply).not.toContain('[NAV:/tasks|')
+  })
+})
 
 // ── Route handler tests — added in Task 4 ───────────────────────────────
