@@ -27,6 +27,7 @@ import { emergencyRelease, getActiveSession } from '@/lib/supabase/sessions'
 import { getSupabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useOnboarding } from '@/lib/stores/onboarding-store'
+import { PunishmentPoolEditor } from '@/components/features/punishment/punishment-pool-editor'
 
 const settingsItems = [
     {
@@ -259,6 +260,11 @@ export default function SettingsPage() {
                                 </div>
                             </div>
                         </div>
+                    </Card>
+
+                    {/* Punishment Pool */}
+                    <Card variant="flat" size="sm" className="!min-h-0">
+                        <PunishmentPoolEditor userId={user?.id ?? ''} />
                     </Card>
 
                     {/* Settings List */}

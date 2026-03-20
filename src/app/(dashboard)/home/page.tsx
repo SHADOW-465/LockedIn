@@ -20,6 +20,7 @@ import type { SessionConfig } from '@/components/features/session-start-flow'
 import { getSupabase } from '@/lib/supabase/client'
 import { archiveSession } from '@/lib/local-storage/session-archive'
 import { MoodCheckinModal } from '@/components/features/mood/mood-checkin-modal'
+import { PunishmentWheelModal } from '@/components/features/punishment/punishment-wheel-modal'
 
 // ── Session Summary Overlay ──────────────────────────────────
 function SessionSummaryOverlay({
@@ -109,6 +110,7 @@ export default function DashboardPage() {
     const [isArchiving, setIsArchiving] = useState(false)
     const [sessionSummary, setSessionSummary] = useState<Record<string, unknown> | null>(null)
     const [showMoodModal, setShowMoodModal] = useState(false)
+    const [showWheelModal, setShowWheelModal] = useState(false)
 
     useEffect(() => {
         if (authLoading || !user) return
@@ -290,6 +292,14 @@ export default function DashboardPage() {
                     sessionId={session.id}
                     onClose={() => setShowMoodModal(false)}
                     onSubmit={() => setShowMoodModal(false)}
+                />
+            )}
+
+            {showWheelModal && session && user && (
+                <PunishmentWheelModal
+                    userId={user.id}
+                    sessionId={session.id}
+                    onClose={() => setShowWheelModal(false)}
                 />
             )}
 
@@ -562,6 +572,15 @@ export default function DashboardPage() {
                                         >
                                             <Zap size={16} className="text-teal-primary" />
                                             <span className="text-sm font-medium">Check In</span>
+                                        </button>
+                                    )}
+                                    {session && (
+                                        <button
+                                            onClick={() => setShowWheelModal(true)}
+                                            className="p-3 bg-bg-tertiary hover:bg-bg-hover rounded-[var(--radius-md)] border border-white/5 transition-colors flex items-center gap-2"
+                                        >
+                                            <AlertTriangle size={16} className="text-red-primary" />
+                                            <span className="text-sm font-medium">Punishment</span>
                                         </button>
                                     )}
                                 </div>
