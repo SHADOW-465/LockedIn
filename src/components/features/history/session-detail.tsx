@@ -62,9 +62,9 @@ export function SessionDetail({ archive, userId }: Props) {
               {data.actual_end_time ? format(new Date(String(data.actual_end_time)), 'MMM d, yyyy') : 'ongoing'}
             </p>
           </div>
-          {summary?.performance_grade && (
+          {typeof summary?.performance_grade === 'string' && (
             <span className="text-3xl font-black font-mono text-teal-primary">
-              {String(summary.performance_grade)}
+              {summary.performance_grade}
             </span>
           )}
         </div>
@@ -77,9 +77,9 @@ export function SessionDetail({ archive, userId }: Props) {
             <Badge variant="genre">{events.length} events</Badge>
           </div>
         )}
-        {summary?.narrative && (
+        {typeof summary?.narrative === 'string' && (
           <p className="text-sm text-text-secondary italic leading-relaxed">
-            {String(summary.narrative)}
+            {summary.narrative}
           </p>
         )}
       </Card>
