@@ -211,6 +211,29 @@ export interface ProofDocument {
     created_at: string
 }
 
+export interface MoodCheckin {
+    id: string
+    user_id: string
+    session_id: string
+    date: string
+    submission_depth: number
+    frustration_level: number
+    headspace_tags: string[]
+    notes: string | null
+    created_at: string
+}
+
+export interface PunishmentPoolItem {
+    id: string
+    user_id: string
+    title: string
+    description: string
+    severity: number
+    requires_proof: boolean
+    is_custom: boolean
+    created_at: string
+}
+
 // Table names for type-safe query helpers
 export type TableName =
     | 'profiles'
@@ -226,3 +249,5 @@ export type TableName =
     | 'calendar_adjustments'
     | 'session_events'
     | 'proof_documents'
+    | 'mood_checkins'
+    | 'punishment_pool'
