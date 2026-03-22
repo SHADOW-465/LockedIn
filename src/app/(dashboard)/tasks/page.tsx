@@ -9,8 +9,9 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { ProofCaptureModal } from '@/components/features/proof/proof-capture-modal'
 import {
     Clock, Camera, AlertTriangle, Sparkles, Upload, Loader2,
-    CheckCircle, XCircle, X, Trophy, Zap, Plus, BookOpen
+    CheckCircle, XCircle, X, Trophy, Zap, Plus, BookOpen, ChevronRight
 } from 'lucide-react'
+import Link from 'next/link'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { useRealtimeQuery } from '@/lib/hooks/use-realtime'
 import { getSupabase } from '@/lib/supabase/client'
@@ -276,89 +277,6 @@ function TaskDetailModal({
                     )}
                 </div>
             </div>
-        </div>
-    )
-}
-
-// ── Checkin Proof History ────────────────────────────────────
-function CheckinProofHistory({ task }: { task: Task }) {
-    type ProofRecord = {
-        id: string
-        verification_status: 'pending' | 'passed' | 'failed'
-        verified_at: string | null
-        created_at: string
-        local_storage_key: string | null
-        imageDataUrl?: string
-    }
-    const [proofs, setProofs] = useState<ProofRecord[]>([])
-
-    useEffect(() => {
-        const supabase = getSupabase()
-        supabase
-            .from('proof_documents')
-            .select('id, verification_status, verified_at, created_at, local_storage_key')
-            .eq('task_id', task.id)
-            .order('created_at', { ascending: false })
-            .then(({ data }: { data: Array<{ id: string; verification_status: string; verified_at: string | null; created_at: string; local_storage_key: string | null }> | null }) => {
-                if (!data?.length) return
-                const enriched = data.map((p) => {
-                    let imageDataUrl: string | undefined
-                    if (p.local_storage_key) {
-                        try {
-                            const raw = localStorage.getItem(p.local_storage_key)
-                            if (raw) {
-                                const parsed = JSON.parse(raw)
-                                if (parsed.content) imageDataUrl = `data:image/jpeg;base64,${parsed.content}`
-                            }
-                        } catch { /* image not in localStorage */ }
-                    }
-                    return { ...p, imageDataUrl } as ProofRecord
-                })
-                setProofs(enriched)
-            })
-    }, [task.id, task.status])
-
-    if (!proofs.length) return null
-
-    return (
-        <div className="mt-3 space-y-2">
-            <p className="text-[10px] font-bold text-text-tertiary uppercase tracking-wide">
-                {task.title} — Submissions
-            </p>
-            {proofs.map((p, i) => (
-                <div key={p.id} className="bg-bg-tertiary rounded-xl p-3 flex gap-3 items-start border border-white/5">
-                    {p.imageDataUrl ? (
-                        <img
-                            src={p.imageDataUrl}
-                            alt="Proof"
-                            className="w-16 h-16 object-cover rounded-lg shrink-0 border border-white/10"
-                        />
-                    ) : (
-                        <div className="w-16 h-16 rounded-lg bg-bg-secondary border border-white/10 flex items-center justify-center shrink-0">
-                            <Camera size={18} className="text-text-tertiary" />
-                        </div>
-                    )}
-                    <div className="flex-1 min-w-0 space-y-1">
-                        <div className="flex items-center justify-between gap-2">
-                            <span className={`text-xs font-bold ${
-                                p.verification_status === 'passed' ? 'text-green-400' :
-                                p.verification_status === 'failed' ? 'text-red-400' :
-                                'text-yellow-400'
-                            }`}>
-                                {p.verification_status === 'passed' ? '✅ Passed' :
-                                 p.verification_status === 'failed' ? '❌ Rejected' :
-                                 '⏳ Pending'}
-                            </span>
-                            <span className="text-[10px] text-text-tertiary font-mono">
-                                {new Date(p.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                        </div>
-                        {i === 0 && task.ai_verification_reason && (
-                            <p className="text-[11px] text-text-secondary leading-relaxed">{task.ai_verification_reason}</p>
-                        )}
-                    </div>
-                </div>
-            ))}
         </div>
     )
 }
@@ -635,9 +553,17 @@ export default function TasksPage() {
                         {/* Daily Check-ins */}
                         {(morningCheckin || nightCheckin || session) && (
                             <div className="space-y-3 mb-6">
-                                <h2 className="text-sm font-bold text-teal-400 uppercase tracking-wide flex items-center gap-2">
-                                    🔒 Daily Check-ins
-                                </h2>
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-sm font-bold text-teal-400 uppercase tracking-wide">
+                                        🔒 Daily Check-ins
+                                    </h2>
+                                    <Link
+                                        href="/checkin-history"
+                                        className="text-xs text-teal-400 hover:text-teal-300 flex items-center gap-0.5 transition-colors"
+                                    >
+                                        Submissions <ChevronRight size={12} />
+                                    </Link>
+                                </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     {([
                                         { label: 'Morning', window: '6am–10am', task: morningCheckin },
@@ -689,13 +615,6 @@ export default function TasksPage() {
                                         )
                                     })}
                                 </div>
-                                {/* Proof submission history */}
-                                {(morningCheckin || nightCheckin) && (
-                                    <div className="space-y-1 pt-1">
-                                        {morningCheckin && <CheckinProofHistory task={morningCheckin} />}
-                                        {nightCheckin && <CheckinProofHistory task={nightCheckin} />}
-                                    </div>
-                                )}
                             </div>
                         )}
 
