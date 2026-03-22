@@ -22,9 +22,13 @@ const OPENROUTER_BASE = 'https://openrouter.ai/api/v1/chat/completions';
 // Free-tier models on OpenRouter
 const OPENROUTER_MODELS = {
     textFallback: 'google/gemini-2.0-flash-exp:free',
-    vision: 'meta-llama/llama-3.2-11b-vision-instruct:free',
-    visionFallback: 'google/gemini-2.0-flash-exp:free',
-} as const;
+    // Vision fallbacks (Groq vision is tried first in verifyImage)
+    vision: 'qwen/qwen2.5-vl-7b-instruct:free',
+    visionFallback: 'meta-llama/llama-3.2-11b-vision-instruct:free',
+} as const
+
+// Groq vision models (preferred — same API key, no extra cost)
+const GROQ_VISION_MODELS = ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview'] as const;
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -220,15 +224,42 @@ export async function trackUsage(
 // ── Vision / Image Verification ──────────────────────────────
 
 /**
- * Verify an image using OpenRouter's free vision models.
+ * Verify an image. Tries Groq vision models first (same API key),
+ * then falls back to OpenRouter free vision models.
  */
 export async function verifyImage(
     imageBase64: string,
     verificationPrompt: string,
 ): Promise<VerificationResult> {
-    const models = [OPENROUTER_MODELS.vision, OPENROUTER_MODELS.visionFallback];
+    const imageUrl = `data:image/jpeg;base64,${imageBase64}`;
+    const visionMessage = {
+        role: 'user' as const,
+        content: [
+            { type: 'text' as const, text: verificationPrompt },
+            { type: 'image_url' as const, image_url: { url: imageUrl } },
+        ],
+    };
 
-    for (const model of models) {
+    // 1. Try Groq vision (preferred — already authenticated)
+    for (const model of GROQ_VISION_MODELS) {
+        try {
+            const completion = await getGroq().chat.completions.create({
+                model,
+                messages: [visionMessage],
+                max_tokens: 512,
+            });
+            const text = completion.choices[0]?.message?.content;
+            if (text) {
+                console.log(`[AI] Vision verified via Groq ${model}`);
+                return parseVerificationResult(text);
+            }
+        } catch (err) {
+            console.warn(`[AI] Groq vision model ${model} failed:`, (err as Error).message);
+        }
+    }
+
+    // 2. Fall back to OpenRouter free vision models
+    for (const model of [OPENROUTER_MODELS.vision, OPENROUTER_MODELS.visionFallback]) {
         try {
             const response = await fetch(OPENROUTER_BASE, {
                 method: 'POST',
@@ -236,38 +267,23 @@ export async function verifyImage(
                     Authorization: `Bearer ${OPENROUTER_API_KEY}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    model,
-                    messages: [
-                        {
-                            role: 'user',
-                            content: [
-                                { type: 'text', text: verificationPrompt },
-                                {
-                                    type: 'image_url',
-                                    image_url: { url: `data:image/jpeg;base64,${imageBase64}` },
-                                },
-                            ],
-                        },
-                    ],
-                }),
+                body: JSON.stringify({ model, messages: [visionMessage] }),
             });
 
             if (!response.ok) {
-                console.warn(`[AI] Vision model ${model} returned ${response.status}`);
+                console.warn(`[AI] OpenRouter vision model ${model} returned ${response.status}`);
                 continue;
             }
 
             const data = await response.json();
-            const resultText: string = data.choices?.[0]?.message?.content || '';
-            return parseVerificationResult(resultText);
+            const text: string = data.choices?.[0]?.message?.content || '';
+            if (text) return parseVerificationResult(text);
         } catch (err) {
-            console.warn(`[AI] Vision model ${model} error:`, (err as Error).message);
-            continue;
+            console.warn(`[AI] OpenRouter vision model ${model} error:`, (err as Error).message);
         }
     }
 
-    // All vision models failed → allow through with manual flag
+    // All models failed — allow through with manual flag
     return { success: true, reason: 'Auto-verification unavailable. Manual review required.', confidence: 0 };
 }
 
