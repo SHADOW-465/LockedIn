@@ -571,24 +571,25 @@ export default function TasksPage() {
                                             : task.status === 'completed' || task.status === 'verified'
                                                 ? '✅ Done'
                                                 : task.status === 'failed'
-                                                    ? '❌ Missed'
+                                                    ? '❌ Missed (late ok)'
                                                     : task.status === 'proof_submitted'
                                                         ? '🔄 Verifying'
                                                         : '⏳ Pending'
+                                        const canSubmit = task && ['pending', 'active', 'awaiting_proof', 'failed'].includes(task.status)
                                         return (
-                                            <div key={label} className="bg-bg-secondary border border-teal-400/20 rounded-xl p-3 space-y-2">
+                                            <div key={label} className={`bg-bg-secondary border rounded-xl p-3 space-y-2 ${task?.status === 'failed' ? 'border-red-400/30' : 'border-teal-400/20'}`}>
                                                 <p className="text-xs font-semibold text-text-tertiary uppercase">{label}</p>
                                                 <p className="text-[10px] text-text-tertiary">{window}</p>
                                                 <p className={`text-sm font-bold ${statusColor}`}>{statusLabel}</p>
-                                                {task && ['pending', 'active', 'awaiting_proof'].includes(task.status) && (
+                                                {canSubmit && (
                                                     <Button
                                                         size="sm"
-                                                        variant="primary"
+                                                        variant={task.status === 'failed' ? 'ghost' : 'primary'}
                                                         className="w-full !py-1 !text-xs"
                                                         onClick={() => setProofTask(task)}
                                                     >
                                                         <Camera size={11} className="mr-1" />
-                                                        {task.status === 'awaiting_proof' ? 'Retry Photo' : 'Submit Photo'}
+                                                        {task.status === 'awaiting_proof' ? 'Retry Photo' : task.status === 'failed' ? 'Submit Late' : 'Submit Photo'}
                                                     </Button>
                                                 )}
                                             </div>
