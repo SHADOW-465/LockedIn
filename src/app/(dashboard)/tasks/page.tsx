@@ -280,10 +280,94 @@ function TaskDetailModal({
     )
 }
 
+// ── Checkin Proof History ────────────────────────────────────
+function CheckinProofHistory({ task }: { task: Task }) {
+    type ProofRecord = {
+        id: string
+        verification_status: 'pending' | 'passed' | 'failed'
+        verified_at: string | null
+        created_at: string
+        local_storage_key: string | null
+        imageDataUrl?: string
+    }
+    const [proofs, setProofs] = useState<ProofRecord[]>([])
+
+    useEffect(() => {
+        const supabase = getSupabase()
+        supabase
+            .from('proof_documents')
+            .select('id, verification_status, verified_at, created_at, local_storage_key')
+            .eq('task_id', task.id)
+            .order('created_at', { ascending: false })
+            .then(({ data }) => {
+                if (!data?.length) return
+                const enriched = data.map((p) => {
+                    let imageDataUrl: string | undefined
+                    if (p.local_storage_key) {
+                        try {
+                            const raw = localStorage.getItem(p.local_storage_key)
+                            if (raw) {
+                                const parsed = JSON.parse(raw)
+                                if (parsed.content) imageDataUrl = `data:image/jpeg;base64,${parsed.content}`
+                            }
+                        } catch { /* image not in localStorage */ }
+                    }
+                    return { ...p, imageDataUrl } as ProofRecord
+                })
+                setProofs(enriched)
+            })
+    }, [task.id, task.status])
+
+    if (!proofs.length) return null
+
+    return (
+        <div className="mt-3 space-y-2">
+            <p className="text-[10px] font-bold text-text-tertiary uppercase tracking-wide">
+                {task.title} — Submissions
+            </p>
+            {proofs.map((p, i) => (
+                <div key={p.id} className="bg-bg-tertiary rounded-xl p-3 flex gap-3 items-start border border-white/5">
+                    {p.imageDataUrl ? (
+                        <img
+                            src={p.imageDataUrl}
+                            alt="Proof"
+                            className="w-16 h-16 object-cover rounded-lg shrink-0 border border-white/10"
+                        />
+                    ) : (
+                        <div className="w-16 h-16 rounded-lg bg-bg-secondary border border-white/10 flex items-center justify-center shrink-0">
+                            <Camera size={18} className="text-text-tertiary" />
+                        </div>
+                    )}
+                    <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                            <span className={`text-xs font-bold ${
+                                p.verification_status === 'passed' ? 'text-green-400' :
+                                p.verification_status === 'failed' ? 'text-red-400' :
+                                'text-yellow-400'
+                            }`}>
+                                {p.verification_status === 'passed' ? '✅ Passed' :
+                                 p.verification_status === 'failed' ? '❌ Rejected' :
+                                 '⏳ Pending'}
+                            </span>
+                            <span className="text-[10px] text-text-tertiary font-mono">
+                                {new Date(p.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                        </div>
+                        {i === 0 && task.ai_verification_reason && (
+                            <p className="text-[11px] text-text-secondary leading-relaxed">{task.ai_verification_reason}</p>
+                        )}
+                    </div>
+                </div>
+            ))}
+        </div>
+    )
+}
+
 // ── Main Tasks Page ──────────────────────────────────────────
 export default function TasksPage() {
     const { user, profile, loading: authLoading } = useAuth()
     const [session, setSession] = useState<Session | null>(null)
+    const [localHour] = useState(() => new Date().getHours())
     const [generating, setGenerating] = useState(false)
     const [detailTask, setDetailTask] = useState<Task | null>(null)
     const [proofTask, setProofTask] = useState<Task | null>(null)
@@ -575,7 +659,11 @@ export default function TasksPage() {
                                                     : task.status === 'proof_submitted'
                                                         ? '🔄 Verifying'
                                                         : '⏳ Pending'
-                                        const canSubmit = task && ['pending', 'active', 'awaiting_proof', 'failed'].includes(task.status)
+                                        const windowStart = label === 'Morning' ? 6 : 20
+                                        const windowOpenLabel = label === 'Morning' ? '6am' : '8pm'
+                                        const windowIsOpen = localHour >= windowStart
+                                        const isDone = task && ['completed', 'verified'].includes(task.status)
+                                        const canSubmit = task && ['pending', 'active', 'awaiting_proof', 'failed'].includes(task.status) && windowIsOpen
                                         return (
                                             <div key={label} className={`bg-bg-secondary border rounded-xl p-3 space-y-2 ${task?.status === 'failed' ? 'border-red-400/30' : 'border-teal-400/20'}`}>
                                                 <p className="text-xs font-semibold text-text-tertiary uppercase">{label}</p>
@@ -592,10 +680,22 @@ export default function TasksPage() {
                                                         {task.status === 'awaiting_proof' ? 'Retry Photo' : task.status === 'failed' ? 'Submit Late' : 'Submit Photo'}
                                                     </Button>
                                                 )}
+                                                {!windowIsOpen && !isDone && (
+                                                    <p className="text-[10px] text-text-tertiary text-center pt-1">
+                                                        Opens at {windowOpenLabel}
+                                                    </p>
+                                                )}
                                             </div>
                                         )
                                     })}
                                 </div>
+                                {/* Proof submission history */}
+                                {(morningCheckin || nightCheckin) && (
+                                    <div className="space-y-1 pt-1">
+                                        {morningCheckin && <CheckinProofHistory task={morningCheckin} />}
+                                        {nightCheckin && <CheckinProofHistory task={nightCheckin} />}
+                                    </div>
+                                )}
                             </div>
                         )}
 

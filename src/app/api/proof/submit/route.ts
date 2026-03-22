@@ -58,6 +58,22 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        // ── For check-in tasks: reject if submitted before the window opens ──
+        if (task.task_type === 'checkin') {
+            const localHour = captureMetadata?.local_hour
+            if (typeof localHour === 'number') {
+                const isMorning = task.title === 'Morning Check-in'
+                const windowStart = isMorning ? MORNING_WINDOW.start : NIGHT_WINDOW.start
+                if (localHour < windowStart) {
+                    const opensAt = isMorning ? '6am' : '8pm'
+                    return NextResponse.json(
+                        { error: `${isMorning ? 'Morning' : 'Night'} check-in not open yet. Window opens at ${opensAt}.` },
+                        { status: 400 }
+                    )
+                }
+            }
+        }
+
         // ── Verify proof type matches task requirement ────────
         if (task.proof_type && task.proof_type !== proofType) {
             return NextResponse.json(
