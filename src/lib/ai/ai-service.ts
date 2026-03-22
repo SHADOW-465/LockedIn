@@ -27,8 +27,8 @@ const OPENROUTER_MODELS = {
     visionFallback: 'meta-llama/llama-3.2-11b-vision-instruct:free',
 } as const
 
-// Groq vision models (preferred — same API key, no extra cost)
-const GROQ_VISION_MODELS = ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview'] as const;
+// Groq vision models — Llama 4 Scout replaces the decommissioned llama-3.2 vision previews
+const GROQ_VISION_MODELS = ['meta-llama/llama-4-scout-17b-16e-instruct', 'meta-llama/llama-4-maverick-17b-128e-instruct'] as const;
 
 // ── Types ────────────────────────────────────────────────────
 
