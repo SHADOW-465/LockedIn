@@ -6,6 +6,39 @@ import { applyPunishment } from '@/lib/engines/punishment'
 // Default safeword — user can customize during onboarding
 const DEFAULT_SAFEWORD = 'MERCY'
 
+interface PrefUpdate {
+    field: string
+    action: 'set' | 'append'
+    value: string
+}
+
+function parsePrefUpdates(text: string): PrefUpdate[] {
+    const updates: PrefUpdate[] = []
+    const regex = /\[PREF_UPDATE:([\s\S]*?)\]/g
+    let match
+    while ((match = regex.exec(text)) !== null) {
+        try {
+            const parsed = JSON.parse(match[1]) as PrefUpdate
+            if (parsed.field && parsed.action && parsed.value !== undefined) {
+                updates.push(parsed)
+            }
+        } catch {
+            // malformed JSON — skip
+        }
+    }
+    return updates
+}
+
+function stripPrefUpdates(text: string): string {
+    return text.replace(/\[PREF_UPDATE:[\s\S]*?\]\s*/g, '').trim()
+}
+
+const PREF_UPDATE_INSTRUCTION = `When the user explicitly states a preference during Care Mode (e.g., "I don't want outdoor tasks", "my goal is endurance training", "no public humiliation please"), you MAY append a PREF_UPDATE marker to your response to suggest saving it:
+[PREF_UPDATE:{"field":"master_preference","action":"set","value":"no outdoor tasks"}]
+Valid fields: master_preference, session_intent, privacy_constraints (as JSON string), psych_profile.
+Valid actions: "set" (replace) or "append" (add to existing).
+Only suggest updates when the user clearly states a preference. Do not manufacture preferences.`
+
 // Per-persona voice injected into the compact system prompt
 const PERSONA_VOICES: Record<string, string> = {
     "Cruel Mistress": " Icy, controlled, bored. Short declarative statements. Never explain. 'You're still talking.' / 'I didn't ask.' / 'Again.'",
@@ -50,6 +83,13 @@ export async function POST(request: NextRequest) {
 
         // ── Detect safeword ──────────────────────────────────
         const isSafeword = message.toUpperCase().includes(userSafeword.toUpperCase())
+
+        // ── Check if session is already in Care Mode ─────────
+        let sessionInCareMode = false
+        if (sessionId) {
+            const { data: sessionData } = await supabase.from('sessions').select('care_mode_active').eq('id', sessionId).single()
+            sessionInCareMode = sessionData?.care_mode_active === true
+        }
 
         // ── Detect "resume training" to exit Care Mode ───────
         const isResume = message.toLowerCase().includes('resume training')
@@ -125,13 +165,22 @@ proof_type must be "image", "video", or "audio" — never "text". Remind user to
 delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extending. Never fabricate.`
             : undefined
 
+        // ── Determine Care Mode context and build effective system prompt ──
+        const isCareModeContext = isSafeword || sessionInCareMode
+        const effectiveSystem = isCareModeContext
+            ? compactSystem
+                ? `${compactSystem}\n\n${PREF_UPDATE_INSTRUCTION}`
+                : PREF_UPDATE_INSTRUCTION
+            : compactSystem || undefined
+
         let reply: string
         let messageType: string = 'normal'
         let careMode = false
 
         if (isSafeword) {
             // ── CARE MODE: Override persona completely ────────
-            const { text, usage } = await generateText(message, aiContext, CARE_MODE_PROMPT)
+            const careModeSystem = CARE_MODE_PROMPT + '\n\n' + PREF_UPDATE_INSTRUCTION
+            const { text, usage } = await generateText(message, aiContext, careModeSystem)
             reply = text
             messageType = 'care_mode'
             careMode = true
@@ -163,7 +212,8 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
             }
         } else {
             // ── Normal AI response ───────────────────────────
-            const { text, usage } = await generateText(message, aiContext, compactSystem)
+            // Use effectiveSystem which includes PREF_UPDATE instruction when Care Mode is active
+            const { text, usage } = await generateText(message, aiContext, effectiveSystem)
             reply = text
             if (userId) await trackUsage(supabase, userId, 'llama-3.3-70b-versatile', usage, 'chat')
 
@@ -303,13 +353,17 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
             }
         }
 
+        // ── Parse and strip PREF_UPDATE markers from reply ──
+        const prefUpdates = parsePrefUpdates(cleanReply)
+        const finalReply = prefUpdates.length > 0 ? stripPrefUpdates(cleanReply) : cleanReply
+
         // ── Save AI response to DB ───────────────────────────
         if (userId) {
             const { error: aiMsgError } = await supabase.from('chat_messages').insert({
                 user_id: userId,
                 session_id: sessionId || null,
                 sender: 'ai',
-                content: cleanReply,
+                content: finalReply,
                 message_type: messageType,
             })
 
@@ -318,11 +372,12 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
             }
         }
         return NextResponse.json({
-            reply: cleanReply,
+            reply: finalReply,
             masterTask,
             extensionApplied,
             careMode,
             messageType,
+            prefUpdates: prefUpdates.length > 0 ? prefUpdates : undefined,
             timestamp: new Date().toISOString(),
         })
     } catch (error) {
