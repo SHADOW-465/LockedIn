@@ -3,6 +3,24 @@
 // Mirrors Supabase public schema
 // ==========================================
 
+export interface PrivacyConstraints {
+    no_public_humiliation: boolean
+    no_face_revealing: boolean
+    no_outdoor_tasks: boolean
+    no_involving_others: boolean
+}
+
+export interface CommunicationStyle {
+    feedback_frequency: 'minimal' | 'moderate' | 'frequent'
+    tone_preference: 'strict' | 'balanced' | 'encouraging'
+    punishment_sensitivity: 'mild' | 'moderate' | 'severe'
+}
+
+export interface Availability {
+    active_hours: { start: string; end: string }[]
+    timezone: string
+}
+
 export interface UserProfile {
     id: string
     email: string
@@ -30,6 +48,15 @@ export interface UserProfile {
     preferred_regimens: string[]
     notification_frequency: 'low' | 'medium' | 'high' | 'extreme'
     initial_lock_goal_hours: number | null
+
+    // Preferences (added 20260322)
+    master_preference: string
+    privacy_constraints: PrivacyConstraints | null
+    session_intent: string
+    communication_style: CommunicationStyle | null
+    availability: Availability | null
+    safeword: string
+    psych_profile: string
 
     // Stats
     willpower_score: number
