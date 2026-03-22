@@ -11,7 +11,7 @@ interface ImageProofCaptureProps {
 
 type FacingMode = 'user' | 'environment'
 
-const COUNTDOWN_SECONDS = 3
+const TIMER_OPTIONS = [3, 5, 10] as const
 
 export function ImageProofCapture({ onCapture, disabled }: ImageProofCaptureProps) {
     const videoRef = useRef<HTMLVideoElement>(null)
@@ -25,6 +25,7 @@ export function ImageProofCapture({ onCapture, disabled }: ImageProofCaptureProp
     const [facingMode, setFacingMode] = useState<FacingMode>('environment')
     const [hasMultipleCameras, setHasMultipleCameras] = useState(false)
     const [countdown, setCountdown] = useState<number | null>(null)
+    const [timerSeconds, setTimerSeconds] = useState<typeof TIMER_OPTIONS[number]>(3)
 
     const stopStream = useCallback(() => {
         streamRef.current?.getTracks().forEach(t => t.stop())
@@ -149,9 +150,9 @@ export function ImageProofCapture({ onCapture, disabled }: ImageProofCaptureProp
 
     const startCountdown = useCallback(() => {
         if (!cameraReady || disabled) return
-        setCountdown(COUNTDOWN_SECONDS)
+        setCountdown(timerSeconds)
 
-        let remaining = COUNTDOWN_SECONDS
+        let remaining = timerSeconds
         countdownRef.current = setInterval(() => {
             remaining -= 1
             if (remaining <= 0) {
@@ -163,7 +164,7 @@ export function ImageProofCapture({ onCapture, disabled }: ImageProofCaptureProp
                 setCountdown(remaining)
             }
         }, 1000)
-    }, [cameraReady, disabled, doCapture])
+    }, [cameraReady, disabled, doCapture, timerSeconds])
 
     const cancelCountdown = useCallback(() => {
         if (countdownRef.current) {
@@ -270,6 +271,29 @@ export function ImageProofCapture({ onCapture, disabled }: ImageProofCaptureProp
 
             <canvas ref={canvasRef} className="hidden" />
 
+            {/* Timer duration picker */}
+            {countdown === null && cameraReady && (
+                <div className="flex items-center gap-2">
+                    <Timer size={13} className="text-text-tertiary shrink-0" />
+                    <span className="text-xs text-text-tertiary">Timer:</span>
+                    <div className="flex gap-1">
+                        {TIMER_OPTIONS.map(s => (
+                            <button
+                                key={s}
+                                onClick={() => setTimerSeconds(s)}
+                                className={`px-3 py-1 rounded-full text-xs font-mono transition-colors ${
+                                    timerSeconds === s
+                                        ? 'bg-purple-primary text-white'
+                                        : 'bg-white/10 text-text-tertiary hover:bg-white/20'
+                                }`}
+                            >
+                                {s}s
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* Action buttons */}
             {countdown === null ? (
                 <div className="grid grid-cols-2 gap-2">
@@ -280,7 +304,7 @@ export function ImageProofCapture({ onCapture, disabled }: ImageProofCaptureProp
                         disabled={!cameraReady || disabled}
                     >
                         <Timer size={16} className="mr-2" />
-                        {COUNTDOWN_SECONDS}s Timer
+                        {timerSeconds}s Timer
                     </Button>
                     <Button
                         variant="primary"
