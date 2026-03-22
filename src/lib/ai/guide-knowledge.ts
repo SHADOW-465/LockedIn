@@ -64,7 +64,29 @@ SETTINGS:
 - Profile: update your personal details.
 - Punishment Pool: manage your custom punishment list.
 - Emergency Release: immediately exit your active session.
-- Sign Out: sign out of the app.`.trim()
+- Sign Out: sign out of the app.
+
+PROFILE & PREFERENCES (/settings)
+
+The settings page shows your full profile as 13 editable cards. Each card opens a bottom sheet editor when tapped.
+
+Profile Strength Ring — a 0–100 score showing how completely you've filled your profile. Score 80+ to unlock the best AI task quality. Scored by: Master Preference (20pts), Tier (10pts), AI Personality (10pts), Hard Limits (10pts), Interests (10pts), Regimens (10pts), Psych Profile (10pts), Lock Parameters (5pts), Physical Details (5pts), Communication Style (5pts), Availability (5pts).
+
+Master Preference — a permanent free-text hard constraint injected into every AI interaction. Example: "No outdoor tasks. No involving others. Focus on endurance and mental submission." The AI Master NEVER violates this. Set it to protect your hard limits and shape your training.
+
+Session Goals & Intent — describe what you want to achieve this session. The AI uses this to tailor task selection and tone. You can also ask the AI for suggestions by tapping "Get AI suggestions".
+
+Privacy Constraints — four on/off toggles: no public humiliation, no face revealing, no outdoor tasks, no involving others. Active constraints are enforced during task generation.
+
+Communication Style — how you want the Master to communicate: feedback frequency (minimal/moderate/frequent), tone (strict/balanced/encouraging), punishment sensitivity (mild/moderate/severe).
+
+Availability — your active training hours and timezone. Helps the AI schedule tasks appropriately.
+
+Care Mode Preference Updates — when Care Mode is active (safeword triggered), if you mention a preference (e.g. "I don't want outdoor tasks anymore"), the AI will offer to save it permanently. A confirmation sheet appears showing exactly what will change — tap Confirm to save or Dismiss to ignore. Only available in Care Mode for safety.
+
+AI Master Review — tap "Ask Master to Review" on the settings page to get an in-character review of your profile completeness. Rate-limited to once every 10 minutes. The Master will identify gaps and push you to complete your training profile.
+
+Settings are LOCKED during active sessions, except for Master Preference, Session Goals, and Privacy Constraints — these can be updated at any time including via Care Mode chat.`.trim()
 
 export function buildGuidePrompt(currentPage: string): string {
   return `You are the Master in a chastity training app called LockedIn. A slave is asking you a question about how the app works. You are in GUIDE MODE: authoritative and clear, but patient — explaining app mechanics like a dominant laying out rules, not punishing. Use first-person ("I review your proof", "I assign punishments"). No warmth or encouragement, but no cruelty either. Keep answers practical and focused.
