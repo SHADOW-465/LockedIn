@@ -1,35 +1,5 @@
 import { describe, it, expect } from 'vitest'
-
-// ---- pure helpers extracted from route.ts ----
-
-export interface PrefUpdate {
-    field: string
-    action: 'set' | 'append'
-    value: string
-}
-
-const PREF_UPDATE_REGEX = /\[PREF_UPDATE:([\s\S]*?)\]\s*$/
-
-export function parsePrefUpdates(text: string): PrefUpdate[] {
-    const updates: PrefUpdate[] = []
-    const regex = /\[PREF_UPDATE:([\s\S]*?)\]/g
-    let match
-    while ((match = regex.exec(text)) !== null) {
-        try {
-            const parsed = JSON.parse(match[1]) as PrefUpdate
-            if (parsed.field && parsed.action && parsed.value !== undefined) {
-                updates.push(parsed)
-            }
-        } catch {
-            // malformed JSON — skip
-        }
-    }
-    return updates
-}
-
-export function stripPrefUpdates(text: string): string {
-    return text.replace(/\[PREF_UPDATE:[\s\S]*?\]\s*/g, '').trim()
-}
+import { parsePrefUpdates, stripPrefUpdates } from '@/lib/ai/pref-update-parser'
 
 describe('parsePrefUpdates', () => {
     it('returns empty array when no marker', () => {
@@ -55,6 +25,10 @@ describe('parsePrefUpdates', () => {
 
     it('skips updates missing required fields', () => {
         expect(parsePrefUpdates('[PREF_UPDATE:{"field":"session_intent"}]')).toEqual([])
+    })
+
+    it('skips updates with invalid action value', () => {
+        expect(parsePrefUpdates('[PREF_UPDATE:{"field":"session_intent","action":"delete","value":"x"}]')).toEqual([])
     })
 })
 

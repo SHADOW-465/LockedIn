@@ -2,36 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateText, trackUsage, type AIContext } from '@/lib/ai/ai-service'
 import { getServerSupabase } from '@/lib/supabase/server'
 import { applyPunishment } from '@/lib/engines/punishment'
+import { parsePrefUpdates, stripPrefUpdates, type PrefUpdate } from '@/lib/ai/pref-update-parser'
 
 // Default safeword — user can customize during onboarding
 const DEFAULT_SAFEWORD = 'MERCY'
-
-interface PrefUpdate {
-    field: string
-    action: 'set' | 'append'
-    value: string
-}
-
-function parsePrefUpdates(text: string): PrefUpdate[] {
-    const updates: PrefUpdate[] = []
-    const regex = /\[PREF_UPDATE:([\s\S]*?)\]/g
-    let match
-    while ((match = regex.exec(text)) !== null) {
-        try {
-            const parsed = JSON.parse(match[1]) as PrefUpdate
-            if (parsed.field && parsed.action && parsed.value !== undefined) {
-                updates.push(parsed)
-            }
-        } catch {
-            // malformed JSON — skip
-        }
-    }
-    return updates
-}
-
-function stripPrefUpdates(text: string): string {
-    return text.replace(/\[PREF_UPDATE:[\s\S]*?\]\s*/g, '').trim()
-}
 
 const PREF_UPDATE_INSTRUCTION = `When the user explicitly states a preference during Care Mode (e.g., "I don't want outdoor tasks", "my goal is endurance training", "no public humiliation please"), you MAY append a PREF_UPDATE marker to your response to suggest saving it:
 [PREF_UPDATE:{"field":"master_preference","action":"set","value":"no outdoor tasks"}]
