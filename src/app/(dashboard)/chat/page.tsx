@@ -11,7 +11,9 @@ import { useAuth } from '@/lib/contexts/auth-context'
 import { getSupabase } from '@/lib/supabase/client'
 import { getActiveSession } from '@/lib/supabase/sessions'
 import { buildProfileSummary } from '@/lib/ai/context-builder'
+import { PrefUpdateSheet } from '@/components/features/chat/pref-update-sheet'
 import type { Session } from '@/lib/supabase/schema'
+import type { PrefUpdate } from '@/lib/ai/pref-update-parser'
 
 interface MasterTaskCard {
     id: string
@@ -30,7 +32,7 @@ interface DisplayMessage {
 }
 
 export default function ChatPage() {
-    const { user, profile } = useAuth()
+    const { user, profile, refreshProfile } = useAuth()
     const [inputValue, setInputValue] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [session, setSession] = useState<Session | null>(null)
@@ -38,6 +40,7 @@ export default function ChatPage() {
     const [messages, setMessages] = useState<DisplayMessage[]>([])
     const [initialLoading, setInitialLoading] = useState(true)
     const [profileSummary, setProfileSummary] = useState('')
+    const [pendingPrefUpdates, setPendingPrefUpdates] = useState<PrefUpdate[] | null>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
     // Load existing messages from DB on mount
@@ -154,6 +157,11 @@ export default function ChatPage() {
                     setCareMode(true)
                 }
 
+                // Handle Care Mode preference updates
+                if (data.prefUpdates && data.prefUpdates.length > 0) {
+                    setPendingPrefUpdates(data.prefUpdates)
+                }
+
                 // Add AI reply to local state
                 const aiMsg: DisplayMessage = {
                     id: `ai-${Date.now()}`,
@@ -191,6 +199,33 @@ export default function ChatPage() {
 
         setIsLoading(false)
     }, [inputValue, isLoading, user, session, profile, profileSummary])
+
+    const handlePrefUpdateConfirm = async () => {
+        if (!pendingPrefUpdates || !user) return
+
+        // Build the update object — for 'set', replace; for 'append', we just set (server stores it)
+        const updateBody: Record<string, unknown> = { userId: user.id }
+        for (const update of pendingPrefUpdates) {
+            updateBody[update.field] = update.value
+        }
+
+        try {
+            await fetch('/api/profile/update', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateBody),
+            })
+            await refreshProfile()
+        } catch {
+            // Silently fail — preference update is best-effort
+        } finally {
+            setPendingPrefUpdates(null)
+        }
+    }
+
+    const handlePrefUpdateDismiss = () => {
+        setPendingPrefUpdates(null)
+    }
 
     const formatTime = (timestamp: string) =>
         new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -401,6 +436,14 @@ export default function ChatPage() {
             </div>
 
             <BottomNav />
+
+            {pendingPrefUpdates && (
+                <PrefUpdateSheet
+                    updates={pendingPrefUpdates}
+                    onConfirm={handlePrefUpdateConfirm}
+                    onDismiss={handlePrefUpdateDismiss}
+                />
+            )}
         </>
     )
 }
