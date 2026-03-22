@@ -4,18 +4,19 @@ import { applyPunishment } from '@/lib/engines/punishment'
 
 const CHECKIN_VERIFICATION = 'Clear photo of the locked chastity cage showing it is secured and unmodified.'
 
-// UTC hour windows
-const MORNING_START = 6    // 6am UTC
-const MORNING_END   = 10   // 10am UTC
-const NIGHT_START   = 20   // 8pm UTC
+// Local hour windows (applied against client-supplied localHour)
+const MORNING_START = 6    // 6am local
+const MORNING_END   = 10   // 10am local
+const NIGHT_START   = 20   // 8pm local
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { userId, sessionId, date } = body as {
+        const { userId, sessionId, date, localHour } = body as {
             userId: string
             sessionId?: string
-            date?: string // YYYY-MM-DD
+            date?: string   // YYYY-MM-DD in client's local timezone
+            localHour?: number  // client's local 0–23 hour
         }
 
         if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
@@ -23,7 +24,10 @@ export async function POST(request: NextRequest) {
         const supabase = getServerSupabase()
         const now = new Date()
         const today = date || now.toISOString().split('T')[0]
-        const currentHour = now.getUTCHours()
+        // Prefer client local hour so windows match the user's actual morning/night
+        const currentHour = (typeof localHour === 'number' && localHour >= 0 && localHour <= 23)
+            ? localHour
+            : now.getUTCHours()
 
         // Resolve active session for punishment
         let activeSessionId = sessionId
