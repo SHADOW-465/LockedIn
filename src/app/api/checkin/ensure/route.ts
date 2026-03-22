@@ -3,10 +3,6 @@ import { getServerSupabase } from '@/lib/supabase/server'
 
 const CHECKIN_VERIFICATION = 'Clear photo of the locked chastity cage showing it is secured and unmodified.'
 
-// On-time windows (local hours) — used only at proof submission to detect late submissions
-export const MORNING_WINDOW = { start: 6, end: 10 }   // 6am–10am local
-export const NIGHT_WINDOW   = { start: 20, end: 24 }  // 8pm–midnight local
-
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()

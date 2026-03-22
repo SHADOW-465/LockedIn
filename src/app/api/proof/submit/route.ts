@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase/server'
 import { verifyImage, generateSimpleText, trackUsage } from '@/lib/ai/ai-service'
 import { applyPunishment } from '@/lib/engines/punishment'
-import { MORNING_WINDOW, NIGHT_WINDOW } from '@/app/api/checkin/ensure/route'
+import { MORNING_WINDOW, NIGHT_WINDOW } from '@/lib/checkin-windows'
 
 export async function POST(request: NextRequest) {
     try {
