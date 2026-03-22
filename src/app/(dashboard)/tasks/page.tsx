@@ -299,7 +299,7 @@ function CheckinProofHistory({ task }: { task: Task }) {
             .select('id, verification_status, verified_at, created_at, local_storage_key')
             .eq('task_id', task.id)
             .order('created_at', { ascending: false })
-            .then(({ data }) => {
+            .then(({ data }: { data: Array<{ id: string; verification_status: string; verified_at: string | null; created_at: string; local_storage_key: string | null }> | null }) => {
                 if (!data?.length) return
                 const enriched = data.map((p) => {
                     let imageDataUrl: string | undefined
