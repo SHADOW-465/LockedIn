@@ -272,26 +272,32 @@ export function ProofCaptureModal({ task, userId, sessionId, onClose, onSubmitte
 
                     {/* ── RESULT PHASE ── */}
                     {phase === 'result' && submitResult && (
-                        <div className={`text-center py-6 space-y-3 ${submitResult.verified ? 'text-teal-primary' : 'text-red-primary'}`}>
-                            <div className="text-4xl">{submitResult.verified ? '✅' : '❌'}</div>
-                            <h3 className="text-lg font-bold">
-                                {submitResult.verified ? 'Proof Verified!' : 'Proof Rejected'}
-                            </h3>
-                            <p className="text-sm text-text-secondary">{submitResult.reason}</p>
-                            {!submitResult.verified && (
-                                <Button
-                                    variant="primary"
-                                    size="sm"
-                                    onClick={handleRetake}
-                                >
-                                    Try Again
-                                </Button>
-                            )}
-                            {submitResult.verified && (
-                                <Button variant="ghost" size="sm" onClick={onClose}>
-                                    <CheckCircle size={14} className="mr-1" /> Done
-                                </Button>
-                            )}
+                        <div className="py-6 space-y-4">
+                            <div className="text-center space-y-2">
+                                <div className="text-4xl">{submitResult.verified ? '✅' : '❌'}</div>
+                                <h3 className={`text-lg font-bold ${submitResult.verified ? 'text-teal-primary' : 'text-red-primary'}`}>
+                                    {submitResult.verified ? 'Proof Verified!' : 'Proof Rejected'}
+                                </h3>
+                            </div>
+                            {/* AI Feedback */}
+                            <div className={`rounded-[var(--radius-md)] p-4 border text-left ${submitResult.verified ? 'bg-teal-primary/5 border-teal-primary/20' : 'bg-red-primary/5 border-red-primary/20'}`}>
+                                <p className={`text-xs font-bold uppercase mb-2 ${submitResult.verified ? 'text-teal-primary' : 'text-red-primary'}`}>
+                                    AI Feedback
+                                </p>
+                                <p className="text-sm text-text-secondary whitespace-pre-line leading-relaxed">{submitResult.reason}</p>
+                            </div>
+                            <div className="flex justify-center gap-3">
+                                {!submitResult.verified && (
+                                    <Button variant="primary" size="sm" onClick={handleRetake}>
+                                        Try Again
+                                    </Button>
+                                )}
+                                {submitResult.verified && (
+                                    <Button variant="ghost" size="sm" onClick={onClose}>
+                                        <CheckCircle size={14} className="mr-1" /> Done
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>

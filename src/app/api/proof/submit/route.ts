@@ -139,8 +139,15 @@ export async function POST(request: NextRequest) {
                     verificationReason = 'Text proof accepted — no specific requirement set'
                 }
             } else if (proofType === 'image') {
-                // Image proof: use existing AI vision verification
-                const prompt = `Analyze this image for task verification.\nThe task was: "${task.description}"\nCheck: Does this image provide clear evidence that the task was completed as described?\nRespond with PASS or FAIL followed by a brief explanation.`
+                // Image proof: use AI vision verification against the specific requirement
+                const requirement = task.verification_requirement || task.description
+                const prompt = [
+                    `You are a strict visual proof verifier for a chastity training app.`,
+                    `Requirement: "${requirement}"`,
+                    `Carefully examine the image and determine if it clearly satisfies the requirement above.`,
+                    `Describe specifically what you see in the image (1–2 sentences), then state PASS or FAIL with a reason.`,
+                    `Format: [what you see] — PASS/FAIL: [reason]`,
+                ].join('\n')
                 const result = await verifyImage(fileBase64!, prompt)
                 verified = result.success
                 verificationReason = result.reason
