@@ -1,79 +1,40 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { TopBar } from '@/components/layout/top-bar'
-import { BottomNav } from '@/components/layout/bottom-nav'
-import { Lock as LockIcon } from 'lucide-react'
-import {
-    Bell,
-    Shield,
-    HelpCircle,
-    MessageSquare,
-    LogOut,
-    ChevronRight,
-    Crown,
-    User,
-    AlertTriangle,
-    Loader2,
-    RefreshCw
-} from 'lucide-react'
 import { useAuth } from '@/lib/contexts/auth-context'
-import { signOut } from '@/lib/supabase/auth'
+import { useRouter } from 'next/navigation'
+import { AlertTriangle, Loader2 } from 'lucide-react'
+import { ProfileStrengthRing } from '@/components/features/profile/profile-strength-ring'
+import { MasterPreferenceEditor } from '@/components/features/profile/editors/master-preference-editor'
+import { SessionIntentEditor } from '@/components/features/profile/editors/session-intent-editor'
+import { TierEditor } from '@/components/features/profile/editors/tier-editor'
+import { PersonaEditor } from '@/components/features/profile/editors/persona-editor'
+import { LimitsEditor } from '@/components/features/profile/editors/limits-editor'
+import { InterestsEditor } from '@/components/features/profile/editors/interests-editor'
+import { RegimensEditor } from '@/components/features/profile/editors/regimens-editor'
+import { PsychProfileEditor } from '@/components/features/profile/editors/psych-profile-editor'
+import { PhysicalDetailsEditor } from '@/components/features/profile/editors/physical-details-editor'
+import { CommunicationStyleEditor } from '@/components/features/profile/editors/communication-style-editor'
+import { LockParamsEditor } from '@/components/features/profile/editors/lock-params-editor'
+import { AvailabilityEditor } from '@/components/features/profile/editors/availability-editor'
 import { emergencyRelease, getActiveSession } from '@/lib/supabase/sessions'
 import { getSupabase } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import { useOnboarding } from '@/lib/stores/onboarding-store'
+import { signOut } from '@/lib/supabase/auth'
 import { PunishmentPoolEditor } from '@/components/features/punishment/punishment-pool-editor'
 
-const settingsItems = [
-    {
-        icon: User,
-        label: 'Edit Profile',
-        description: 'Username, personality & limits',
-        href: '/settings/profile',
-    },
-    {
-        icon: Bell,
-        label: 'Notifications',
-        description: 'Frequency & quiet hours',
-        href: '/settings/notifications',
-    },
-    {
-        icon: Shield,
-        label: 'Hard Limits',
-        description: 'Always editable for safety',
-        href: '/settings/profile',
-    },
-    {
-        icon: HelpCircle,
-        label: 'Help & Support',
-        description: 'Safeword, emergency, crisis resources',
-        href: '/settings/help',
-    },
-    {
-        icon: MessageSquare,
-        label: 'Suggestions',
-        description: 'Submit feedback (good suggestions earn XP)',
-        href: '/feedback',
-    },
-]
-
 export default function SettingsPage() {
-    const { user, profile, refreshProfile } = useAuth()
+    const { user, profile, loading, refreshProfile } = useAuth()
     const router = useRouter()
+
+    const [openCard, setOpenCard] = useState<string | null>(null)
+    const [sessionLocked, setSessionLocked] = useState(false)
+    const [hasActiveSession, setHasActiveSession] = useState(false)
+    const [masterReviewLoading, setMasterReviewLoading] = useState(false)
+    const [masterReview, setMasterReview] = useState<string | null>(null)
     const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false)
     const [processing, setProcessing] = useState(false)
-    const [hasActiveSession, setHasActiveSession] = useState(false)
-    // const { reset: resetStore } = useOnboarding()
 
-    const tier = profile?.tier ?? 'Newbie'
-    const username = profile?.username ?? profile?.email?.split('@')[0] ?? 'User'
-
-    // Check for active session — settings locked during session per §11.2
+    // Check for active session on mount
     useEffect(() => {
         if (!user) return
         getActiveSession(user.id).then((session) => {
@@ -81,60 +42,51 @@ export default function SettingsPage() {
         })
     }, [user])
 
-    const handleSignOut = async () => {
-        try {
-            setProcessing(true)
-            await signOut()
-            // Force a router refresh to clear any server component state
-            router.refresh()
-            // Use replace to prevent back navigation
-            router.replace('/login')
-        } catch (error) {
-            console.error('Sign out failed:', error)
-            setProcessing(false) // Only stop processing on error
+    // Save helper — PATCH /api/profile/update
+    async function saveField(fields: Record<string, unknown>) {
+        const res = await fetch('/api/profile/update', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user?.id, ...fields }),
+        })
+        if (res.status === 403) {
+            setSessionLocked(true)
+            setOpenCard(null)
+            return
+        }
+        if (res.ok) {
+            await refreshProfile()
+            setOpenCard(null)
         }
     }
 
-    const handleTierSwitch = async (newTier: string) => {
-        if (!user) return
-        const supabase = getSupabase()
-        await supabase.from('profiles').update({ tier: newTier }).eq('id', user.id)
-        refreshProfile()
+    // AI Master Review
+    async function requestMasterReview() {
+        setMasterReviewLoading(true)
+        try {
+            const res = await fetch('/api/profile/suggestions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profileSection: 'full profile review' }),
+            })
+            const data = await res.json()
+            setMasterReview(
+                Array.isArray(data.suggestions) ? data.suggestions.join('\n\n') : data.suggestions ?? null
+            )
+        } catch {
+            setMasterReview('The Master is unavailable right now. Try again later.')
+        } finally {
+            setMasterReviewLoading(false)
+        }
     }
 
-    // const handleResetOnboarding = async () => {
-    //     if (!user) return
-    //     if (!confirm('Are you sure you want to reset onboarding? This will clear your tier and preferences.')) return
-    // 
-    //     setProcessing(true)
-    //     const supabase = getSupabase()
-    // 
-    //     // Reset DB
-    //     await supabase.from('profiles').update({
-    //         onboarding_completed: false,
-    //         onboarding_step: 0,
-    //         tier: null,
-    //         ai_personality: null
-    //     }).eq('id', user.id)
-    // 
-    //     // Reset local store
-    //     resetStore()
-    // 
-    //     // Refresh context to trigger redirect via RouteGuard
-    //     await refreshProfile()
-    // 
-    //     // Manual redirect just in case
-    //     router.replace('/onboarding/welcome')
-    //     setProcessing(false)
-    // }
-
+    // Emergency release (preserved from original page)
     const handleEmergencyRelease = async () => {
         if (!user) return
         setProcessing(true)
         const session = await getActiveSession(user.id)
         if (session) {
             await emergencyRelease(session.id)
-            // Apply willpower penalty
             const supabase = getSupabase()
             await supabase
                 .from('profiles')
@@ -151,238 +103,370 @@ export default function SettingsPage() {
         router.refresh()
     }
 
+    const handleSignOut = async () => {
+        try {
+            setProcessing(true)
+            await signOut()
+            router.refresh()
+            router.replace('/login')
+        } catch (error) {
+            console.error('Sign out failed:', error)
+            setProcessing(false)
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-black">
+                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full" />
+            </div>
+        )
+    }
+
+    if (!profile) return null
+
+    // 13 profile cards
+    const cards = [
+        {
+            id: 'master_preference',
+            title: 'Master Preference',
+            value: profile.master_preference ? profile.master_preference.slice(0, 40) + (profile.master_preference.length > 40 ? '…' : '') : 'Not set',
+            description: 'Hard constraints the AI never violates',
+        },
+        {
+            id: 'session_intent',
+            title: 'Session Goals & Intent',
+            value: profile.session_intent ? profile.session_intent.slice(0, 40) + (profile.session_intent.length > 40 ? '…' : '') : 'Not set',
+            description: 'What you want to achieve this session',
+        },
+        {
+            id: 'tier',
+            title: 'Training Tier',
+            value: profile.tier || 'Newbie',
+            description: 'Intensity level of your training',
+        },
+        {
+            id: 'ai_personality',
+            title: 'AI Persona',
+            value: profile.ai_personality || 'Strict Master',
+            description: "Your Master's personality",
+        },
+        {
+            id: 'hard_limits',
+            title: 'Hard Limits',
+            value: `${(profile.hard_limits || []).length} limits set`,
+            description: 'Absolute limits never crossed',
+        },
+        {
+            id: 'soft_limits',
+            title: 'Soft Limits',
+            value: `${(profile.soft_limits || []).length} limits set`,
+            description: 'Limits that can be pushed',
+        },
+        {
+            id: 'interests',
+            title: 'Fetish Interests',
+            value: `${(profile.interests || []).length} selected`,
+            description: 'Your fetish profile',
+        },
+        {
+            id: 'preferred_regimens',
+            title: 'Training Regimens',
+            value: `${(profile.preferred_regimens || []).length} selected`,
+            description: 'Active training programs',
+        },
+        {
+            id: 'psych_profile',
+            title: 'Psych Profile',
+            value: profile.psych_profile ? 'Completed' : 'Not set',
+            description: 'Psychological calibration for the AI',
+        },
+        {
+            id: 'physical_details',
+            title: 'Physical Details',
+            value: profile.physical_details ? 'Set' : 'Not set',
+            description: 'Body details for task calibration',
+        },
+        {
+            id: 'communication_style',
+            title: 'Communication Style',
+            value: profile.communication_style
+                ? `${profile.communication_style.tone_preference} / ${profile.communication_style.feedback_frequency}`
+                : 'Not set',
+            description: 'How the Master communicates with you',
+        },
+        {
+            id: 'lock_params',
+            title: 'Lock Parameters',
+            value: `${profile.initial_lock_goal_hours || 168}h goal`,
+            description: 'Default lock duration & safeword',
+        },
+        {
+            id: 'availability',
+            title: 'Availability',
+            value: profile.availability?.active_hours?.length
+                ? `${profile.availability.active_hours.length} window${profile.availability.active_hours.length !== 1 ? 's' : ''}`
+                : 'Not set',
+            description: 'Your active training hours',
+        },
+    ]
+
+    function renderBottomSheet() {
+        if (!openCard || !profile) return null
+        const commonProps = { onClose: () => setOpenCard(null) }
+
+        switch (openCard) {
+            case 'master_preference':
+                return (
+                    <MasterPreferenceEditor
+                        value={profile.master_preference || ''}
+                        onSave={(v) => saveField({ master_preference: v })}
+                        {...commonProps}
+                    />
+                )
+            case 'session_intent':
+                return (
+                    <SessionIntentEditor
+                        value={profile.session_intent || ''}
+                        onSave={(v) => saveField({ session_intent: v })}
+                        {...commonProps}
+                    />
+                )
+            case 'tier':
+                return (
+                    <TierEditor
+                        value={profile.tier || 'Newbie'}
+                        onSave={(v) => saveField({ tier: v })}
+                        {...commonProps}
+                    />
+                )
+            case 'ai_personality':
+                return (
+                    <PersonaEditor
+                        value={profile.ai_personality || 'Strict Master'}
+                        onSave={(v) => saveField({ ai_personality: v })}
+                        {...commonProps}
+                    />
+                )
+            case 'hard_limits':
+                return (
+                    <LimitsEditor
+                        field="hard_limits"
+                        value={profile.hard_limits || []}
+                        onSave={(v) => saveField({ hard_limits: v })}
+                        {...commonProps}
+                    />
+                )
+            case 'soft_limits':
+                return (
+                    <LimitsEditor
+                        field="soft_limits"
+                        value={profile.soft_limits || []}
+                        onSave={(v) => saveField({ soft_limits: v })}
+                        {...commonProps}
+                    />
+                )
+            case 'interests':
+                return (
+                    <InterestsEditor
+                        value={profile.interests || []}
+                        onSave={(v) => saveField({ interests: v })}
+                        {...commonProps}
+                    />
+                )
+            case 'preferred_regimens':
+                return (
+                    <RegimensEditor
+                        value={profile.preferred_regimens || []}
+                        onSave={(v) => saveField({ preferred_regimens: v })}
+                        {...commonProps}
+                    />
+                )
+            case 'psych_profile':
+                return (
+                    <PsychProfileEditor
+                        value={profile.psych_profile || ''}
+                        onSave={(v) => saveField({ psych_profile: v })}
+                        {...commonProps}
+                    />
+                )
+            case 'physical_details':
+                return (
+                    <PhysicalDetailsEditor
+                        value={profile.physical_details}
+                        onSave={(v) => saveField({ physical_details: v })}
+                        {...commonProps}
+                    />
+                )
+            case 'communication_style':
+                return (
+                    <CommunicationStyleEditor
+                        value={profile.communication_style}
+                        onSave={(v) => saveField({ communication_style: v })}
+                        {...commonProps}
+                    />
+                )
+            case 'lock_params':
+                return (
+                    <LockParamsEditor
+                        goalHours={profile.initial_lock_goal_hours || 168}
+                        safeword={profile.safeword || 'MERCY'}
+                        onSave={(v) => saveField(v)}
+                        {...commonProps}
+                    />
+                )
+            case 'availability':
+                return (
+                    <AvailabilityEditor
+                        value={profile.availability}
+                        onSave={(v) => saveField({ availability: v })}
+                        {...commonProps}
+                    />
+                )
+            default:
+                return null
+        }
+    }
+
     return (
-        <>
-            <TopBar />
+        <div className="min-h-screen bg-black text-white pb-24">
+            {/* Header */}
+            <div className="px-4 pt-8 pb-4">
+                <h1 className="text-2xl font-bold">Settings</h1>
 
-            <div className="min-h-screen pb-24 lg:pb-8 p-4">
-                <div className="relative max-w-2xl mx-auto space-y-6">
-                    <h1 className="text-3xl font-bold">Settings</h1>
-
-                    {/* Session Active Banner */}
-                    {hasActiveSession && (
-                        <Card variant="flat" size="sm" className="!min-h-0 border-red-primary/30 bg-red-primary/5">
-                            <div className="flex items-center gap-3">
-                                <LockIcon size={18} className="text-red-primary shrink-0" />
-                                <div>
-                                    <p className="text-sm font-semibold text-red-primary">Session Active — Settings Locked</p>
-                                    <p className="text-xs text-text-tertiary">Profile, limits, and notifications are read-only during an active lock session.</p>
-                                </div>
-                            </div>
-                        </Card>
-                    )}
-
-                    {/* Profile Card */}
-                    <Card variant="hero">
-                        <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-full bg-purple-primary/20 flex items-center justify-center text-2xl font-bold text-purple-primary border border-purple-primary/30">
-                                {username.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="flex-1">
-                                <h2 className="text-xl font-bold">{username}</h2>
-                                <p className="text-sm text-text-secondary">{profile?.email ?? 'No email'}</p>
-                            </div>
-                            <Badge variant={
-                                `tier${tier === 'Newbie' ? '1' : tier === 'Slave' ? '2' : tier === 'Hardcore' ? '3' : tier === 'Extreme' ? '4' : '5'}` as 'tier1'
-                            }>
-                                {tier.toUpperCase()}
-                            </Badge>
-                        </div>
-
-                        {/* Stats row */}
-                        <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-white/5">
-                            <div className="text-center">
-                                <div className="text-lg font-bold font-mono">{profile?.total_sessions ?? 0}</div>
-                                <div className="text-[10px] text-text-tertiary uppercase">Sessions</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-lg font-bold font-mono">{profile?.total_denial_hours ?? 0}h</div>
-                                <div className="text-[10px] text-text-tertiary uppercase">Denial</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-lg font-bold font-mono">{profile?.total_edges ?? 0}</div>
-                                <div className="text-[10px] text-text-tertiary uppercase">Edges</div>
-                            </div>
-                        </div>
-                    </Card>
-
-                    {/* Subscription */}
-                    <Card variant="raised">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <Crown size={20} className="text-tier-slave" />
-                                <div>
-                                    <h3 className="font-semibold">Subscription</h3>
-                                    <p className="text-sm text-text-tertiary">
-                                        {profile?.subscription_tier?.toUpperCase() ?? 'FREE'} Tier
-                                    </p>
-                                </div>
-                            </div>
-                            <Button variant="secondary" size="sm">
-                                Upgrade
-                            </Button>
-                        </div>
-                    </Card>
-
-                    {/* Testing / Dev Actions */}
-                    <Card variant="flat" size="sm" className="!min-h-0">
-                        <div className="flex items-start gap-3">
-                            <User size={18} className="text-purple-primary shrink-0 mt-0.5" />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <p className="text-sm font-medium">Developer Controls</p>
-                                    <Badge variant="info">DEV</Badge>
-                                </div>
-                                <div className="space-y-4">
-                                    {/* Tier Switch */}
-                                    <div>
-                                        <p className="text-xs text-text-tertiary mb-2">Switch Tier (Instant)</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {['Newbie', 'Slave', 'Hardcore', 'Extreme', 'Destruction'].map(
-                                                (t) => (
-                                                    <button
-                                                        key={t}
-                                                        onClick={() => handleTierSwitch(t)}
-                                                        disabled={hasActiveSession}
-                                                        className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-colors cursor-pointer border ${t === tier
-                                                            ? 'bg-purple-primary text-white border-purple-primary'
-                                                            : 'bg-bg-tertiary hover:bg-bg-hover border-white/5'
-                                                            } ${hasActiveSession ? 'opacity-40 cursor-not-allowed' : ''}`}
-                                                    >
-                                                        {t}
-                                                    </button>
-                                                )
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Reset Onboarding Removed */}
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-
-                    {/* Punishment Pool */}
-                    <Card variant="flat" size="sm" className="!min-h-0">
-                        <PunishmentPoolEditor userId={user?.id ?? ''} />
-                    </Card>
-
-                    {/* Settings List */}
-                    <div className="space-y-2">
-                        {settingsItems.map((item) => {
-                            const Icon = item.icon
-                            const isLocked = hasActiveSession && ['Edit Profile', 'Notifications', 'Hard Limits'].includes(item.label)
-                            return (
-                                <Link key={item.label} href={isLocked ? '#' : item.href} onClick={isLocked ? (e: React.MouseEvent) => e.preventDefault() : undefined}>
-                                    <Card
-                                        variant="flat"
-                                        size="sm"
-                                        className={`!min-h-0 py-4 transition-colors ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-bg-tertiary'}`}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <Icon size={20} className="text-text-tertiary" />
-                                                <div>
-                                                    <span className="font-medium text-sm">{item.label}</span>
-                                                    <p className="text-xs text-text-tertiary">{item.description}</p>
-                                                </div>
-                                            </div>
-                                            {isLocked ? (
-                                                <LockIcon size={16} className="text-red-primary/50" />
-                                            ) : (
-                                                <ChevronRight size={18} className="text-text-tertiary" />
-                                            )}
-                                        </div>
-                                    </Card>
-                                </Link>
-                            )
-                        })}
+                {/* Session active info banner */}
+                {hasActiveSession && (
+                    <div className="mt-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm">
+                        Session active — some settings are locked until your session ends.
                     </div>
+                )}
 
-                    {/* Emergency Release */}
-                    {!showEmergencyConfirm ? (
-                        <Card
-                            variant="flat"
-                            size="sm"
-                            className="!min-h-0 py-4 border-red-primary/30 cursor-pointer hover:bg-red-primary/5 transition-colors"
-                            onClick={() => setShowEmergencyConfirm(true)}
-                        >
-                            <div className="flex items-center gap-3">
-                                <AlertTriangle size={20} className="text-red-primary" />
-                                <div>
-                                    <span className="font-medium text-sm text-red-primary">
-                                        Emergency Release
-                                    </span>
-                                    <p className="text-xs text-text-tertiary">
-                                        Always available. Severe in-game penalties apply.
-                                    </p>
-                                </div>
-                            </div>
-                        </Card>
-                    ) : (
-                        <Card variant="raised" className="border-red-primary/30">
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2 text-red-primary">
-                                    <AlertTriangle size={20} />
-                                    <h3 className="font-bold">Confirm Emergency Release</h3>
-                                </div>
-                                <p className="text-sm text-text-secondary">
-                                    This will immediately end your session. Penalties:
-                                </p>
-                                <ul className="text-xs text-red-primary space-y-1 list-disc pl-4">
-                                    <li>-30 willpower score</li>
-                                    <li>Compliance streak reset to 0</li>
-                                    <li>Session marked as failed</li>
-                                </ul>
-                                <div className="flex gap-3">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setShowEmergencyConfirm(false)}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        variant="primary"
-                                        size="sm"
-                                        className="!bg-red-primary"
-                                        onClick={handleEmergencyRelease}
-                                        disabled={processing}
-                                    >
-                                        {processing ? (
-                                            <><Loader2 size={14} className="mr-1 animate-spin" /> Releasing...</>
-                                        ) : (
-                                            'Yes, Release Now'
-                                        )}
-                                    </Button>
-                                </div>
-                            </div>
-                        </Card>
-                    )}
+                {/* Session locked error banner (shown after 403) */}
+                {sessionLocked && (
+                    <div className="mt-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                        Settings are locked during an active session. End your session first.
+                    </div>
+                )}
+            </div>
 
-                    {/* Sign Out */}
-                    <Card
-                        variant="flat"
-                        size="sm"
-                        className={`!min-h-0 py-4 transition-colors ${processing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-bg-tertiary'}`}
-                        onClick={!processing ? handleSignOut : undefined}
+            {/* Profile Strength Ring */}
+            <div className="flex flex-col items-center py-6">
+                <ProfileStrengthRing profile={profile} size={140} />
+                <button
+                    onClick={requestMasterReview}
+                    disabled={masterReviewLoading}
+                    className="mt-4 px-4 py-2 rounded-full bg-zinc-800 border border-zinc-700 text-sm text-white/80 hover:bg-zinc-700 transition disabled:opacity-50"
+                >
+                    {masterReviewLoading ? 'Consulting Master...' : 'Ask Master to Review'}
+                </button>
+                {masterReview && (
+                    <div className="mt-3 mx-4 p-4 rounded-lg bg-zinc-900 border border-zinc-800 text-sm text-white/70 whitespace-pre-line max-w-lg w-full">
+                        {masterReview}
+                    </div>
+                )}
+            </div>
+
+            {/* 13 Profile Cards */}
+            <div className="px-4 space-y-2">
+                {cards.map((card) => (
+                    <button
+                        key={card.id}
+                        onClick={() => setOpenCard(card.id)}
+                        className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition text-left"
                     >
-                        <div className="flex items-center gap-3">
-                            <LogOut size={20} className="text-text-tertiary" />
-                            <div>
-                                <span className="font-medium text-sm">
-                                    {processing ? 'Signing Out...' : 'Sign Out'}
-                                </span>
-                                <p className="text-xs text-text-tertiary">Log out of your account</p>
-                            </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white text-sm">{card.title}</p>
+                            <p className="text-xs text-white/40 mt-0.5">{card.description}</p>
                         </div>
-                    </Card>
+                        <div className="flex items-center gap-2 ml-3 shrink-0">
+                            <span className="text-sm text-white/60 max-w-[130px] truncate">{card.value}</span>
+                            <span className="text-white/30 text-lg leading-none">›</span>
+                        </div>
+                    </button>
+                ))}
+            </div>
 
-
+            {/* Punishment Pool */}
+            <div className="px-4 mt-6">
+                <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800">
+                    <PunishmentPoolEditor userId={user?.id ?? ''} />
                 </div>
             </div>
 
-            <BottomNav />
-        </>
+            {/* Danger Zone */}
+            <div className="px-4 mt-8 space-y-3">
+                <p className="text-xs text-white/30 uppercase tracking-widest">Danger Zone</p>
+
+                {/* Emergency Release */}
+                {!showEmergencyConfirm ? (
+                    <button
+                        onClick={() => setShowEmergencyConfirm(true)}
+                        className="w-full flex items-center gap-3 p-4 rounded-xl bg-zinc-900 border border-red-500/30 text-left hover:bg-red-500/5 transition"
+                    >
+                        <AlertTriangle size={18} className="text-red-400 shrink-0" />
+                        <div>
+                            <p className="text-sm font-medium text-red-400">Emergency Release</p>
+                            <p className="text-xs text-white/40 mt-0.5">Always available. Severe in-game penalties apply.</p>
+                        </div>
+                    </button>
+                ) : (
+                    <div className="p-4 rounded-xl bg-zinc-900 border border-red-500/30 space-y-4">
+                        <div className="flex items-center gap-2 text-red-400">
+                            <AlertTriangle size={18} />
+                            <h3 className="font-bold text-sm">Confirm Emergency Release</h3>
+                        </div>
+                        <p className="text-sm text-white/60">This will immediately end your session. Penalties:</p>
+                        <ul className="text-xs text-red-400 space-y-1 list-disc pl-4">
+                            <li>-30 willpower score</li>
+                            <li>Compliance streak reset to 0</li>
+                            <li>Session marked as emergency</li>
+                        </ul>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowEmergencyConfirm(false)}
+                                className="flex-1 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white/70 text-sm hover:bg-zinc-700 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleEmergencyRelease}
+                                disabled={processing}
+                                className="flex-1 py-2.5 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-500 transition disabled:opacity-50 flex items-center justify-center gap-1"
+                            >
+                                {processing ? (
+                                    <><Loader2 size={14} className="animate-spin" /> Releasing...</>
+                                ) : (
+                                    'Yes, Release Now'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Sign Out */}
+                <button
+                    onClick={!processing ? handleSignOut : undefined}
+                    disabled={processing}
+                    className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-white/70 hover:bg-zinc-800 transition disabled:opacity-50 text-left"
+                >
+                    {processing ? 'Signing Out...' : 'Sign Out'}
+                </button>
+            </div>
+
+            {/* Bottom Sheet Overlay */}
+            {openCard && (
+                <div className="fixed inset-0 z-50">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/70"
+                        onClick={() => setOpenCard(null)}
+                    />
+                    {/* Sheet */}
+                    <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-zinc-950 border-t border-zinc-800">
+                        {renderBottomSheet()}
+                    </div>
+                </div>
+            )}
+        </div>
     )
 }
