@@ -281,6 +281,198 @@ function TaskDetailModal({
     )
 }
 
+// XP by difficulty (1→5, 2→10, 3→20, 4→40, 5→80)
+const XP_BY_DIFFICULTY = [0, 5, 10, 20, 40, 80]
+
+const TASK_TYPE_LABELS: Record<string, string> = {
+    master: '⚔ Master Task',
+    punishment: '⚠ Punishment Task',
+    checkin: '🔒 Check-in',
+    daily: '📋 Daily Task',
+}
+
+// ── History Detail Modal (read-only, for completed/failed/overdue tasks) ──
+function HistoryTaskDetailModal({
+    task,
+    onClose,
+}: {
+    task: Task
+    onClose: () => void
+}) {
+    const isCompleted = ['completed', 'verified'].includes(task.status)
+    const isFailed = task.status === 'failed'
+    const isOverdue = task.status === 'overdue'
+
+    const willpowerDelta = isCompleted
+        ? `+${Math.ceil(task.difficulty * 3)}`
+        : `-${Math.ceil(task.difficulty * 2)}`
+    const xp = XP_BY_DIFFICULTY[task.difficulty] ?? 0
+
+    const outcomeColor = isCompleted
+        ? 'text-teal-primary border-teal-primary/20 bg-teal-primary/5'
+        : 'text-red-primary border-red-primary/20 bg-red-primary/5'
+
+    const outcomeLabel = task.status === 'verified'
+        ? '✅ Verified by AI'
+        : isCompleted
+            ? '✅ Completed'
+            : isFailed
+                ? '❌ Failed'
+                : '⏰ Overdue'
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-bg-secondary border border-white/10 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                {/* Header */}
+                <div className="flex items-start justify-between p-6 border-b border-white/5">
+                    <div className="space-y-2 flex-1 pr-4">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-mono text-text-tertiary uppercase">
+                                {TASK_TYPE_LABELS[task.task_type] ?? '📋 Task'}
+                            </span>
+                        </div>
+                        <h2 className="text-xl font-bold leading-tight">{task.title}</h2>
+                        <div className="flex flex-wrap gap-2">
+                            {task.genres?.map((g) => (
+                                <Badge key={g} variant="genre">{g}</Badge>
+                            ))}
+                            {task.cage_status && (
+                                <Badge variant={task.cage_status === 'caged' ? 'caged' : 'uncaged'}>
+                                    {task.cage_status === 'caged' ? '🔒' : '🗝️'} {task.cage_status.toUpperCase()}
+                                </Badge>
+                            )}
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors shrink-0">
+                        <X size={20} className="text-text-tertiary" />
+                    </button>
+                </div>
+
+                {/* Outcome Banner */}
+                <div className={`mx-6 mt-5 rounded-xl border p-4 ${outcomeColor}`}>
+                    <p className="text-sm font-bold">{outcomeLabel}</p>
+                    {isCompleted && (
+                        <div className="flex items-center gap-4 mt-2 text-xs">
+                            <span className="flex items-center gap-1">
+                                <Zap size={12} /> {willpowerDelta} Willpower
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <Trophy size={12} /> +{xp} XP
+                            </span>
+                        </div>
+                    )}
+                    {(isFailed || isOverdue) && (
+                        <div className="flex items-center gap-4 mt-2 text-xs">
+                            <span className="flex items-center gap-1">
+                                <Zap size={12} /> {willpowerDelta} Willpower
+                            </span>
+                            {task.punishment_hours && (
+                                <span className="flex items-center gap-1">
+                                    <Clock size={12} /> +{task.punishment_hours}h lock added
+                                </span>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Body */}
+                <div className="p-6 space-y-5">
+                    {/* Instructions */}
+                    <div>
+                        <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wide mb-2">Instructions</h3>
+                        <p className="text-sm text-text-secondary whitespace-pre-line leading-relaxed">
+                            {task.description || '—'}
+                        </p>
+                    </div>
+
+                    {/* Stats row */}
+                    <div className="grid grid-cols-3 gap-3">
+                        <div className="bg-bg-tertiary rounded-xl p-3 text-center">
+                            <div className="text-base font-bold font-mono">
+                                {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
+                            </div>
+                            <div className="text-[10px] text-text-tertiary mt-1">Difficulty</div>
+                        </div>
+                        <div className="bg-bg-tertiary rounded-xl p-3 text-center">
+                            <div className="text-base font-bold font-mono flex items-center justify-center gap-1">
+                                <Clock size={13} /> {task.duration_minutes}m
+                            </div>
+                            <div className="text-[10px] text-text-tertiary mt-1">Duration</div>
+                        </div>
+                        <div className="bg-bg-tertiary rounded-xl p-3 text-center">
+                            <div className="text-base font-bold">
+                                {isCompleted ? (
+                                    <span className="text-teal-primary">+{xp}</span>
+                                ) : (
+                                    <span className="text-red-primary">0</span>
+                                )}
+                            </div>
+                            <div className="text-[10px] text-text-tertiary mt-1">XP Earned</div>
+                        </div>
+                    </div>
+
+                    {/* Proof type */}
+                    {task.proof_type && (
+                        <div className="bg-purple-primary/5 border border-purple-primary/20 rounded-xl p-4">
+                            <p className="text-xs font-bold text-purple-primary uppercase mb-1">
+                                {PROOF_TYPE_ICONS[task.proof_type]} Proof Required: {task.proof_type.toUpperCase()}
+                            </p>
+                            {task.verification_requirement && (
+                                <p className="text-sm text-text-secondary mt-1">{task.verification_requirement}</p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* AI feedback on verification */}
+                    {task.ai_verification_reason && (
+                        <div className={`rounded-xl border p-4 ${isCompleted ? 'bg-teal-primary/5 border-teal-primary/20' : 'bg-red-primary/5 border-red-primary/20'}`}>
+                            <p className={`text-xs font-bold uppercase mb-2 ${isCompleted ? 'text-teal-primary' : 'text-red-primary'}`}>
+                                AI Feedback
+                            </p>
+                            <p className="text-sm text-text-secondary whitespace-pre-line leading-relaxed">
+                                {task.ai_verification_reason}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Punishment applied */}
+                    {(task.punishment_hours || task.punishment_additional) && (
+                        <div className="bg-red-primary/5 border border-red-primary/20 rounded-xl p-4">
+                            <div className="flex items-start gap-2">
+                                <AlertTriangle size={14} className="text-red-primary shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-xs font-bold text-red-primary uppercase mb-1">
+                                        Punishment Applied
+                                    </p>
+                                    {task.punishment_hours && (
+                                        <p className="text-sm text-red-primary">+{task.punishment_hours}h lock extension</p>
+                                    )}
+                                    {task.punishment_additional && (
+                                        <p className="text-sm text-text-secondary mt-1">{task.punishment_additional}</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Deadline (when it was due) */}
+                    {task.deadline && (
+                        <div className="text-xs text-text-tertiary font-mono text-center">
+                            Deadline was: {new Date(task.deadline).toLocaleString()}
+                        </div>
+                    )}
+                </div>
+
+                <div className="p-6 pt-0">
+                    <Button variant="ghost" className="w-full" onClick={onClose}>
+                        Close
+                    </Button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 // ── Main Tasks Page ──────────────────────────────────────────
 export default function TasksPage() {
     const { user, profile, loading: authLoading } = useAuth()
@@ -288,6 +480,7 @@ export default function TasksPage() {
     const [localHour] = useState(() => new Date().getHours())
     const [generating, setGenerating] = useState(false)
     const [detailTask, setDetailTask] = useState<Task | null>(null)
+    const [historyTask, setHistoryTask] = useState<Task | null>(null)
     const [proofTask, setProofTask] = useState<Task | null>(null)
     const [dailyTaskCount, setDailyTaskCount] = useState(0)
     const [dailyLimitReached, setDailyLimitReached] = useState(false)
@@ -849,22 +1042,40 @@ export default function TasksPage() {
                             {/* Overdue Tasks */}
                             {overdueTasks.length > 0 && (
                                 <div>
-                                    <h2 className="text-lg font-semibold mb-3 text-orange-400">Overdue</h2>
-                                    <div className="space-y-3 opacity-70">
-                                        {overdueTasks.slice(0, 5).map((task) => (
-                                            <Card key={task.id} variant="flat" size="sm" className="!min-h-0 border-orange-500/30">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <p className="text-sm font-medium">{task.title}</p>
-                                                        <p className="text-xs text-orange-400/70">
-                                                            ⏰ Time expired before completion
-                                                        </p>
+                                    <h2 className="text-lg font-semibold mb-3 text-orange-400 flex items-center gap-2">
+                                        ⏰ Overdue
+                                        <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full">
+                                            {overdueTasks.length}
+                                        </span>
+                                    </h2>
+                                    <div className="space-y-2">
+                                        {overdueTasks.map((task) => (
+                                            <button
+                                                key={task.id}
+                                                className="w-full text-left"
+                                                onClick={() => setHistoryTask(task)}
+                                            >
+                                                <Card variant="flat" size="sm" className="!min-h-0 border-orange-500/30 hover:border-orange-400/60 hover:bg-orange-500/5 transition-colors cursor-pointer">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="text-sm font-medium truncate">{task.title}</p>
+                                                            <div className="flex items-center gap-3 mt-0.5">
+                                                                <span className="text-xs text-orange-400/70">⏰ Expired</span>
+                                                                <span className="text-xs text-text-tertiary font-mono">
+                                                                    {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
+                                                                </span>
+                                                                {task.punishment_hours && (
+                                                                    <span className="text-xs text-red-400/70">+{task.punishment_hours}h</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 shrink-0">
+                                                            <Badge variant="locked">OVERDUE</Badge>
+                                                            <ChevronRight size={14} className="text-text-tertiary" />
+                                                        </div>
                                                     </div>
-                                                    <Badge variant="locked">
-                                                        OVERDUE
-                                                    </Badge>
-                                                </div>
-                                            </Card>
+                                                </Card>
+                                            </button>
                                         ))}
                                     </div>
                                 </div>
@@ -873,22 +1084,40 @@ export default function TasksPage() {
                             {/* Failed Tasks */}
                             {failedTasks.length > 0 && (
                                 <div>
-                                    <h2 className="text-lg font-semibold mb-3 text-red-500">Failed / Rejected</h2>
-                                    <div className="space-y-3 opacity-70">
-                                        {failedTasks.slice(0, 5).map((task) => (
-                                            <Card key={task.id} variant="flat" size="sm" className="!min-h-0 border-red-500/30">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <p className="text-sm font-medium">{task.title}</p>
-                                                        <p className="text-xs text-red-400/70">
-                                                            ❌ Failed validation or marked failed
-                                                        </p>
+                                    <h2 className="text-lg font-semibold mb-3 text-red-500 flex items-center gap-2">
+                                        ❌ Failed
+                                        <span className="text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">
+                                            {failedTasks.length}
+                                        </span>
+                                    </h2>
+                                    <div className="space-y-2">
+                                        {failedTasks.map((task) => (
+                                            <button
+                                                key={task.id}
+                                                className="w-full text-left"
+                                                onClick={() => setHistoryTask(task)}
+                                            >
+                                                <Card variant="flat" size="sm" className="!min-h-0 border-red-500/30 hover:border-red-400/60 hover:bg-red-500/5 transition-colors cursor-pointer">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="text-sm font-medium truncate">{task.title}</p>
+                                                            <div className="flex items-center gap-3 mt-0.5">
+                                                                <span className="text-xs text-red-400/70">❌ Failed</span>
+                                                                <span className="text-xs text-text-tertiary font-mono">
+                                                                    {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
+                                                                </span>
+                                                                <span className="text-xs text-red-400/70 font-mono">
+                                                                    -{Math.ceil(task.difficulty * 2)} WP
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 shrink-0">
+                                                            <Badge variant="locked">FAILED</Badge>
+                                                            <ChevronRight size={14} className="text-text-tertiary" />
+                                                        </div>
                                                     </div>
-                                                    <Badge variant="locked">
-                                                        FAILED
-                                                    </Badge>
-                                                </div>
-                                            </Card>
+                                                </Card>
+                                            </button>
                                         ))}
                                     </div>
                                 </div>
@@ -897,22 +1126,44 @@ export default function TasksPage() {
                             {/* Completed Tasks */}
                             {completedTasks.length > 0 && (
                                 <div>
-                                    <h2 className="text-lg font-semibold mb-3 text-text-tertiary">Completed</h2>
-                                    <div className="space-y-3 opacity-70">
-                                        {completedTasks.slice(0, 10).map((task) => (
-                                            <Card key={task.id} variant="flat" size="sm" className="!min-h-0">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <p className="text-sm font-medium">{task.title}</p>
-                                                        <p className="text-xs text-text-tertiary">
-                                                            ✅ Successfully completed
-                                                        </p>
+                                    <h2 className="text-lg font-semibold mb-3 text-teal-400 flex items-center gap-2">
+                                        ✅ Completed
+                                        <span className="text-xs bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full">
+                                            {completedTasks.length}
+                                        </span>
+                                    </h2>
+                                    <div className="space-y-2">
+                                        {completedTasks.map((task) => (
+                                            <button
+                                                key={task.id}
+                                                className="w-full text-left"
+                                                onClick={() => setHistoryTask(task)}
+                                            >
+                                                <Card variant="flat" size="sm" className="!min-h-0 hover:border-teal-400/30 hover:bg-teal-500/5 transition-colors cursor-pointer">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="text-sm font-medium truncate">{task.title}</p>
+                                                            <div className="flex items-center gap-3 mt-0.5">
+                                                                <span className="text-xs text-teal-400/70">
+                                                                    {task.status === 'verified' ? '✅ Verified' : '✅ Done'}
+                                                                </span>
+                                                                <span className="text-xs text-text-tertiary font-mono">
+                                                                    {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
+                                                                </span>
+                                                                <span className="text-xs text-teal-400/70 font-mono">
+                                                                    +{XP_BY_DIFFICULTY[task.difficulty] ?? 0} XP
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 shrink-0">
+                                                            <Badge variant="info">
+                                                                {task.status === 'verified' ? '✅ VERIFIED' : 'DONE'}
+                                                            </Badge>
+                                                            <ChevronRight size={14} className="text-text-tertiary" />
+                                                        </div>
                                                     </div>
-                                                    <Badge variant="info">
-                                                        {task.status === 'verified' ? '✅ VERIFIED' : 'COMPLETED'}
-                                                    </Badge>
-                                                </div>
-                                            </Card>
+                                                </Card>
+                                            </button>
                                         ))}
                                     </div>
                                 </div>
@@ -921,6 +1172,14 @@ export default function TasksPage() {
                     </div>
                 )}
             </div>
+
+            {/* History Task Detail Modal */}
+            {historyTask && (
+                <HistoryTaskDetailModal
+                    task={historyTask}
+                    onClose={() => setHistoryTask(null)}
+                />
+            )}
 
             {/* Task Detail Modal */}
             {detailTask && (
