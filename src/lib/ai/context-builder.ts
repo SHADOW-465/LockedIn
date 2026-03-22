@@ -24,6 +24,28 @@ export function buildProfileSummary(
 
     let summary = `${tier} | ${persona} | WP:${willpower} | Interests:${interests} | Limits:${limits} | Training:${regimens}`
 
+    // Inject HARD CONSTRAINTS from master_preference (near top, right after tier/persona info)
+    if (profile.master_preference) {
+        summary += ` | HARD CONSTRAINTS — NEVER VIOLATE: ${profile.master_preference}`
+    }
+
+    // Inject active privacy constraints
+    if (profile.privacy_constraints) {
+        const activeConstraints: string[] = []
+        if (profile.privacy_constraints.no_public_humiliation) activeConstraints.push('no public humiliation')
+        if (profile.privacy_constraints.no_face_revealing) activeConstraints.push('no face revealing')
+        if (profile.privacy_constraints.no_outdoor_tasks) activeConstraints.push('no outdoor tasks')
+        if (profile.privacy_constraints.no_involving_others) activeConstraints.push('no involving others')
+        if (activeConstraints.length > 0) {
+            summary += ` | Privacy: ${activeConstraints.join(', ')}`
+        }
+    }
+
+    // Inject session intent
+    if (profile.session_intent) {
+        summary += ` | Session intent: ${profile.session_intent}`
+    }
+
     if (extras?.journalTitles?.length) {
         summary += ` | Notes:${extras.journalTitles.slice(0, 5).join(';')}`
     }

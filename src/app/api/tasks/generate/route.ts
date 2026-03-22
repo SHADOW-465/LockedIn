@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateSimpleText, trackUsage } from '@/lib/ai/ai-service'
 import { getServerSupabase } from '@/lib/supabase/server'
+import { conflictsWithPreferences } from '@/lib/ai/preference-conflicts'
+import type { UserProfile, PrivacyConstraints } from '@/lib/supabase/schema'
 
 const DAILY_TASK_LIMIT = 5
 
@@ -42,6 +44,13 @@ export async function POST(request: NextRequest) {
                 limit: DAILY_TASK_LIMIT,
             }, { status: 429 })
         }
+
+        // ── Fetch profile for preference/conflict checking ────
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('master_preference, privacy_constraints, session_intent')
+            .eq('id', userId)
+            .maybeSingle() as { data: Pick<UserProfile, 'master_preference' | 'privacy_constraints' | 'session_intent'> | null }
 
         // ── Generate task via AI ──────────────────────────────
         const systemPrompt = `You are a task generator for the LockedIn chastity app.
@@ -92,6 +101,48 @@ Response format: VALID JSON only. No markdown fences, no explanation.
                 verification_requirement: 'Confirm completion honestly',
                 punishment_hours: 4,
                 punishment_additional: null,
+            }
+        }
+
+        // ── Conflict check + one-shot retry ──────────────────
+        if (profile && (profile.master_preference || profile.privacy_constraints)) {
+            try {
+                const taskTextToCheck = `${taskData.title || ''} ${taskData.description || ''}`
+                const masterPref = profile.master_preference || ''
+                const privacyConstraints = profile.privacy_constraints as PrivacyConstraints | null
+
+                if (conflictsWithPreferences(taskTextToCheck, masterPref, privacyConstraints)) {
+                    // Build constraint context for retry
+                    const activePrivacy: string[] = []
+                    if (privacyConstraints?.no_public_humiliation) activePrivacy.push('no public humiliation')
+                    if (privacyConstraints?.no_face_revealing) activePrivacy.push('no face revealing')
+                    if (privacyConstraints?.no_outdoor_tasks) activePrivacy.push('no outdoor tasks')
+                    if (privacyConstraints?.no_involving_others) activePrivacy.push('no involving others')
+
+                    const constraintNote = [
+                        masterPref ? `Do NOT generate tasks involving: ${masterPref}` : '',
+                        activePrivacy.length ? `Privacy constraints: ${activePrivacy.join(', ')}` : '',
+                    ].filter(Boolean).join('. ')
+
+                    const retryPrompt = systemPrompt + `\n\nIMPORTANT: ${constraintNote}`
+                    const { text: retryResult, usage: retryUsage } = await generateSimpleText(retryPrompt, 'Generate one task now.')
+                    await trackUsage(supabase, userId, 'llama-3.3-70b-versatile', retryUsage, 'task_gen')
+
+                    try {
+                        const retryCleaned = retryResult.replace(/```json?\n?/g, '').replace(/```\n?/g, '').trim()
+                        const retryData = JSON.parse(retryCleaned) as Record<string, unknown>
+                        // Only use retry result if it doesn't conflict either
+                        const retryText = `${retryData.title || ''} ${retryData.description || ''}`
+                        if (!conflictsWithPreferences(retryText, masterPref, privacyConstraints)) {
+                            taskData = retryData
+                        }
+                        // If retry still conflicts, fall through and use original taskData
+                    } catch {
+                        // Retry parse failed — keep original taskData
+                    }
+                }
+            } catch {
+                // Conflict check threw — skip silently and use original taskData
             }
         }
 
