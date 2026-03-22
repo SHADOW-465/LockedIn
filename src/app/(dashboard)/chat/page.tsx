@@ -5,12 +5,20 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { TopBar } from '@/components/layout/top-bar'
 import { BottomNav } from '@/components/layout/bottom-nav'
-import { Send, Loader2, Heart, Shield, ArrowRight } from 'lucide-react'
+import { Send, Loader2, Heart, Shield, ArrowRight, ClipboardList, Clock, Star } from 'lucide-react'
+import Link from 'next/link'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { getSupabase } from '@/lib/supabase/client'
 import { getActiveSession } from '@/lib/supabase/sessions'
 import { buildProfileSummary } from '@/lib/ai/context-builder'
 import type { Session } from '@/lib/supabase/schema'
+
+interface MasterTaskCard {
+    id: string
+    title: string
+    deadline: string
+    difficulty: number
+}
 
 interface DisplayMessage {
     id: string
@@ -18,6 +26,7 @@ interface DisplayMessage {
     content: string
     message_type: string
     created_at: string
+    masterTask?: MasterTaskCard | null
 }
 
 export default function ChatPage() {
@@ -152,6 +161,7 @@ export default function ChatPage() {
                     content: data.reply,
                     message_type: data.messageType || 'normal',
                     created_at: new Date().toISOString(),
+                    masterTask: data.masterTask ?? null,
                 }
                 setMessages(prev => [...prev, aiMsg])
 
@@ -303,6 +313,37 @@ export default function ChatPage() {
                                         {formatTime(message.created_at)}
                                     </span>
                                 </div>
+
+                                {/* Task assigned card */}
+                                {message.masterTask && (
+                                    <Link
+                                        href="/tasks"
+                                        className="mt-2 block max-w-[85%] rounded-xl border border-red-primary/40 bg-red-primary/8 hover:bg-red-primary/15 transition-colors p-3 group"
+                                    >
+                                        <div className="flex items-center gap-1.5 mb-2">
+                                            <ClipboardList size={12} className="text-red-primary shrink-0" />
+                                            <span className="text-[10px] font-bold text-red-primary uppercase tracking-wide">
+                                                ⚔ Task Assigned
+                                            </span>
+                                        </div>
+                                        <p className="text-sm font-semibold text-text-primary leading-snug">
+                                            {message.masterTask.title}
+                                        </p>
+                                        <div className="flex items-center gap-3 mt-2 text-xs text-text-tertiary">
+                                            <span className="flex items-center gap-1">
+                                                <Star size={10} />
+                                                {'★'.repeat(message.masterTask.difficulty)}{'☆'.repeat(5 - message.masterTask.difficulty)}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <Clock size={10} />
+                                                Due {new Date(message.masterTask.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-1 mt-2 text-[10px] text-red-primary/70 group-hover:text-red-primary transition-colors">
+                                            Go to Tasks <ArrowRight size={10} />
+                                        </div>
+                                    </Link>
+                                )}
                             </div>
                         )
                     })}
