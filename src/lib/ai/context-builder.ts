@@ -22,12 +22,12 @@ export function buildProfileSummary(
     const limits = (profile.hard_limits || []).slice(0, 3).join(',') || 'none'
     const regimens = (profile.preferred_regimens || []).slice(0, 3).join(',') || 'none'
 
-    let summary = `${tier} | ${persona} | WP:${willpower} | Interests:${interests} | Limits:${limits} | Training:${regimens}`
+    // Build HARD CONSTRAINTS segment first — must appear near the top, right after tier/persona
+    const hardConstraints = profile.master_preference
+        ? ` | HARD CONSTRAINTS — NEVER VIOLATE: ${profile.master_preference}`
+        : ''
 
-    // Inject HARD CONSTRAINTS from master_preference (near top, right after tier/persona info)
-    if (profile.master_preference) {
-        summary += ` | HARD CONSTRAINTS — NEVER VIOLATE: ${profile.master_preference}`
-    }
+    let summary = `${tier} | ${persona}${hardConstraints} | WP:${willpower} | Interests:${interests} | Limits:${limits} | Training:${regimens}`
 
     // Inject active privacy constraints
     if (profile.privacy_constraints) {
