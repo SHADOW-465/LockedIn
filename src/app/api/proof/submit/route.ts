@@ -45,8 +45,9 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
         }
 
-        // Only accept proof for tasks that are active or awaiting_proof
-        if (!['active', 'awaiting_proof'].includes(task.status)) {
+        // Only accept proof for tasks that are pending, active, or awaiting_proof
+        // 'pending' is included for check-in tasks which go straight to proof without a Start step
+        if (!['pending', 'active', 'awaiting_proof'].includes(task.status)) {
             return NextResponse.json(
                 { error: `Cannot submit proof for task in '${task.status}' state` },
                 { status: 400 }
