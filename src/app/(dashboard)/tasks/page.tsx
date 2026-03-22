@@ -296,6 +296,7 @@ export default function TasksPage() {
     const [createNotes, setCreateNotes] = useState('')
     const [createDifficulty, setCreateDifficulty] = useState(2)
     const [creating, setCreating] = useState(false)
+    const checkinPromptedRef = useRef(false)
 
     const { data: tasks, refetch, setData: setTasks } = useRealtimeQuery<Task>(
         'tasks',
@@ -346,8 +347,20 @@ export default function TasksPage() {
     const masterTasks = (tasks || []).filter(t => t.task_type === 'master' && activeStatuses.includes(t.status))
     const punishmentTasks = (tasks || []).filter(t => t.task_type === 'punishment' && activeStatuses.includes(t.status))
     const checkinTasks = (tasks || []).filter(t => t.task_type === 'checkin')
+    // Most recently created check-in task for each window (tasks are ordered descending by created_at)
     const morningCheckin = checkinTasks.find(t => t.title === 'Morning Check-in') ?? null
     const nightCheckin = checkinTasks.find(t => t.title === 'Night Check-in') ?? null
+
+    // Auto-open proof modal when a check-in task is due and user hasn't been prompted yet this session
+    useEffect(() => {
+        if (!session || !tasks?.length || checkinPromptedRef.current || proofTask) return
+        const actionable = ['pending', 'active', 'awaiting_proof']
+        const target = morningCheckin ?? nightCheckin
+        if (target && actionable.includes(target.status)) {
+            checkinPromptedRef.current = true
+            setProofTask(target)
+        }
+    }, [morningCheckin, nightCheckin, session, tasks, proofTask])
     const dailyTasksAll = (tasks || []).filter(t => t.task_type === 'daily' || !t.task_type)
 
     const activeTasks = dailyTasksAll.filter((t) => activeStatuses.includes(t.status))
@@ -567,14 +580,15 @@ export default function TasksPage() {
                                                 <p className="text-xs font-semibold text-text-tertiary uppercase">{label}</p>
                                                 <p className="text-[10px] text-text-tertiary">{window}</p>
                                                 <p className={`text-sm font-bold ${statusColor}`}>{statusLabel}</p>
-                                                {task && task.status === 'pending' && (
+                                                {task && ['pending', 'active', 'awaiting_proof'].includes(task.status) && (
                                                     <Button
                                                         size="sm"
                                                         variant="primary"
                                                         className="w-full !py-1 !text-xs"
                                                         onClick={() => setProofTask(task)}
                                                     >
-                                                        <Camera size={11} className="mr-1" /> Submit Photo
+                                                        <Camera size={11} className="mr-1" />
+                                                        {task.status === 'awaiting_proof' ? 'Retry Photo' : 'Submit Photo'}
                                                     </Button>
                                                 )}
                                             </div>
