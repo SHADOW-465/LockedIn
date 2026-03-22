@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase/server'
-import { applyPunishment } from '@/lib/engines/punishment'
 
 const CHECKIN_VERIFICATION = 'Clear photo of the locked chastity cage showing it is secured and unmodified.'
 
-// Local hour windows (applied against client-supplied localHour)
-const MORNING_START = 6    // 6am local
-const MORNING_END   = 10   // 10am local
-const NIGHT_START   = 20   // 8pm local
+// On-time windows (local hours) — used only at proof submission to detect late submissions
+export const MORNING_WINDOW = { start: 6, end: 10 }   // 6am–10am local
+export const NIGHT_WINDOW   = { start: 20, end: 24 }  // 8pm–midnight local
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { userId, sessionId, date, localHour } = body as {
+        const { userId, sessionId, date } = body as {
             userId: string
             sessionId?: string
             date?: string   // YYYY-MM-DD in client's local timezone
-            localHour?: number  // client's local 0–23 hour
         }
 
         if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
@@ -24,39 +21,26 @@ export async function POST(request: NextRequest) {
         const supabase = getServerSupabase()
         const now = new Date()
         const today = date || now.toISOString().split('T')[0]
-        // Prefer client local hour so windows match the user's actual morning/night
-        const currentHour = (typeof localHour === 'number' && localHour >= 0 && localHour <= 23)
-            ? localHour
-            : now.getUTCHours()
 
-        // Resolve active session for punishment
+        // Resolve active session
         let activeSessionId = sessionId
-        let tier = 'Slave'
-
-        if (activeSessionId) {
+        if (!activeSessionId) {
             const { data: sess } = await supabase
                 .from('sessions')
-                .select('tier')
-                .eq('id', activeSessionId)
-                .single()
-            if (sess?.tier) tier = sess.tier
-        } else {
-            const { data: sess } = await supabase
-                .from('sessions')
-                .select('id, tier')
+                .select('id')
                 .eq('user_id', userId)
                 .in('status', ['active', 'extending'])
                 .maybeSingle()
-            if (sess) { activeSessionId = sess.id; tier = sess.tier || 'Slave' }
+            if (sess) activeSessionId = sess.id
         }
 
-        // Query today's checkin tasks
+        // Query today's check-in tasks (by local date)
         const todayStart = `${today}T00:00:00.000Z`
         const todayEnd   = `${today}T23:59:59.999Z`
 
         const { data: existing } = await supabase
             .from('tasks')
-            .select('*')
+            .select('id, title')
             .eq('user_id', userId)
             .eq('task_type', 'checkin')
             .gte('assigned_at', todayStart)
@@ -66,114 +50,56 @@ export async function POST(request: NextRequest) {
         const hasNight   = existing?.some(t => t.title === 'Night Check-in')
 
         const created: string[] = []
-        const punished: string[] = []
 
-        // ── Morning window ──────────────────────────────────────
+        // Always create today's check-ins if they don't exist yet.
+        // No time-window restriction — the task is always available.
+        // Late submissions are penalised at proof-submission time instead.
+
         if (!hasMorning) {
-            if (currentHour >= MORNING_START && currentHour < MORNING_END) {
-                // Window is open — create pending task
-                const deadline = new Date(`${today}T${String(MORNING_END).padStart(2, '0')}:00:00.000Z`)
-                await supabase.from('tasks').insert({
-                    user_id: userId,
-                    session_id: activeSessionId || null,
-                    task_type: 'checkin',
-                    source: 'system',
-                    title: 'Morning Check-in',
-                    description: 'Submit your morning cage check-in photo. Window: 6am–10am.',
-                    difficulty: 1,
-                    genres: ['chastity'],
-                    cage_status: 'caged',
-                    verification_type: 'photo',
-                    proof_type: 'image',
-                    verification_requirement: CHECKIN_VERIFICATION,
-                    status: 'pending',
-                    assigned_at: now.toISOString(),
-                    deadline: deadline.toISOString(),
-                    punishment_hours: 2,
-                })
-                created.push('morning')
-            } else if (currentHour >= MORNING_END) {
-                // Window has passed — create as failed + punish
-                const windowEnd = new Date(`${today}T${String(MORNING_END).padStart(2, '0')}:00:00.000Z`)
-                await supabase.from('tasks').insert({
-                    user_id: userId,
-                    session_id: activeSessionId || null,
-                    task_type: 'checkin',
-                    source: 'system',
-                    title: 'Morning Check-in',
-                    description: 'Submit your morning cage check-in photo. Window: 6am–10am.',
-                    difficulty: 1,
-                    genres: ['chastity'],
-                    cage_status: 'caged',
-                    verification_type: 'photo',
-                    proof_type: 'image',
-                    verification_requirement: CHECKIN_VERIFICATION,
-                    status: 'failed',
-                    assigned_at: new Date(`${today}T06:00:00.000Z`).toISOString(),
-                    deadline: windowEnd.toISOString(),
-                    punishment_hours: 2,
-                    completed_at: windowEnd.toISOString(),
-                })
-                if (activeSessionId) {
-                    await applyPunishment(supabase, userId, activeSessionId, 'task_failed', tier, 'Missed morning cage check-in')
-                    punished.push('morning')
-                }
-            }
-            // Before 6am: skip — window not yet open
+            await supabase.from('tasks').insert({
+                user_id:                  userId,
+                session_id:               activeSessionId || null,
+                task_type:                'checkin',
+                source:                   'system',
+                title:                    'Morning Check-in',
+                description:              'Submit your morning cage check-in photo. On-time window: 6am–10am. Submitting outside this window incurs a punishment.',
+                difficulty:               1,
+                genres:                   ['chastity'],
+                cage_status:              'caged',
+                verification_type:        'photo',
+                proof_type:               'image',
+                verification_requirement: CHECKIN_VERIFICATION,
+                status:                   'pending',
+                assigned_at:              now.toISOString(),
+                deadline:                 null,   // no hard deadline — always submittable
+                punishment_hours:         1,       // applied if submitted late
+            })
+            created.push('morning')
         }
 
-        // ── Night window ────────────────────────────────────────
         if (!hasNight) {
-            if (currentHour >= NIGHT_START) {
-                // Window is open — create pending task with midnight deadline
-                const nextDay = new Date(now)
-                nextDay.setUTCDate(nextDay.getUTCDate() + 1)
-                const nextDayStr = nextDay.toISOString().split('T')[0]
-                const deadline = new Date(`${nextDayStr}T00:00:00.000Z`)
-
-                await supabase.from('tasks').insert({
-                    user_id: userId,
-                    session_id: activeSessionId || null,
-                    task_type: 'checkin',
-                    source: 'system',
-                    title: 'Night Check-in',
-                    description: 'Submit your nightly cage check-in photo. Window: 8pm–midnight.',
-                    difficulty: 1,
-                    genres: ['chastity'],
-                    cage_status: 'caged',
-                    verification_type: 'photo',
-                    proof_type: 'image',
-                    verification_requirement: CHECKIN_VERIFICATION,
-                    status: 'pending',
-                    assigned_at: now.toISOString(),
-                    deadline: deadline.toISOString(),
-                    punishment_hours: 2,
-                })
-                created.push('night')
-            }
-            // Before 8pm: skip — window not yet open
+            await supabase.from('tasks').insert({
+                user_id:                  userId,
+                session_id:               activeSessionId || null,
+                task_type:                'checkin',
+                source:                   'system',
+                title:                    'Night Check-in',
+                description:              'Submit your nightly cage check-in photo. On-time window: 8pm–midnight. Submitting outside this window incurs a punishment.',
+                difficulty:               1,
+                genres:                   ['chastity'],
+                cage_status:              'caged',
+                verification_type:        'photo',
+                proof_type:               'image',
+                verification_requirement: CHECKIN_VERIFICATION,
+                status:                   'pending',
+                assigned_at:              now.toISOString(),
+                deadline:                 null,   // no hard deadline — always submittable
+                punishment_hours:         1,       // applied if submitted late
+            })
+            created.push('night')
         }
 
-        // ── Expire any pending check-ins past their deadline ────
-        const pendingOverdue = (existing || []).filter(t =>
-            ['pending', 'active'].includes(t.status) &&
-            t.deadline &&
-            new Date(t.deadline) < now
-        )
-
-        for (const task of pendingOverdue) {
-            await supabase
-                .from('tasks')
-                .update({ status: 'failed', completed_at: now.toISOString() })
-                .eq('id', task.id)
-
-            if (activeSessionId) {
-                await applyPunishment(supabase, userId, activeSessionId, 'task_failed', tier, `Missed ${task.title}`)
-                punished.push(task.title)
-            }
-        }
-
-        return NextResponse.json({ created, punished, ok: true })
+        return NextResponse.json({ created, ok: true })
     } catch (error) {
         console.error('[CheckIn] Error:', error)
         return NextResponse.json({ error: 'Failed to ensure check-ins' }, { status: 500 })

@@ -124,6 +124,7 @@ export function ProofCaptureModal({ task, userId, sessionId, onClose, onSubmitte
                     captureMetadata: {
                         device_user_agent: navigator.userAgent,
                         capture_timestamp: new Date().toISOString(),
+                        local_hour: new Date().getHours(),
                         duration_seconds: capturedData.durationSeconds,
                     },
                 }),

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase/server'
 import { verifyImage, generateSimpleText, trackUsage } from '@/lib/ai/ai-service'
+import { applyPunishment } from '@/lib/engines/punishment'
+import { MORNING_WINDOW, NIGHT_WINDOW } from '@/app/api/checkin/ensure/route'
 
 export async function POST(request: NextRequest) {
     try {
@@ -20,6 +22,7 @@ export async function POST(request: NextRequest) {
             captureMetadata?: {
                 device_user_agent?: string
                 capture_timestamp?: string
+                local_hour?: number
                 duration_seconds?: number
             }
         }
@@ -229,6 +232,33 @@ export async function POST(request: NextRequest) {
                         verification_reason: verificationReason,
                     },
                 })
+            }
+        }
+
+        // ── Late check-in punishment ──────────────────────────
+        // If the proof was accepted but submitted outside the on-time window, apply a late penalty.
+        if (verified && task.task_type === 'checkin') {
+            const localHour = captureMetadata?.local_hour
+            const isMorning = task.title === 'Morning Check-in'
+            const inWindow = typeof localHour === 'number'
+                ? isMorning
+                    ? localHour >= MORNING_WINDOW.start && localHour < MORNING_WINDOW.end
+                    : localHour >= NIGHT_WINDOW.start && localHour < NIGHT_WINDOW.end
+                : true // no local_hour provided — assume on time (safe fallback)
+
+            if (!inWindow) {
+                const effectiveSessionId = sessionId || task.session_id
+                if (effectiveSessionId) {
+                    const { data: sess } = await supabase
+                        .from('sessions').select('tier').eq('id', effectiveSessionId).single()
+                    const tier = sess?.tier || 'Slave'
+                    const windowLabel = isMorning ? '6am–10am' : '8pm–midnight'
+                    await applyPunishment(
+                        supabase, userId, effectiveSessionId,
+                        'late_checkin', tier,
+                        `Late ${task.title} — submitted outside the ${windowLabel} on-time window`
+                    )
+                }
             }
         }
 

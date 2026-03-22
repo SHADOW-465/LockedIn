@@ -311,15 +311,13 @@ export default function TasksPage() {
             getActiveSession(user.id).then(sess => {
             setSession(sess)
             if (sess) {
-                const localNow = new Date()
                 fetch('/api/checkin/ensure', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: user.id,
                         sessionId: sess.id,
-                        date: localNow.toLocaleDateString('en-CA'), // YYYY-MM-DD in local tz
-                        localHour: localNow.getHours(),             // local 0–23
+                        date: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD in local tz
                     }),
                 }).then(() => refetch()).catch(console.error)
             }
