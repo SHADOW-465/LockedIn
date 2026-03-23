@@ -2,20 +2,23 @@ import { cn } from '@/lib/utils'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 const cardVariants = cva(
-    'rounded-[var(--radius-lg)] transition-all duration-300',
+    'rounded-xl transition-all duration-200',
     {
         variants: {
             variant: {
                 raised:
-                    'bg-bg-secondary shadow-raised hover:shadow-raised-hover border border-white/5',
-                inset: 'bg-bg-primary shadow-inset',
-                flat: 'bg-bg-secondary shadow-sm',
-                hero: 'bg-gradient-to-br from-bg-secondary to-bg-primary shadow-raised border border-white/5',
+                    'bg-zinc-900 border border-zinc-800',
+                inset:
+                    'bg-black border border-zinc-800/50',
+                flat:
+                    'bg-zinc-900',
+                hero:
+                    'bg-zinc-900 border border-zinc-800',
             },
             size: {
-                sm: 'p-4 min-h-[100px]',
-                md: 'p-6 min-h-[140px]',
-                lg: 'p-8 min-h-[200px]',
+                sm: 'p-4',
+                md: 'p-5',
+                lg: 'p-6',
             },
         },
         defaultVariants: {

@@ -37,7 +37,7 @@ export function BottomNav() {
                         className="fixed inset-0 z-40"
                         onClick={() => setShowMore(false)}
                     />
-                    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 glass-strong border border-white/10 rounded-2xl p-2 flex gap-1 shadow-xl">
+                    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-zinc-900 border border-zinc-800 rounded-2xl p-2 flex gap-1 shadow-xl">
                         {moreItems.map((item) => {
                             const Icon = item.icon
                             const isActive = pathname.startsWith(item.href)
@@ -48,8 +48,8 @@ export function BottomNav() {
                                     className={cn(
                                         'flex flex-col items-center gap-1 px-4 py-2.5 rounded-[var(--radius-lg)] transition-all duration-200 min-w-[72px]',
                                         isActive
-                                            ? 'text-purple-primary bg-bg-tertiary glow-purple'
-                                            : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary'
+                                            ? 'text-[var(--accent)] bg-zinc-800'
+                                            : 'text-white/40 hover:text-white/70 hover:bg-zinc-800/50'
                                     )}
                                 >
                                     <Icon size={20} />
@@ -61,7 +61,7 @@ export function BottomNav() {
                 </>
             )}
 
-            <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center h-20 px-4 glass-strong lg:hidden safe-area-bottom">
+            <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center h-20 px-4 bg-zinc-950/95 backdrop-blur-xl border-t border-zinc-800 lg:hidden safe-area-bottom">
                 {mainItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname === item.href
@@ -72,8 +72,8 @@ export function BottomNav() {
                             className={cn(
                                 'flex flex-col items-center gap-1 px-3 py-2 rounded-[var(--radius-lg)] transition-all duration-200 cursor-pointer',
                                 isActive
-                                    ? 'text-purple-primary bg-bg-tertiary glow-purple'
-                                    : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary'
+                                    ? 'text-[var(--accent)] bg-zinc-800'
+                                    : 'text-white/40 hover:text-white/70 hover:bg-zinc-800/50'
                             )}
                         >
                             <Icon size={20} />
@@ -88,8 +88,8 @@ export function BottomNav() {
                     className={cn(
                         'flex flex-col items-center gap-1 px-3 py-2 rounded-[var(--radius-lg)] transition-all duration-200 cursor-pointer',
                         showMore || moreActive
-                            ? 'text-purple-primary bg-bg-tertiary glow-purple'
-                            : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary'
+                            ? 'text-[var(--accent)] bg-zinc-800'
+                            : 'text-white/40 hover:text-white/70 hover:bg-zinc-800/50'
                     )}
                 >
                     {showMore ? <X size={20} /> : <MoreHorizontal size={20} />}
