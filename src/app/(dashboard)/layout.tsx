@@ -1,4 +1,5 @@
 import { GuideFab } from '@/components/features/guide/guide-fab'
+import { ThemeProvider } from '@/lib/contexts/theme-context'
 
 export default function DashboardLayout({
   children,
@@ -6,9 +7,9 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <>
+    <ThemeProvider>
       {children}
       <GuideFab />
-    </>
+    </ThemeProvider>
   )
 }
