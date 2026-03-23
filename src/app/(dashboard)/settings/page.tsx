@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/contexts/auth-context'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { BottomNav } from '@/components/layout/bottom-nav'
 import { ProfileStrengthRing } from '@/components/features/profile/profile-strength-ring'
 import { MasterPreferenceEditor } from '@/components/features/profile/editors/master-preference-editor'
 import { SessionIntentEditor } from '@/components/features/profile/editors/session-intent-editor'
@@ -464,6 +465,8 @@ export default function SettingsPage() {
                     {processing ? 'Signing Out...' : 'Sign Out'}
                 </button>
             </div>
+
+            <BottomNav />
 
             {/* Bottom Sheet Overlay */}
             {openCard && (
