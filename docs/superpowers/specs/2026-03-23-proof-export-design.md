@@ -15,7 +15,7 @@ Allow the user to export all their proof submissions (photos, videos, audio, tex
 
 **Included:**
 - Proof photos, videos, audio files from OPFS
-- Text proof submissions (as individual `.txt` files)
+- Text proof submissions (as individual `.txt` files — content noted as not recoverable if absent from archive)
 - All completed/archived sessions
 
 **Excluded:**
@@ -27,8 +27,12 @@ Allow the user to export all their proof submissions (photos, videos, audio, tex
 
 ## ZIP Structure
 
+**Download filename:** `LockedIn_Proofs_{YYYY-MM-DD}.zip` (today's date)
+
+**Internal structure:**
+
 ```
-LockedIn_Export_2026-03-23/
+LockedIn_Proofs_2026-03-23/
   README.txt
   2026-02-15_to_2026-02-22/
     2026-02-15_checkin-morning.jpg
@@ -47,12 +51,12 @@ LockedIn_Export_2026-03-23/
 {date}_{task-type}_{title-slug}.{ext}
 ```
 
-- `date` — ISO date of task completion (`YYYY-MM-DD`)
+- `date` — ISO date from task `created_at` field (`YYYY-MM-DD`)
 - `task-type` — one of: `checkin-morning`, `checkin-night`, `master-task`, `punishment-task`, `daily-task`
-- `title-slug` — task title lowercased, non-alphanumeric replaced with `-`, truncated to 40 chars
+- `title-slug` — task title lowercased, non-alphanumeric replaced with `-`, leading/trailing dashes trimmed, truncated to 40 chars
 - `ext` — inferred from `proof_type`: `image→jpg`, `video→mp4`, `audio→webm`, `text→txt`
 
-Duplicate filenames within a session get a numeric suffix: `_2`, `_3`, etc.
+Duplicate filenames within a session get a numeric suffix inserted **before the extension**: e.g. `2026-02-16_checkin-night_2.jpg`, `2026-02-16_checkin-night_3.jpg`.
 
 ### Session folder naming
 
@@ -62,7 +66,7 @@ Duplicate filenames within a session get a numeric suffix: `_2`, `_3`, etc.
 
 Dates from `session_data.start_time` and `session_data.scheduled_end_time` in the session archive. Format: `YYYY-MM-DD`.
 
-Sessions with zero proof submissions are omitted from the ZIP entirely.
+Sessions where all OPFS reads fail still appear with a `MISSING.txt` inside the folder (see edge cases). Sessions with no `proof_type` tasks at all are omitted.
 
 ### README.txt format
 
@@ -72,7 +76,7 @@ Generated: 2026-03-23
 
 Sessions exported: 3
 
-  2026-02-15 to 2026-02-22 — 12 submissions
+  2026-02-15 to 2026-02-22 — 12 submissions (2 files unavailable)
   2026-03-01 to 2026-03-03 — 4 submissions
   2026-03-10 to 2026-03-14 — 7 submissions
 
@@ -95,48 +99,59 @@ export async function exportAllProofsZip(userId: string): Promise<void>
 
 1. `listUserArchives(userId)` — fetch all session archives from IndexedDB, sorted by `archived_at`
 2. For each archive:
-   a. Extract `startDate` and `endDate` from `session_data.start_time` / `session_data.scheduled_end_time`
+   a. Extract `startDate` and `endDate` from `session_data.start_time` / `session_data.scheduled_end_time`; fall back to `archive.archived_at` if either is absent
    b. Build session folder name: `{startDate}_to_{endDate}/`
    c. For each task in `archive.tasks` that has a non-null `proof_type`:
-      - Find corresponding entry in `archive.proof_documents` by `task_id`
-      - Determine completion date from task's `completed_at` or `created_at`
-      - Build filename using naming convention above
-      - Resolve duplicate filenames with `_2`, `_3` suffix counter
-      - **Binary proof** (image/video/audio): read file from OPFS via `readFileFromOPFS(userId, sessionId, 'proofs', filename)`, add `Uint8Array` to ZIP
-      - **Text proof**: read text content from proof document record, encode as UTF-8, add as `.txt` file
-   d. If session produced ≥1 file, add all files under the session folder
-3. Build `README.txt` content with session summary
+      - Find corresponding entry in `archive.proof_documents` where `doc.task_id === task.id`
+      - Determine file date from task `created_at` field (format `YYYY-MM-DD`)
+      - Build filename using naming convention above, resolve duplicates with suffix counter
+      - **Binary proof** (image/video/audio):
+        - Extract bare `filename` from `proof_document.file_path` by splitting on `/` and taking the last segment
+        - Use category `'videos'` if `proof_type === 'video'`, else `'proofs'`
+        - Call `readFileFromOPFS(userId, sessionId, category, filename)`
+        - If null (file missing): increment `missingCount`, skip file
+        - If found: add `Uint8Array` to ZIP under `{folderName}/{filename}`
+      - **Text proof** (`proof_type === 'text'`): text content is not stored in the archive — write a `.txt` file with the message: `"Text proof submitted — content not recoverable from local archive."`
+   d. Track `fileCount` and `missingCount` per session
+   e. If session produced ≥1 file OR has missing files: add session folder to ZIP
+      - If all files missing: add a `MISSING.txt` inside the folder: `"Files were not found on this device. They may have been submitted on another device or browser storage was cleared."`
+3. Build `README.txt` content with session summary (include `(X files unavailable)` annotation where `missingCount > 0`)
 4. Call `zipSync(files)` from `fflate`
-5. Create Blob, create object URL, trigger `<a>` download, revoke URL
+5. Create Blob, trigger `<a>` download with filename `LockedIn_Proofs_{date}.zip`, revoke URL
 
-**Helper functions (internal):**
+**Helper functions (internal, not exported):**
 
 ```typescript
 function slugify(s: string): string
-// lowercase, replace non-alphanumeric with '-', trim leading/trailing dashes, truncate to 40
+// lowercase, replace /[^a-z0-9]+/g with '-', trim leading/trailing '-', truncate to 40 chars
 
 function buildFilename(date: string, taskType: string, title: string, ext: string): string
-// assembles "{date}_{taskType}_{slug}.{ext}"
+// returns "{date}_{taskType}_{slugify(title)}.{ext}"
 
 function extForProofType(proofType: string): string
-// 'image' → 'jpg', 'video' → 'mp4', 'audio' → 'webm', 'text' → 'txt'
+// 'image' → 'jpg', 'video' → 'mp4', 'audio' → 'webm', 'text' → 'txt', unknown → 'bin'
 
 function taskTypeSlug(taskType: string, title: string): string
-// 'checkin' + morning title → 'checkin-morning'
-// 'checkin' + night title → 'checkin-night'
-// 'master' → 'master-task'
-// 'punishment' → 'punishment-task'
-// 'daily' → 'daily-task'
+// task_type === 'checkin':
+//   title.toLowerCase().includes('morning') → 'checkin-morning'
+//   otherwise → 'checkin-night'
+// task_type === 'master' → 'master-task'
+// task_type === 'punishment' → 'punishment-task'
+// task_type === 'daily' → 'daily-task'
+// unknown → task_type (passthrough)
 ```
 
 **Edge cases:**
 
 | Scenario | Handling |
 |----------|----------|
-| OPFS file missing for a proof | Skip file silently; note in README as "X files unavailable" |
-| Text proof content absent from record | Write `.txt` with message: "Text proof submitted — content not recoverable" |
-| Session archive has no `start_time` in session_data | Use `archived_at` date for folder name |
-| Zero proof submissions across all sessions | Trigger download of ZIP containing only README.txt |
+| OPFS file missing (read returns null) | Skip file; increment `missingCount`; annotate README with "(X files unavailable)" |
+| All OPFS reads for a session fail | Include session folder in ZIP with `MISSING.txt` explaining files not found on this device |
+| Text proof (`proof_type === 'text'`) | Write `.txt` with message: "Text proof submitted — content not recoverable from local archive." |
+| Session archive has no `start_time` in session_data | Use `archived_at` date for both start and end in folder name |
+| Zero tasks with `proof_type` across all sessions | ZIP contains only `README.txt` |
+| Duplicate filename within a session | Insert `_2`, `_3` before the extension: `name_2.jpg`, `name_3.jpg` |
+| No proof_document entry matches a task | Skip that task |
 
 ### Modified file: `src/app/(dashboard)/settings/page.tsx`
 
@@ -170,7 +185,7 @@ async function handleExport() {
 }
 ```
 
-**JSX card:**
+**JSX card** (inserted after Punishment Pool `</div>`, before Help link `<div>`):
 ```tsx
 {/* ── Export ── */}
 <div className="px-4 mt-6">
@@ -182,6 +197,7 @@ async function handleExport() {
       </p>
     </div>
     <button
+      type="button"
       onClick={handleExport}
       disabled={exporting}
       className="w-full py-2.5 rounded-xl text-white text-sm font-medium
@@ -208,14 +224,17 @@ async function handleExport() {
 Settings page button click
   → handleExport()
   → exportAllProofsZip(userId)
-      → listUserArchives(userId)           [IndexedDB]
+      → listUserArchives(userId)                     [IndexedDB]
       → for each session archive:
-          → archive.tasks (filtered by proof_type)
-          → archive.proof_documents (matched by task_id)
-          → readFileFromOPFS(...)           [OPFS — binary proofs]
-          → encode text content             [text proofs]
-      → zipSync(files)                      [fflate]
-      → Blob → URL.createObjectURL → <a>.click()
+          → archive.tasks filtered by proof_type != null
+          → archive.proof_documents matched by task_id
+          → file_path.split('/').pop() → bare filename
+          → readFileFromOPFS(userId, sessionId, category, filename)  [OPFS]
+          → if null: missingCount++
+          → if text proof: write placeholder .txt
+      → build README.txt with per-session counts
+      → zipSync(files)                               [fflate]
+      → Blob → URL.createObjectURL → <a>.click() → URL.revokeObjectURL
 ```
 
 ---
@@ -223,7 +242,7 @@ Settings page button click
 ## What Is NOT Changed
 
 - `export.ts` — per-session export for the history page, untouched
-- `opfs.ts` — no new OPFS functions needed; `readFileFromOPFS` and `listSessionFiles` are sufficient
+- `opfs.ts` — no new OPFS functions needed; `readFileFromOPFS` is sufficient
 - `db.ts` — no schema changes
 - Any API route — export is fully client-side
 
@@ -234,8 +253,10 @@ Settings page button click
 `src/__tests__/export-all.test.ts` — unit tests with `@vitest-environment jsdom`:
 
 1. `slugify` handles special characters, truncation, leading/trailing dashes
-2. `extForProofType` returns correct extensions for all 4 types
-3. `buildFilename` assembles correctly
-4. `exportAllProofsZip` with no archived sessions — produces ZIP with only README.txt (mock `listUserArchives` returning `[]`)
-5. `exportAllProofsZip` with one session, one image proof — correct folder name, correct filename in ZIP
-6. Duplicate filename within a session gets `_2` suffix
+2. `extForProofType` returns correct extensions for all 4 proof types; unknown → `'bin'`
+3. `buildFilename` assembles `{date}_{taskType}_{slug}.{ext}` correctly
+4. `taskTypeSlug` returns `'checkin-morning'` when title contains "morning", `'checkin-night'` otherwise
+5. `exportAllProofsZip` with no archived sessions — ZIP contains only `README.txt`
+6. `exportAllProofsZip` with one session, one image proof — correct folder name and filename in ZIP
+7. Duplicate filename within a session gets `_2` suffix
+8. When one OPFS read returns null, README.txt includes "(1 file unavailable)" annotation
