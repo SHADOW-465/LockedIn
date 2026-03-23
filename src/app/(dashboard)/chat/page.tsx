@@ -236,18 +236,18 @@ export default function ChatPage() {
         <>
             <TopBar />
 
-            <div className="min-h-screen pb-24 lg:pb-8 flex flex-col">
+            <div className="min-h-screen pb-24 lg:pb-8 flex flex-col bg-black">
                 {/* Chat Sub-Header */}
                 <div className={`px-4 py-2 border-b transition-colors ${careMode
-                    ? 'border-teal-primary/30 bg-teal-primary/5'
-                    : 'border-white/5 bg-bg-secondary/50'
+                    ? 'border-teal-500/30 bg-teal-900/10'
+                    : 'border-zinc-800 bg-zinc-900/50'
                     }`}>
                     <div className="flex items-center justify-between max-w-2xl mx-auto">
                         <div>
                             <h2 className="text-sm font-semibold">
                                 {careMode ? '💚 Care Mode' : personality}
                             </h2>
-                            <p className="text-xs text-text-tertiary">
+                            <p className="text-xs text-white/30">
                                 {careMode
                                     ? 'Safe space — no punishments active'
                                     : `Tier: ${profile?.tier ?? 'Newbie'}`
@@ -257,7 +257,7 @@ export default function ChatPage() {
                         <div className="flex items-center gap-2">
                             {careMode ? (
                                 <>
-                                    <Shield size={14} className="text-teal-primary" />
+                                    <Shield size={14} className="text-teal-400" />
                                     <Badge variant="info">SAFE</Badge>
                                 </>
                             ) : (
@@ -272,18 +272,18 @@ export default function ChatPage() {
 
                 {/* Care Mode Banner */}
                 {careMode && (
-                    <div className="mx-4 mt-3 bg-teal-primary/10 border border-teal-primary/20 rounded-xl p-4 flex items-start gap-3">
-                        <Heart size={20} className="text-teal-primary shrink-0 mt-0.5" />
+                    <div className="mx-4 mt-3 bg-teal-900/30 border border-teal-500/40 rounded-xl p-4 flex items-start gap-3">
+                        <Heart size={20} className="text-teal-300 shrink-0 mt-0.5" />
                         <div className="flex-1">
-                            <p className="text-sm font-semibold text-teal-primary">Care Mode Active</p>
-                            <p className="text-xs text-text-secondary mt-1">
+                            <p className="text-sm font-semibold text-teal-300">Care Mode Active</p>
+                            <p className="text-xs text-white/85 mt-1">
                                 All training and punishments are paused. You are safe and in control.
                             </p>
                             <button
                                 onClick={() => {
                                     setInputValue('resume training')
                                 }}
-                                className="mt-2 text-xs text-teal-primary hover:text-teal-primary/80 flex items-center gap-1 transition-colors"
+                                className="mt-2 text-xs text-teal-400 hover:text-teal-300 flex items-center gap-1 transition-colors"
                             >
                                 <ArrowRight size={12} /> Resume Training when ready
                             </button>
@@ -295,15 +295,15 @@ export default function ChatPage() {
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                     {initialLoading ? (
                         <div className="text-center py-12">
-                            <Loader2 size={24} className="animate-spin mx-auto text-text-tertiary" />
+                            <Loader2 size={24} className="animate-spin mx-auto text-white/30" />
                         </div>
                     ) : messages.length === 0 ? (
-                        <div className="text-center py-12 text-text-tertiary">
+                        <div className="text-center py-12 text-white/30">
                             <p className="text-sm">Start the conversation. Address your Master respectfully.</p>
                         </div>
                     ) : null}
 
-                    {messages.map((message) => {
+                    {messages.map((message, index) => {
                         const isCareMode = message.message_type === 'care_mode'
                         const isPunishment = message.message_type === 'punishment'
                         const isSafeword = message.message_type === 'safeword_detected'
@@ -314,37 +314,41 @@ export default function ChatPage() {
                                 className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
                             >
                                 <div
-                                    className={`max-w-[85%] rounded-2xl px-4 py-3 ${message.sender === 'ai'
+                                    className={`max-w-[85%] ${message.sender === 'ai'
                                         ? isCareMode
-                                            ? 'bg-teal-primary/10 border border-teal-primary/20'
+                                            ? 'bg-teal-900/20 border border-teal-500/30 rounded-2xl rounded-tl-sm px-4 py-3 animate-bubble-in'
                                             : isPunishment
-                                                ? 'bg-red-primary/10 border border-red-primary/20'
-                                                : 'bg-purple-primary/10 border border-purple-primary/20'
+                                                ? 'bg-zinc-900 border border-orange-500/40 rounded-2xl rounded-tl-sm px-4 py-3 animate-bubble-in'
+                                                : 'bg-zinc-900 border border-zinc-800 rounded-2xl rounded-tl-sm px-4 py-3 animate-bubble-in'
                                         : isSafeword
-                                            ? 'bg-teal-primary/10 border border-teal-primary/20'
-                                            : 'bg-bg-tertiary border border-white/5'
+                                            ? 'bg-teal-900/20 border border-teal-500/30 rounded-2xl rounded-tr-sm px-4 py-3 animate-bubble-in'
+                                            : 'rounded-2xl rounded-tr-sm px-4 py-3 text-white animate-bubble-in'
                                         }`}
+                                    style={message.sender === 'user' && !isSafeword
+                                        ? { backgroundColor: 'var(--accent)', animationDelay: `${Math.min(index * 0.04, 0.4)}s` }
+                                        : { animationDelay: `${Math.min(index * 0.04, 0.4)}s` }
+                                    }
                                 >
                                     {message.sender === 'ai' && (
                                         <p className={`text-xs font-semibold mb-1.5 ${isCareMode
-                                            ? 'text-teal-primary'
+                                            ? 'text-teal-300'
                                             : isPunishment
-                                                ? 'text-red-primary'
-                                                : 'text-purple-primary'
+                                                ? 'text-red-500'
+                                                : 'text-[var(--accent)]'
                                             }`}>
                                             {isCareMode ? '💚 Care Mode' : personality}
                                             {isPunishment && ' ⚠️'}
                                         </p>
                                     )}
                                     {isSafeword && message.sender === 'user' && (
-                                        <p className="text-xs font-semibold mb-1.5 text-teal-primary">
+                                        <p className="text-xs font-semibold mb-1.5 text-teal-300">
                                             🛡️ Safeword Used
                                         </p>
                                     )}
                                     <p className="text-sm whitespace-pre-line leading-relaxed">
                                         {message.content}
                                     </p>
-                                    <span className="text-[10px] text-text-tertiary mt-2 block text-right">
+                                    <span className="text-[10px] text-white/30 mt-2 block text-right">
                                         {formatTime(message.created_at)}
                                     </span>
                                 </div>
@@ -353,18 +357,18 @@ export default function ChatPage() {
                                 {message.masterTask && (
                                     <Link
                                         href="/tasks"
-                                        className="mt-2 block max-w-[85%] rounded-xl border border-red-primary/40 bg-red-primary/8 hover:bg-red-primary/15 transition-colors p-3 group"
+                                        className="mt-2 block max-w-[85%] bg-zinc-900 border border-[var(--accent)]/30 rounded-xl p-3 hover:opacity-90 transition-opacity group"
                                     >
                                         <div className="flex items-center gap-1.5 mb-2">
-                                            <ClipboardList size={12} className="text-red-primary shrink-0" />
-                                            <span className="text-[10px] font-bold text-red-primary uppercase tracking-wide">
+                                            <ClipboardList size={12} className="text-[var(--accent)] shrink-0" />
+                                            <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wide">
                                                 ⚔ Task Assigned
                                             </span>
                                         </div>
-                                        <p className="text-sm font-semibold text-text-primary leading-snug">
+                                        <p className="text-sm font-semibold text-white leading-snug">
                                             {message.masterTask.title}
                                         </p>
-                                        <div className="flex items-center gap-3 mt-2 text-xs text-text-tertiary">
+                                        <div className="flex items-center gap-3 mt-2 text-xs text-white/30">
                                             <span className="flex items-center gap-1">
                                                 <Star size={10} />
                                                 {'★'.repeat(message.masterTask.difficulty)}{'☆'.repeat(5 - message.masterTask.difficulty)}
@@ -374,7 +378,7 @@ export default function ChatPage() {
                                                 Due {new Date(message.masterTask.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
-                                        <div className="flex items-center gap-1 mt-2 text-[10px] text-red-primary/70 group-hover:text-red-primary transition-colors">
+                                        <div className="flex items-center gap-1 mt-2 text-[10px] text-[var(--accent)]/70 group-hover:text-[var(--accent)] transition-colors">
                                             Go to Tasks <ArrowRight size={10} />
                                         </div>
                                     </Link>
@@ -386,13 +390,13 @@ export default function ChatPage() {
                     {isLoading && (
                         <div className="flex justify-start">
                             <div className={`rounded-2xl px-4 py-3 ${careMode
-                                ? 'bg-teal-primary/10 border border-teal-primary/20'
-                                : 'bg-purple-primary/10 border border-purple-primary/20'
+                                ? 'bg-teal-900/20 border border-teal-500/30'
+                                : 'bg-zinc-900 border border-zinc-800'
                                 }`}>
                                 <div className="flex gap-1.5">
-                                    <div className={`w-2 h-2 rounded-full animate-bounce ${careMode ? 'bg-teal-primary/50' : 'bg-purple-primary/50'}`} style={{ animationDelay: '0ms' }} />
-                                    <div className={`w-2 h-2 rounded-full animate-bounce ${careMode ? 'bg-teal-primary/50' : 'bg-purple-primary/50'}`} style={{ animationDelay: '150ms' }} />
-                                    <div className={`w-2 h-2 rounded-full animate-bounce ${careMode ? 'bg-teal-primary/50' : 'bg-purple-primary/50'}`} style={{ animationDelay: '300ms' }} />
+                                    <div className={`w-2 h-2 rounded-full animate-bounce ${careMode ? 'bg-teal-400/50' : 'bg-white/20'}`} style={{ animationDelay: '0ms' }} />
+                                    <div className={`w-2 h-2 rounded-full animate-bounce ${careMode ? 'bg-teal-400/50' : 'bg-white/20'}`} style={{ animationDelay: '150ms' }} />
+                                    <div className={`w-2 h-2 rounded-full animate-bounce ${careMode ? 'bg-teal-400/50' : 'bg-white/20'}`} style={{ animationDelay: '300ms' }} />
                                 </div>
                             </div>
                         </div>
@@ -402,31 +406,30 @@ export default function ChatPage() {
                 </div>
 
                 {/* Input */}
-                <div className={`sticky bottom-20 lg:bottom-0 p-4 border-t transition-colors ${careMode
-                    ? 'glass-strong border-teal-primary/10'
-                    : 'glass-strong border-white/5'
+                <div className={`sticky bottom-20 lg:bottom-0 transition-colors ${careMode
+                    ? 'bg-zinc-900 border-t border-teal-500/20 px-4 py-3'
+                    : 'bg-zinc-900 border-t border-zinc-800 px-4 py-3'
                     }`}>
                     <div className="flex gap-2">
-                        <input
-                            type="text"
+                        <textarea
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend()}
+                            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && handleSend()}
                             placeholder={careMode ? 'You are safe here...' : 'Address Master respectfully...'}
-                            className="flex-1 bg-bg-primary rounded-[var(--radius-pill)] px-4 py-3 shadow-inset focus:outline-none focus:ring-2 focus:ring-purple-primary/50 text-sm"
+                            className="bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-zinc-600 flex-1 resize-none text-sm"
+                            rows={1}
                             disabled={isLoading}
                         />
-                        <Button
-                            variant="primary"
-                            size="icon"
+                        <button
                             onClick={handleSend}
                             disabled={isLoading || !inputValue.trim()}
-                            className="!rounded-full w-12 h-12 shrink-0"
+                            className="p-3 rounded-xl text-white disabled:opacity-40 transition-opacity shrink-0"
+                            style={{ backgroundColor: 'var(--accent)' }}
                         >
                             {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-                        </Button>
+                        </button>
                     </div>
-                    <p className="text-[10px] text-text-tertiary mt-2 text-center">
+                    <p className="text-[10px] text-white/30 mt-2 text-center">
                         {careMode
                             ? 'Type "resume training" when you\'re ready to continue'
                             : 'Type "MERCY" at any time to activate Care Mode'
