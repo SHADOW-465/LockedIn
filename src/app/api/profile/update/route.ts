@@ -6,6 +6,8 @@ import type { PrivacyConstraints, CommunicationStyle, Availability, UserProfile 
 // Fields allowed to update even during an active session (set via Care Mode chat)
 const SESSION_EXEMPT_FIELDS = new Set(['master_preference', 'session_intent', 'privacy_constraints'])
 
+const VALID_THEMES = new Set(['crimson', 'amethyst', 'ice', 'gold', 'obsidian', 'bone'])
+
 export async function PATCH(request: NextRequest) {
     try {
         const body = await request.json()
@@ -82,7 +84,12 @@ export async function PATCH(request: NextRequest) {
         if (communication_style !== undefined) updates.communication_style = communication_style
         if (availability !== undefined) updates.availability = availability
         if (psych_profile !== undefined) updates.psych_profile = psych_profile
-        if (theme !== undefined) updates.theme = theme
+        if (theme !== undefined) {
+            if (!VALID_THEMES.has(theme)) {
+                return NextResponse.json({ error: 'Invalid theme value' }, { status: 400 })
+            }
+            updates.theme = theme
+        }
 
         const { error } = await supabase.from('profiles').update(updates).eq('id', userId)
 
