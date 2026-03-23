@@ -57,6 +57,7 @@ export interface UserProfile {
     availability: Availability | null
     safeword: string
     psych_profile: string
+    theme?: string  // one of: 'crimson' | 'amethyst' | 'ice' | 'gold' | 'obsidian' | 'bone'
 
     // Stats
     willpower_score: number

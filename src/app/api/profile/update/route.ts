@@ -26,6 +26,7 @@ export async function PATCH(request: NextRequest) {
             communication_style,
             availability,
             psych_profile,
+            theme,
         } = body as {
             userId: string
             tier?: string
@@ -43,6 +44,7 @@ export async function PATCH(request: NextRequest) {
             communication_style?: CommunicationStyle
             availability?: Availability
             psych_profile?: string
+            theme?: string
         }
 
         if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
@@ -80,6 +82,7 @@ export async function PATCH(request: NextRequest) {
         if (communication_style !== undefined) updates.communication_style = communication_style
         if (availability !== undefined) updates.availability = availability
         if (psych_profile !== undefined) updates.psych_profile = psych_profile
+        if (theme !== undefined) updates.theme = theme
 
         const { error } = await supabase.from('profiles').update(updates).eq('id', userId)
 

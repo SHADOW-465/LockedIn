@@ -1,0 +1,2 @@
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS theme text NOT NULL DEFAULT 'crimson';
