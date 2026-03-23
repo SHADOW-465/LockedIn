@@ -124,18 +124,24 @@ export default function SettingsPage() {
         setThemeChanging(true)
         // Apply immediately for instant preview
         applyTheme(themeName)
-        const res = await fetch('/api/profile/update', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user?.id, theme: themeName }),
-        })
-        if (res.ok) {
-            await refreshProfile()
-        } else {
-            // Revert on failure
+        try {
+            const res = await fetch('/api/profile/update', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user?.id, theme: themeName }),
+            })
+            if (res.ok) {
+                await refreshProfile()
+            } else {
+                // Revert on server error
+                applyTheme(profile?.theme ?? 'crimson')
+            }
+        } catch {
+            // Revert on network failure
             applyTheme(profile?.theme ?? 'crimson')
+        } finally {
+            setThemeChanging(false)
         }
-        setThemeChanging(false)
     }
 
     if (loading) {
@@ -404,6 +410,7 @@ export default function SettingsPage() {
                                 <button
                                     key={key}
                                     title={t.label}
+                                    aria-label={t.label}
                                     disabled={themeChanging || hasActiveSession}
                                     onClick={() => handleThemeChange(key)}
                                     className="relative flex flex-col items-center gap-1.5 disabled:opacity-40"
