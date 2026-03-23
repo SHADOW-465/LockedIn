@@ -309,7 +309,7 @@ export default function DashboardPage() {
 
                 {(authLoading || (loading && user)) ? (
                     <div className="flex h-[50vh] items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-purple-primary" />
+                        <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)]" />
                     </div>
                 ) : (
                     <BentoGrid>
@@ -365,10 +365,10 @@ export default function DashboardPage() {
                         <BentoItem>
                             <div className="space-y-4 animate-card-in" style={{ animationDelay: '0.05s' }}>
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">
+                                    <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
                                         Willpower
                                     </h3>
-                                    <Zap size={16} className="text-purple-primary" />
+                                    <Zap size={16} className="text-[var(--accent)]" />
                                 </div>
                                 <div className="relative w-28 h-28 mx-auto">
                                     <svg className="transform -rotate-90 w-28 h-28">
@@ -378,7 +378,8 @@ export default function DashboardPage() {
                                             stroke="currentColor" strokeWidth="6" fill="none"
                                             strokeDasharray={2 * Math.PI * 48}
                                             strokeDashoffset={2 * Math.PI * 48 * (1 - willpowerScore / 100)}
-                                            className="text-purple-primary transition-all duration-1000"
+                                            className="transition-all duration-1000"
+                                            style={{ stroke: 'var(--accent)' }}
                                             strokeLinecap="round"
                                         />
                                     </svg>
@@ -388,7 +389,7 @@ export default function DashboardPage() {
                                         </span>
                                     </div>
                                 </div>
-                                <p className="text-center text-xs text-text-tertiary">
+                                <p className="text-center text-xs text-white/30">
                                     {willpowerScore >= 70
                                         ? 'Strong resistance'
                                         : willpowerScore >= 40
@@ -403,8 +404,8 @@ export default function DashboardPage() {
                             <div className="space-y-4 animate-card-in" style={{ animationDelay: '0.1s' }}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <Target size={16} className="text-red-primary" />
-                                        <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">
+                                        <Target size={16} className="text-red-500" />
+                                        <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
                                             Current Task
                                         </h3>
                                     </div>
@@ -427,7 +428,7 @@ export default function DashboardPage() {
                                                 {currentTask.cage_status === 'uncaged' ? '🗝️' : '🔒'} {currentTask.cage_status.toUpperCase()}
                                             </Badge>
                                             {currentTask.deadline && (
-                                                <span className="text-sm text-text-tertiary font-mono">
+                                                <span className="text-sm text-white/30 font-mono">
                                                     Deadline: {formatTimeLeft(new Date(currentTask.deadline))}
                                                 </span>
                                             )}
@@ -442,7 +443,7 @@ export default function DashboardPage() {
                                         </div>
                                     </>
                                 ) : (
-                                    <p className="text-text-tertiary text-sm">No active task. Generate one from the Tasks page.</p>
+                                    <p className="text-white/30 text-sm">No active task. Generate one from the Tasks page.</p>
                                 )}
                             </div>
                         </BentoItem>
@@ -475,8 +476,8 @@ export default function DashboardPage() {
                         <BentoItem>
                             <div className="space-y-3 animate-card-in" style={{ animationDelay: '0.2s' }}>
                                 <div className="flex items-center gap-2">
-                                    <Calendar size={16} className="text-teal-primary" />
-                                    <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">
+                                    <Calendar size={16} className="text-[var(--accent)]" />
+                                    <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
                                         Next Release
                                     </h3>
                                 </div>
@@ -496,8 +497,8 @@ export default function DashboardPage() {
                         <BentoItem>
                             <div className="space-y-3 animate-card-in" style={{ animationDelay: '0.25s' }}>
                                 <div className="flex items-center gap-2">
-                                    <TrendingUp size={16} className="text-teal-primary" />
-                                    <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">
+                                    <TrendingUp size={16} className="text-[var(--accent)]" />
+                                    <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
                                         Session Stats
                                     </h3>
                                 </div>
@@ -506,25 +507,25 @@ export default function DashboardPage() {
                                         <div className="text-lg font-bold font-mono">
                                             {session?.total_tasks_completed ?? profile?.total_sessions ?? 0}
                                         </div>
-                                        <div className="text-xs text-text-tertiary">Tasks Done</div>
+                                        <div className="text-xs text-white/30">Tasks Done</div>
                                     </div>
                                     <div>
                                         <div className="text-lg font-bold font-mono">
                                             {session?.total_tasks_failed ?? 0}
                                         </div>
-                                        <div className="text-xs text-text-tertiary">Violations</div>
+                                        <div className="text-xs text-white/30">Violations</div>
                                     </div>
                                     <div>
                                         <div className="text-lg font-bold font-mono">
                                             {profile?.total_denial_hours ?? 0}h
                                         </div>
-                                        <div className="text-xs text-text-tertiary">Total Denial</div>
+                                        <div className="text-xs text-white/30">Total Denial</div>
                                     </div>
                                     <div>
                                         <div className="text-lg font-bold font-mono">
                                             {profile?.total_edges ?? 0}
                                         </div>
-                                        <div className="text-xs text-text-tertiary">Total Edges</div>
+                                        <div className="text-xs text-white/30">Total Edges</div>
                                     </div>
                                 </div>
                             </div>
@@ -533,14 +534,14 @@ export default function DashboardPage() {
                         {/* Quick Links */}
                         <BentoItem>
                             <div className="space-y-3 animate-card-in" style={{ animationDelay: '0.3s' }}>
-                                <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">Quick Access</h3>
+                                <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">Quick Access</h3>
                                 <div className="grid grid-cols-2 gap-2">
                                     <Link href="/achievements" className="p-3 bg-bg-tertiary hover:bg-bg-hover rounded-[var(--radius-md)] border border-white/5 transition-colors flex items-center gap-2">
                                         <Trophy size={16} className="text-tier-slave" />
                                         <span className="text-sm font-medium">Achievements</span>
                                     </Link>
                                     <Link href="/regimens" className="p-3 bg-bg-tertiary hover:bg-bg-hover rounded-[var(--radius-md)] border border-white/5 transition-colors flex items-center gap-2">
-                                        <Dumbbell size={16} className="text-purple-primary" />
+                                        <Dumbbell size={16} className="text-[var(--accent)]" />
                                         <span className="text-sm font-medium">Regimens</span>
                                     </Link>
                                     {session && (
@@ -548,7 +549,7 @@ export default function DashboardPage() {
                                             onClick={() => setShowMoodModal(true)}
                                             className="p-3 bg-bg-tertiary hover:bg-bg-hover rounded-[var(--radius-md)] border border-white/5 transition-colors flex items-center gap-2"
                                         >
-                                            <Zap size={16} className="text-teal-primary" />
+                                            <Zap size={16} className="text-[var(--accent)]" />
                                             <span className="text-sm font-medium">Check In</span>
                                         </button>
                                     )}
@@ -557,7 +558,7 @@ export default function DashboardPage() {
                                             onClick={() => setShowWheelModal(true)}
                                             className="p-3 bg-bg-tertiary hover:bg-bg-hover rounded-[var(--radius-md)] border border-white/5 transition-colors flex items-center gap-2"
                                         >
-                                            <AlertTriangle size={16} className="text-red-primary" />
+                                            <AlertTriangle size={16} className="text-red-500" />
                                             <span className="text-sm font-medium">Punishment</span>
                                         </button>
                                     )}
