@@ -118,24 +118,24 @@ export default function CheckinHistoryPage() {
     return (
         <>
             <TopBar />
-            <div className="min-h-screen pb-24 p-4">
+            <div className="min-h-screen bg-black pb-24 p-4">
                 <div className="max-w-2xl mx-auto">
                     <div className="flex items-center gap-3 mb-6">
                         <button
                             onClick={() => router.back()}
-                            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                            className="p-2 hover:bg-white/5 rounded-xl transition-colors"
                         >
                             <ArrowLeft size={20} />
                         </button>
-                        <h1 className="text-2xl font-bold">Check-in Submissions</h1>
+                        <h1 className="text-2xl font-bold text-white">Check-in Submissions</h1>
                     </div>
 
                     {loading ? (
                         <div className="flex justify-center py-20">
-                            <Loader2 className="animate-spin text-purple-primary" size={32} />
+                            <Loader2 className="animate-spin text-[var(--accent)]" size={32} />
                         </div>
                     ) : records.length === 0 ? (
-                        <div className="text-center py-20 text-text-tertiary space-y-3">
+                        <div className="text-center py-20 text-white/30 space-y-3">
                             <Camera size={40} className="mx-auto opacity-30" />
                             <p className="text-sm">No check-in photos submitted today</p>
                         </div>
@@ -144,7 +144,7 @@ export default function CheckinHistoryPage() {
                             {records.map(record => (
                                 <div
                                     key={record.id}
-                                    className="bg-bg-secondary border border-white/10 rounded-2xl overflow-hidden"
+                                    className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden"
                                 >
                                     {/* Photo */}
                                     {record.imageDataUrl ? (
@@ -154,8 +154,8 @@ export default function CheckinHistoryPage() {
                                             className="w-full max-h-72 object-cover"
                                         />
                                     ) : (
-                                        <div className="w-full h-40 bg-bg-tertiary flex items-center justify-center">
-                                            <Camera size={32} className="text-text-tertiary" />
+                                        <div className="w-full h-40 bg-zinc-800 flex items-center justify-center">
+                                            <Camera size={32} className="text-white/30" />
                                         </div>
                                     )}
 
@@ -163,8 +163,8 @@ export default function CheckinHistoryPage() {
                                     <div className="p-4 space-y-3">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <p className="font-semibold text-sm">{record.task_title}</p>
-                                                <p className="text-[10px] text-text-tertiary font-mono">
+                                                <p className="font-semibold text-sm text-white">{record.task_title}</p>
+                                                <p className="text-[10px] text-white/30 font-mono">
                                                     {new Date(record.created_at).toLocaleString([], {
                                                         hour: '2-digit', minute: '2-digit',
                                                         month: 'short', day: 'numeric',
@@ -173,10 +173,10 @@ export default function CheckinHistoryPage() {
                                             </div>
                                             <span className={`text-xs font-bold px-2 py-1 rounded-full ${
                                                 record.verification_status === 'passed'
-                                                    ? 'bg-green-400/10 text-green-400'
+                                                    ? 'bg-emerald-400/10 text-emerald-400'
                                                     : record.verification_status === 'failed'
-                                                        ? 'bg-red-400/10 text-red-400'
-                                                        : 'bg-yellow-400/10 text-yellow-400'
+                                                        ? 'bg-[var(--accent)]/10 text-[var(--accent)]'
+                                                        : 'bg-amber-400/10 text-amber-400'
                                             }`}>
                                                 {record.verification_status === 'passed' ? '✅ Passed'
                                                     : record.verification_status === 'failed' ? '❌ Rejected'
@@ -188,13 +188,13 @@ export default function CheckinHistoryPage() {
                                         {record.ai_feedback && (
                                             <div className={`rounded-xl p-3 border ${
                                                 record.verification_status === 'passed'
-                                                    ? 'bg-teal-primary/5 border-teal-primary/20'
-                                                    : 'bg-red-primary/5 border-red-primary/20'
+                                                    ? 'bg-teal-900/30 border-teal-500/20'
+                                                    : 'bg-[var(--accent)]/5 border-[var(--accent)]/20'
                                             }`}>
-                                                <p className="text-[10px] font-bold uppercase mb-1 text-text-tertiary">
+                                                <p className="text-[10px] font-bold uppercase mb-1 text-white/30">
                                                     AI Feedback
                                                 </p>
-                                                <p className="text-xs text-text-secondary leading-relaxed">
+                                                <p className="text-xs text-white/85 leading-relaxed">
                                                     {record.ai_feedback}
                                                 </p>
                                             </div>

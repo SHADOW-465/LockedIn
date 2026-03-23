@@ -35,71 +35,69 @@ export default function AchievementsPage() {
         <>
             <TopBar />
 
-            <div className="min-h-screen pb-24 lg:pb-8 p-4">
+            <div className="min-h-screen bg-black pb-24 lg:pb-8 p-4">
                 <div className="max-w-2xl mx-auto space-y-6">
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <Trophy size={28} className="text-tier-slave" />
+                    <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+                        <Trophy size={28} className="text-[var(--accent)]" />
                         Achievements
                     </h1>
 
                     {/* XP Summary */}
-                    <Card variant="hero">
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
                         <div className="grid grid-cols-3 gap-4 text-center">
                             <div>
-                                <Zap size={20} className="mx-auto text-purple-primary mb-1" />
-                                <div className="text-2xl font-bold font-mono">{totalXp}</div>
-                                <div className="text-[10px] text-text-tertiary uppercase">Total XP</div>
+                                <Zap size={20} className="mx-auto text-[var(--accent)] mb-1" />
+                                <div className="text-2xl font-bold font-mono text-white">{totalXp}</div>
+                                <div className="text-[10px] text-white/30 uppercase">Total XP</div>
                             </div>
                             <div>
-                                <Trophy size={20} className="mx-auto text-tier-slave mb-1" />
-                                <div className="text-2xl font-bold font-mono">{achievements.length}</div>
-                                <div className="text-[10px] text-text-tertiary uppercase">Unlocked</div>
+                                <Trophy size={20} className="mx-auto text-[var(--accent)] mb-1" />
+                                <div className="text-2xl font-bold font-mono text-white">{achievements.length}</div>
+                                <div className="text-[10px] text-white/30 uppercase">Unlocked</div>
                             </div>
                             <div>
-                                <Flame size={20} className="mx-auto text-red-primary mb-1" />
-                                <div className="text-2xl font-bold font-mono">{profile?.compliance_streak ?? 0}</div>
-                                <div className="text-[10px] text-text-tertiary uppercase">Streak</div>
+                                <Flame size={20} className="mx-auto text-[var(--accent)] mb-1" />
+                                <div className="text-2xl font-bold font-mono text-white">{profile?.compliance_streak ?? 0}</div>
+                                <div className="text-[10px] text-white/30 uppercase">Streak</div>
                             </div>
                         </div>
-                    </Card>
+                    </div>
 
                     {/* Achievement List */}
                     {loading ? (
-                        <div className="text-center py-8 text-text-tertiary text-sm">Loading...</div>
+                        <div className="text-center py-8 text-white/30 text-sm">Loading...</div>
                     ) : achievements.length === 0 ? (
-                        <Card variant="flat" className="text-center py-12">
-                            <Trophy size={40} className="mx-auto text-text-tertiary mb-3" />
-                            <p className="text-text-tertiary text-sm mb-2">No achievements unlocked yet.</p>
-                            <p className="text-[10px] text-text-tertiary">Complete tasks and maintain streaks to earn badges.</p>
-                        </Card>
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center py-12">
+                            <Trophy size={40} className="mx-auto text-white/30 mb-3" />
+                            <p className="text-white/30 text-sm mb-2">No achievements unlocked yet.</p>
+                            <p className="text-[10px] text-white/30">Complete tasks and maintain streaks to earn badges.</p>
+                        </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {achievements.map((achievement, idx) => (
-                                <Card
+                                <div
                                     key={achievement.id}
-                                    variant="raised"
-                                    size="sm"
-                                    className="!min-h-0 animate-fade-in"
+                                    className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 animate-card-in"
                                     style={{ animationDelay: `${idx * 50}ms` }}
                                 >
                                     <div className="flex items-start gap-3">
                                         <span className="text-2xl">{achievement.icon}</span>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <h4 className="text-sm font-semibold truncate">{achievement.name}</h4>
+                                                <h4 className="text-sm font-semibold text-white truncate">{achievement.name}</h4>
                                                 <Badge variant="info" className="shrink-0">+{achievement.xp_awarded} XP</Badge>
                                             </div>
                                             {achievement.description && (
-                                                <p className="text-xs text-text-tertiary mt-0.5">{achievement.description}</p>
+                                                <p className="text-xs text-white/30 mt-0.5">{achievement.description}</p>
                                             )}
-                                            <span className="text-[10px] text-text-tertiary">
+                                            <span className="text-[10px] text-white/30">
                                                 {new Date(achievement.awarded_at).toLocaleDateString('en-US', {
                                                     month: 'short', day: 'numeric', year: 'numeric',
                                                 })}
                                             </span>
                                         </div>
                                     </div>
-                                </Card>
+                                </div>
                             ))}
                         </div>
                     )}

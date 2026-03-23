@@ -29,10 +29,10 @@ export default function SessionDetailPage() {
   return (
     <>
       <TopBar />
-      <div className="min-h-screen pb-24 lg:pb-8 p-4">
+      <div className="min-h-screen bg-black pb-24 lg:pb-8 p-4">
         <div className="max-w-2xl mx-auto space-y-4">
           <div className="flex items-center gap-2">
-            <Link href="/history" className="text-text-tertiary hover:text-text-secondary transition-colors flex items-center gap-1 text-sm">
+            <Link href="/history" className="text-white/30 hover:text-white/85 transition-colors flex items-center gap-1 text-sm">
               <ChevronLeft className="w-4 h-4" />
               Past Sessions
             </Link>
@@ -40,12 +40,12 @@ export default function SessionDetailPage() {
 
           {loading ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-text-tertiary" />
+              <Loader2 className="w-6 h-6 animate-spin text-white/30" />
             </div>
           ) : archive && user ? (
             <SessionDetail archive={archive} userId={user.id} />
           ) : (
-            <p className="text-text-tertiary text-center py-12">Session not found in local storage.</p>
+            <p className="text-white/30 text-center py-12">Session not found in local storage.</p>
           )}
         </div>
       </div>

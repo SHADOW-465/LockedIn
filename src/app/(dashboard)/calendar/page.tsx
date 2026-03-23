@@ -128,24 +128,24 @@ export default function CalendarPage() {
         <>
             <TopBar />
 
-            <div className="min-h-screen pb-24 lg:pb-8 p-4">
+            <div className="min-h-screen bg-black pb-24 lg:pb-8 p-4">
                 <div className="max-w-2xl mx-auto space-y-6">
                     <div className="flex items-center justify-between">
-                        <h1 className="text-3xl font-bold">Calendar</h1>
+                        <h1 className="text-3xl font-bold text-white">Calendar</h1>
                         <button
                             onClick={() => router.push('/history')}
-                            className="text-sm text-text-tertiary hover:text-text-secondary transition-colors flex items-center gap-1"
+                            className="text-sm text-white/30 hover:text-white/85 transition-colors flex items-center gap-1"
                         >
                             Past Sessions ↗
                         </button>
                     </div>
 
                     {/* Release Date Card */}
-                    <Card variant="hero" className="text-center">
-                        <p className="text-xs text-text-tertiary uppercase tracking-wide mb-2">
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
+                        <p className="text-xs text-white/30 uppercase tracking-wide mb-2">
                             Scheduled Release Date
                         </p>
-                        <div className="text-4xl font-bold font-mono mb-2 text-red-primary text-glow-red">
+                        <div className="text-4xl font-bold font-mono mb-2 text-[var(--accent)]">
                             {releaseDate
                                 ? format(releaseDate, 'MMM dd, yyyy')
                                 : 'No Active Session'}
@@ -153,23 +153,23 @@ export default function CalendarPage() {
                         <Badge variant="locked">
                             {session ? 'Subject to change based on performance' : 'Start a session to see release date'}
                         </Badge>
-                    </Card>
+                    </div>
 
                     {/* Month Calendar */}
-                    <Card variant="raised" className="p-4">
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-4">
                             <button
                                 onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                                className="p-2 rounded-[var(--radius-md)] hover:bg-bg-tertiary transition-colors cursor-pointer"
+                                className="p-2 rounded-xl hover:bg-zinc-800 transition-colors cursor-pointer"
                             >
                                 <ChevronLeft size={18} />
                             </button>
-                            <h2 className="text-lg font-semibold font-mono">
+                            <h2 className="text-lg font-semibold font-mono text-white">
                                 {format(currentMonth, 'MMMM yyyy')}
                             </h2>
                             <button
                                 onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                                className="p-2 rounded-[var(--radius-md)] hover:bg-bg-tertiary transition-colors cursor-pointer"
+                                className="p-2 rounded-xl hover:bg-zinc-800 transition-colors cursor-pointer"
                             >
                                 <ChevronRight size={18} />
                             </button>
@@ -193,8 +193,8 @@ export default function CalendarPage() {
                                     })}
                                     className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
                                         overlays.has(key)
-                                            ? 'bg-purple-primary/20 text-purple-primary border border-purple-primary/30'
-                                            : 'bg-bg-tertiary text-text-tertiary hover:text-text-secondary'
+                                            ? 'bg-[var(--accent-dim)] text-[var(--accent)] border border-[var(--accent)]/30'
+                                            : 'bg-zinc-800 text-white/30 hover:text-white/85'
                                     }`}
                                 >
                                     {label}
@@ -205,7 +205,7 @@ export default function CalendarPage() {
                         {/* Day headers */}
                         <div className="grid grid-cols-7 gap-1 mb-2">
                             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                                <div key={`${day}-${i}`} className="text-center text-xs text-text-tertiary font-semibold py-1">
+                                <div key={`${day}-${i}`} className="text-center text-xs text-white/30 font-semibold py-1">
                                     {day}
                                 </div>
                             ))}
@@ -229,34 +229,39 @@ export default function CalendarPage() {
                                 const dayColors = {
                                     good: 'bg-tier-newbie/20 text-tier-newbie',
                                     mixed: 'bg-tier-slave/20 text-tier-slave',
-                                    bad: 'bg-red-primary/20 text-red-primary',
+                                    bad: 'bg-[var(--accent)]/20 text-[var(--accent)]',
                                 }
 
                                 return (
                                     <div
                                         key={day.toString()}
                                         onClick={() => setSelectedDay(isSelected ? null : day)}
-                                        className={`aspect-square relative flex items-center justify-center rounded-[var(--radius-sm)] text-sm font-mono transition-all cursor-pointer hover:ring-1 hover:ring-purple-primary/30 ${
+                                        className={`aspect-square relative flex items-center justify-center rounded-xl text-sm font-mono transition-all cursor-pointer hover:ring-1 hover:ring-[var(--accent)]/30 ${
                                             isSelected
-                                                ? 'ring-2 ring-purple-primary'
+                                                ? 'ring-2 ring-[var(--accent)]'
                                                 : ''
                                         } ${isToday
-                                            ? 'bg-purple-primary text-white font-bold ring-2 ring-purple-primary/50'
+                                            ? 'text-white font-bold ring-2 ring-[var(--accent)]/50'
                                             : isReleaseDay
-                                                ? 'bg-red-primary text-white font-bold glow-red'
+                                                ? 'text-white font-bold'
                                                 : overlays.has('tasks') && dayType
                                                     ? dayColors[dayType]
-                                                    : 'text-text-secondary hover:bg-bg-tertiary'
+                                                    : 'text-white/85 hover:bg-zinc-800'
                                         }`}
+                                        style={isToday
+                                            ? { backgroundColor: 'var(--accent)' }
+                                            : isReleaseDay
+                                                ? { backgroundColor: 'var(--accent)' }
+                                                : undefined}
                                     >
                                         {format(day, 'd')}
                                         {/* Session ring */}
                                         {hasSession && (
-                                            <span className="absolute inset-0 rounded-[var(--radius-sm)] ring-1 ring-teal-primary/40 pointer-events-none" />
+                                            <span className="absolute inset-0 rounded-xl ring-1 ring-teal-500/40 pointer-events-none" />
                                         )}
                                         {/* Mood dot */}
                                         {hasMood && (
-                                            <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-purple-primary" />
+                                            <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
                                         )}
                                         {/* Punish indicator */}
                                         {hasPunish && (
@@ -271,80 +276,80 @@ export default function CalendarPage() {
                         <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-white/5">
                             <div className="flex items-center gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full bg-tier-newbie" />
-                                <span className="text-[10px] text-text-tertiary">Good</span>
+                                <span className="text-[10px] text-white/30">Good</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full bg-tier-slave" />
-                                <span className="text-[10px] text-text-tertiary">Mixed</span>
+                                <span className="text-[10px] text-white/30">Mixed</span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                                <div className="w-2.5 h-2.5 rounded-full bg-red-primary" />
-                                <span className="text-[10px] text-text-tertiary">Bad</span>
+                                <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />
+                                <span className="text-[10px] text-white/30">Bad</span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                                <div className="w-2.5 h-2.5 rounded-full bg-purple-primary" />
-                                <span className="text-[10px] text-text-tertiary">Today</span>
+                                <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />
+                                <span className="text-[10px] text-white/30">Today</span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                                <div className="w-2.5 h-2.5 rounded-full border border-teal-primary/40" />
-                                <span className="text-[10px] text-text-tertiary">Session</span>
+                                <div className="w-2.5 h-2.5 rounded-full border border-teal-500/40" />
+                                <span className="text-[10px] text-white/30">Session</span>
                             </div>
                         </div>
-                    </Card>
+                    </div>
 
                     {/* Day detail panel */}
                     {selectedDay && (
-                        <Card variant="raised" className="animate-fade-in">
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 animate-card-in">
                             <div className="flex items-center justify-between mb-3">
-                                <h3 className="font-semibold">{format(selectedDay, 'MMMM d, yyyy')}</h3>
+                                <h3 className="font-semibold text-white">{format(selectedDay, 'MMMM d, yyyy')}</h3>
                                 <div className="flex items-center gap-3">
                                     {sessionDaySet.has(format(selectedDay, 'yyyy-MM-dd')) && (
                                         <button
                                             onClick={() => router.push('/history')}
-                                            className="text-xs text-teal-primary hover:underline"
+                                            className="text-xs text-teal-400 hover:underline"
                                         >
                                             ↗ Past Sessions
                                         </button>
                                     )}
                                     <button
                                         onClick={() => setSelectedDay(null)}
-                                        className="text-text-tertiary hover:text-text-secondary"
+                                        className="text-white/30 hover:text-white/85"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
                             {selectedDay > new Date() ? (
-                                <p className="text-sm text-text-tertiary">No data yet for future dates.</p>
+                                <p className="text-sm text-white/30">No data yet for future dates.</p>
                             ) : (
                                 <div className="space-y-3 text-sm">
                                     {/* Task counts */}
                                     {(() => {
                                         const dateKey = format(selectedDay, 'yyyy-MM-dd')
                                         const detail = taskDetailByDate[dateKey]
-                                        if (!detail) return <p className="text-text-tertiary text-xs">No tasks recorded for this day.</p>
+                                        if (!detail) return <p className="text-white/30 text-xs">No tasks recorded for this day.</p>
                                         return (
                                             <div className="flex gap-4 text-sm">
-                                                <span className="text-teal-primary">✅ {detail.completed} completed</span>
-                                                <span className="text-red-primary">❌ {detail.failed} failed</span>
+                                                <span className="text-teal-400">✅ {detail.completed} completed</span>
+                                                <span className="text-[var(--accent)]">❌ {detail.failed} failed</span>
                                             </div>
                                         )
                                     })()}
                                     {/* Mood check-in */}
                                     {(() => {
                                         const m = moodByDate[format(selectedDay, 'yyyy-MM-dd')]
-                                        if (!m) return <p className="text-text-tertiary text-xs">No mood check-in for this day.</p>
+                                        if (!m) return <p className="text-white/30 text-xs">No mood check-in for this day.</p>
                                         return (
-                                            <div className="bg-bg-tertiary rounded-lg p-3 space-y-1">
-                                                <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">Mood Check-in</p>
+                                            <div className="bg-zinc-800 rounded-xl p-3 space-y-1">
+                                                <p className="text-xs font-semibold text-white/30 uppercase tracking-wide">Mood Check-in</p>
                                                 <div className="flex gap-3 text-xs">
-                                                    <span className="text-purple-primary">Depth {m.submission_depth}/10</span>
-                                                    <span className="text-red-primary">Frust {m.frustration_level}/10</span>
+                                                    <span className="text-[var(--accent)]">Depth {m.submission_depth}/10</span>
+                                                    <span className="text-[var(--accent)]">Frust {m.frustration_level}/10</span>
                                                 </div>
                                                 {m.headspace_tags.length > 0 && (
                                                     <div className="flex flex-wrap gap-1">
                                                         {m.headspace_tags.map(tag => (
-                                                            <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] bg-purple-primary/10 text-purple-primary">{tag}</span>
+                                                            <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] bg-[var(--accent-dim)] text-[var(--accent)]">{tag}</span>
                                                         ))}
                                                     </div>
                                                 )}
@@ -355,53 +360,51 @@ export default function CalendarPage() {
                                     {adjustments
                                         .filter(a => format(new Date(a.created_at), 'yyyy-MM-dd') === format(selectedDay, 'yyyy-MM-dd'))
                                         .map(a => (
-                                            <div key={a.id} className="text-xs text-red-primary">
+                                            <div key={a.id} className="text-xs text-[var(--accent)]">
                                                 ⚠ +{a.hours_added}h — {a.reason}
                                             </div>
                                         ))
                                     }
                                 </div>
                             )}
-                        </Card>
+                        </div>
                     )}
 
                     {/* Adjustment Log */}
                     <div>
-                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                            <Clock size={18} className="text-text-tertiary" />
+                        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                            <Clock size={18} className="text-white/30" />
                             Recent Adjustments
                         </h2>
                         {adjustments.length === 0 ? (
-                            <Card variant="flat" size="sm" className="!min-h-0 text-center py-6">
-                                <p className="text-sm text-text-tertiary">No adjustments yet. Complete tasks to see changes.</p>
-                            </Card>
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center py-6">
+                                <p className="text-sm text-white/30">No adjustments yet. Complete tasks to see changes.</p>
+                            </div>
                         ) : (
                             <div className="space-y-2">
                                 {adjustments.map((log) => (
-                                    <Card
+                                    <div
                                         key={log.id}
-                                        variant="flat"
-                                        size="sm"
-                                        className="!min-h-0 py-3 animate-fade-in"
+                                        className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 animate-card-in"
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 {log.hours_added > 0 ? (
-                                                    <TrendingUp size={16} className="text-red-primary" />
+                                                    <TrendingUp size={16} className="text-[var(--accent)]" />
                                                 ) : (
-                                                    <TrendingDown size={16} className="text-teal-primary" />
+                                                    <TrendingDown size={16} className="text-teal-400" />
                                                 )}
                                                 <div>
-                                                    <p className="text-sm font-medium">
+                                                    <p className="text-sm font-medium text-white">
                                                         {log.hours_added > 0
                                                             ? `+${log.hours_added}h`
                                                             : `-${log.hours_subtracted}h`}
                                                     </p>
-                                                    <p className="text-xs text-text-tertiary">{log.reason}</p>
+                                                    <p className="text-xs text-white/30">{log.reason}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] text-text-tertiary font-mono">
+                                                <span className="text-[10px] text-white/30 font-mono">
                                                     {format(new Date(log.created_at), 'h:mm a')}
                                                 </span>
                                                 <Badge variant={log.ai_controlled ? 'locked' : 'genre'}>
@@ -409,7 +412,7 @@ export default function CalendarPage() {
                                                 </Badge>
                                             </div>
                                         </div>
-                                    </Card>
+                                    </div>
                                 ))}
                             </div>
                         )}

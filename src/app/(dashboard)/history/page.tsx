@@ -28,13 +28,13 @@ export default function HistoryPage() {
   return (
     <>
       <TopBar />
-      <div className="min-h-screen pb-24 lg:pb-8 p-4">
+      <div className="min-h-screen bg-black pb-24 lg:pb-8 p-4">
         <div className="max-w-2xl mx-auto space-y-6">
-          <h1 className="text-3xl font-bold">Past Sessions</h1>
+          <h1 className="text-3xl font-bold text-white">Past Sessions</h1>
 
           {loading ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-text-tertiary" />
+              <Loader2 className="w-6 h-6 animate-spin text-white/30" />
             </div>
           ) : (
             <SessionList archives={archives} />

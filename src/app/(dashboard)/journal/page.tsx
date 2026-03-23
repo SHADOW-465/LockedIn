@@ -93,17 +93,17 @@ export default function JournalPage() {
         <>
             <TopBar />
 
-            <div className="min-h-screen pb-24 lg:pb-8 p-4">
+            <div className="min-h-screen bg-black pb-24 lg:pb-8 p-4">
                 <div className="max-w-2xl mx-auto space-y-6">
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <BookOpen size={28} className="text-purple-primary" />
+                    <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+                        <BookOpen size={28} className="text-[var(--accent)]" />
                         Journal
                     </h1>
 
                     {/* New Entry Form */}
-                    <Card variant="hero">
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
                         <div className="space-y-4">
-                            <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">
+                            <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
                                 New Entry
                             </h3>
 
@@ -111,22 +111,23 @@ export default function JournalPage() {
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
                                 placeholder="How are you feeling? What happened today? Be honest..."
-                                className="w-full bg-bg-tertiary border border-white/10 rounded-[var(--radius-md)] p-3 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:border-purple-primary/50 transition-colors"
+                                className="w-full bg-zinc-800 border border-white/10 rounded-xl p-3 text-sm text-white placeholder:text-white/30 resize-none focus:outline-none focus:border-[var(--accent)]/50 transition-colors"
                                 rows={4}
                             />
 
                             {/* Mood Selector */}
                             <div>
-                                <label className="text-xs text-text-tertiary mb-2 block">Mood</label>
+                                <label className="text-xs text-white/30 mb-2 block">Mood</label>
                                 <div className="flex flex-wrap gap-2">
                                     {MOODS.map((m) => (
                                         <button
                                             key={m.value}
                                             onClick={() => setMood(mood === m.value ? null : m.value)}
                                             className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-colors cursor-pointer border ${mood === m.value
-                                                ? 'bg-purple-primary text-white border-purple-primary'
-                                                : 'bg-bg-tertiary hover:bg-bg-hover border-white/5'
+                                                ? 'text-white border-[var(--accent)]'
+                                                : 'bg-zinc-800 hover:bg-zinc-700 border-white/5'
                                                 }`}
+                                            style={mood === m.value ? { backgroundColor: 'var(--accent)' } : undefined}
                                         >
                                             {m.emoji} {m.label}
                                         </button>
@@ -136,9 +137,9 @@ export default function JournalPage() {
 
                             {/* Obedience Slider */}
                             <div>
-                                <label className="text-xs text-text-tertiary mb-2 flex justify-between">
+                                <label className="text-xs text-white/30 mb-2 flex justify-between">
                                     <span>Obedience Rating</span>
-                                    <span className="font-mono text-text-primary">{obedience}/10</span>
+                                    <span className="font-mono text-white">{obedience}/10</span>
                                 </label>
                                 <input
                                     type="range"
@@ -146,9 +147,9 @@ export default function JournalPage() {
                                     max={10}
                                     value={obedience}
                                     onChange={(e) => setObedience(Number(e.target.value))}
-                                    className="w-full accent-purple-primary"
+                                    className="w-full accent-[var(--accent)]"
                                 />
-                                <div className="flex justify-between text-[10px] text-text-tertiary mt-1">
+                                <div className="flex justify-between text-[10px] text-white/30 mt-1">
                                     <span>Defiant</span>
                                     <span>Obedient</span>
                                 </div>
@@ -167,27 +168,27 @@ export default function JournalPage() {
                                 )}
                             </Button>
                         </div>
-                    </Card>
+                    </div>
 
                     {/* Past Entries */}
                     <div className="space-y-3">
-                        <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">
+                        <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
                             Past Entries
                         </h3>
 
                         {loading ? (
-                            <div className="text-center py-8 text-text-tertiary text-sm">Loading...</div>
+                            <div className="text-center py-8 text-white/30 text-sm">Loading...</div>
                         ) : entries.length === 0 ? (
-                            <Card variant="flat" className="text-center py-8">
-                                <Smile size={32} className="mx-auto text-text-tertiary mb-2" />
-                                <p className="text-sm text-text-tertiary">No journal entries yet.<br />Write your first one above.</p>
-                            </Card>
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center py-8">
+                                <Smile size={32} className="mx-auto text-white/30 mb-2" />
+                                <p className="text-sm text-white/30">No journal entries yet.<br />Write your first one above.</p>
+                            </div>
                         ) : (
                             entries.map((entry) => (
-                                <Card key={entry.id} variant="flat" size="sm" className="!min-h-0">
+                                <div key={entry.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs text-text-tertiary">
+                                            <span className="text-xs text-white/30">
                                                 {new Date(entry.created_at).toLocaleDateString('en-US', {
                                                     month: 'short',
                                                     day: 'numeric',
@@ -209,17 +210,17 @@ export default function JournalPage() {
                                                 )}
                                             </div>
                                         </div>
-                                        <p className="text-sm text-text-secondary leading-relaxed">
+                                        <p className="text-sm text-white/85 leading-relaxed">
                                             {entry.content}
                                         </p>
                                         {entry.ai_analysis && (
-                                            <div className="mt-2 p-2 bg-purple-primary/5 border border-purple-primary/20 rounded-[var(--radius-md)]">
-                                                <p className="text-xs text-purple-primary font-medium">🤖 AI Analysis</p>
-                                                <p className="text-xs text-text-secondary mt-1">{entry.ai_analysis}</p>
+                                            <div className="mt-2 p-2 bg-[var(--accent-dim)] border border-[var(--accent)]/20 rounded-xl">
+                                                <p className="text-xs text-[var(--accent)] font-medium">🤖 AI Analysis</p>
+                                                <p className="text-xs text-white/85 mt-1">{entry.ai_analysis}</p>
                                             </div>
                                         )}
                                     </div>
-                                </Card>
+                                </div>
                             ))
                         )}
                     </div>

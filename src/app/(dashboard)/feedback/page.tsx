@@ -76,37 +76,38 @@ export default function FeedbackPage() {
         <>
             <TopBar />
 
-            <div className="min-h-screen pb-24 lg:pb-8 p-4">
+            <div className="min-h-screen bg-black pb-24 lg:pb-8 p-4">
                 <div className="max-w-2xl mx-auto space-y-6">
                     <div className="flex items-center gap-3">
-                        <Link href="/settings" className="text-text-tertiary hover:text-text-primary transition-colors">
+                        <Link href="/settings" className="text-white/30 hover:text-white transition-colors">
                             <ArrowLeft size={20} />
                         </Link>
-                        <h1 className="text-3xl font-bold flex items-center gap-2">
-                            <MessageSquarePlus size={28} className="text-purple-primary" />
+                        <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+                            <MessageSquarePlus size={28} className="text-[var(--accent)]" />
                             Feedback
                         </h1>
                     </div>
 
                     {/* Submit Form */}
-                    <Card variant="hero">
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
                         <div className="space-y-4">
-                            <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">
+                            <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
                                 Submit Suggestion
                             </h3>
 
                             {/* Category */}
                             <div>
-                                <label className="text-xs text-text-tertiary mb-2 block">Category</label>
+                                <label className="text-xs text-white/30 mb-2 block">Category</label>
                                 <div className="flex flex-wrap gap-2">
                                     {CATEGORIES.map((c) => (
                                         <button
                                             key={c}
                                             onClick={() => setCategory(c)}
                                             className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-colors cursor-pointer border ${category === c
-                                                    ? 'bg-purple-primary text-white border-purple-primary'
-                                                    : 'bg-bg-tertiary hover:bg-bg-hover border-white/5'
+                                                    ? 'text-white border-[var(--accent)]'
+                                                    : 'bg-zinc-800 hover:bg-zinc-700 border-white/5'
                                                 }`}
+                                            style={category === c ? { backgroundColor: 'var(--accent)' } : undefined}
                                         >
                                             {c}
                                         </button>
@@ -119,13 +120,13 @@ export default function FeedbackPage() {
                                 value={suggestion}
                                 onChange={(e) => setSuggestion(e.target.value)}
                                 placeholder="What would you like to see improved? Be specific for bonus XP..."
-                                className="w-full bg-bg-tertiary border border-white/10 rounded-[var(--radius-md)] p-3 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:border-purple-primary/50 transition-colors"
+                                className="w-full bg-zinc-800 border border-white/10 rounded-xl p-3 text-sm text-white placeholder:text-white/30 resize-none focus:outline-none focus:border-[var(--accent)]/50 transition-colors"
                                 rows={3}
                             />
 
                             {/* Star Rating */}
                             <div>
-                                <label className="text-xs text-text-tertiary mb-2 block">App Rating (optional)</label>
+                                <label className="text-xs text-white/30 mb-2 block">App Rating (optional)</label>
                                 <div className="flex gap-1">
                                     {[1, 2, 3, 4, 5].map((s) => (
                                         <button
@@ -135,7 +136,7 @@ export default function FeedbackPage() {
                                         >
                                             <Star
                                                 size={24}
-                                                className={s <= rating ? 'text-tier-slave fill-tier-slave' : 'text-text-tertiary'}
+                                                className={s <= rating ? 'text-tier-slave fill-tier-slave' : 'text-white/30'}
                                             />
                                         </button>
                                     ))}
@@ -155,20 +156,20 @@ export default function FeedbackPage() {
                                 )}
                             </Button>
 
-                            <p className="text-[10px] text-text-tertiary text-center">
+                            <p className="text-[10px] text-white/30 text-center">
                                 Detailed suggestions (50+ chars) earn bonus XP
                             </p>
                         </div>
-                    </Card>
+                    </div>
 
                     {/* Past Feedbacks */}
                     {!loading && feedbacks.length > 0 && (
                         <div className="space-y-3">
-                            <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">
+                            <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
                                 Your Submissions
                             </h3>
                             {feedbacks.map((fb) => (
-                                <Card key={fb.id} variant="flat" size="sm" className="!min-h-0">
+                                <div key={fb.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
                                     <div className="flex items-start justify-between">
                                         <div className="space-y-1 flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
@@ -180,8 +181,8 @@ export default function FeedbackPage() {
                                                     {fb.status}
                                                 </Badge>
                                             </div>
-                                            <p className="text-sm text-text-secondary line-clamp-2">{fb.suggestion}</p>
-                                            <span className="text-[10px] text-text-tertiary">
+                                            <p className="text-sm text-white/85 line-clamp-2">{fb.suggestion}</p>
+                                            <span className="text-[10px] text-white/30">
                                                 {new Date(fb.created_at).toLocaleDateString('en-US', {
                                                     month: 'short', day: 'numeric',
                                                 })}
@@ -193,13 +194,13 @@ export default function FeedbackPage() {
                                                     <Star
                                                         key={s}
                                                         size={12}
-                                                        className={s <= fb.rating! ? 'text-tier-slave fill-tier-slave' : 'text-text-tertiary'}
+                                                        className={s <= fb.rating! ? 'text-tier-slave fill-tier-slave' : 'text-white/30'}
                                                     />
                                                 ))}
                                             </div>
                                         )}
                                     </div>
-                                </Card>
+                                </div>
                             ))}
                         </div>
                     )}
