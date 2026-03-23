@@ -46,7 +46,7 @@ export function BottomNav() {
                                     key={item.href}
                                     href={item.href}
                                     className={cn(
-                                        'flex flex-col items-center gap-1 px-4 py-2.5 rounded-[var(--radius-lg)] transition-all duration-200 min-w-[72px]',
+                                        'flex flex-col items-center gap-1 px-4 py-2.5 rounded-lg transition-all duration-200 min-w-[72px]',
                                         isActive
                                             ? 'text-[var(--accent)] bg-zinc-800'
                                             : 'text-white/40 hover:text-white/70 hover:bg-zinc-800/50'
@@ -70,7 +70,7 @@ export function BottomNav() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                'flex flex-col items-center gap-1 px-3 py-2 rounded-[var(--radius-lg)] transition-all duration-200 cursor-pointer',
+                                'flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer',
                                 isActive
                                     ? 'text-[var(--accent)] bg-zinc-800'
                                     : 'text-white/40 hover:text-white/70 hover:bg-zinc-800/50'
@@ -86,7 +86,7 @@ export function BottomNav() {
                 <button
                     onClick={() => setShowMore((v) => !v)}
                     className={cn(
-                        'flex flex-col items-center gap-1 px-3 py-2 rounded-[var(--radius-lg)] transition-all duration-200 cursor-pointer',
+                        'flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer',
                         showMore || moreActive
                             ? 'text-[var(--accent)] bg-zinc-800'
                             : 'text-white/40 hover:text-white/70 hover:bg-zinc-800/50'

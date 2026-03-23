@@ -141,15 +141,8 @@
    ========================================== */
 
 @keyframes timer-pulse {
-
-  0%,
-  100% {
-    box-shadow: 0 0 20px rgba(211, 47, 47, 0.3), 0 0 40px rgba(211, 47, 47, 0.15);
-  }
-
-  50% {
-    box-shadow: 0 0 30px rgba(211, 47, 47, 0.5), 0 0 60px rgba(211, 47, 47, 0.25);
-  }
+  0%, 100% { box-shadow: 0 0 20px var(--accent-glow), 0 0 40px var(--accent-dim); }
+  50%       { box-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-dim); }
 }
 
 @keyframes fade-in {
@@ -223,15 +216,8 @@
 }
 
 @keyframes lock-glow {
-
-  0%,
-  100% {
-    filter: drop-shadow(0 0 4px rgba(211, 47, 47, 0.4));
-  }
-
-  50% {
-    filter: drop-shadow(0 0 12px rgba(211, 47, 47, 0.8));
-  }
+  0%, 100% { filter: drop-shadow(0 0 4px  var(--accent-dim)); }
+  50%       { filter: drop-shadow(0 0 12px var(--accent-glow)); }
 }
 
 /* ==========================================
@@ -276,15 +262,8 @@
 
 /* Sealed state — glow pulse */
 @keyframes lockin-pulse {
-
-  0%,
-  100% {
-    box-shadow: 0 0 12px rgba(211, 47, 47, 0.3), inset 0 0 8px rgba(211, 47, 47, 0.05);
-  }
-
-  50% {
-    box-shadow: 0 0 28px rgba(211, 47, 47, 0.55), inset 0 0 12px rgba(211, 47, 47, 0.1);
-  }
+  0%, 100% { box-shadow: 0 0 12px var(--accent-dim),  inset 0 0 8px  rgba(0,0,0,0.05); }
+  50%       { box-shadow: 0 0 28px var(--accent-glow), inset 0 0 12px rgba(0,0,0,0.1); }
 }
 
 /* Fade up + slight scale for completion text */
@@ -404,7 +383,7 @@
   }
 
   .card-hover:hover {
-    border-color: #3f3f46 !important;
+    border-color: var(--color-bg-hover) !important;  /* zinc-700 — override Tailwind border utility */
     transform: translateY(-1px);
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
   }
