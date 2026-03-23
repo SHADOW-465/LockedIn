@@ -63,7 +63,7 @@ function DeadlineTimer({ deadline }: { deadline: Date }) {
         return () => clearInterval(id)
     }, [deadline])
 
-    return <span className={remaining === 'OVERDUE' ? 'text-red-500 font-bold' : ''}>{remaining}</span>
+    return <span className={remaining === 'OVERDUE' ? 'text-[var(--accent)] font-bold' : ''}>{remaining}</span>
 }
 
 interface VerificationResult {
@@ -143,9 +143,9 @@ function TaskDetailModal({
 }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-bg-secondary border border-white/10 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex items-start justify-between p-6 border-b border-white/5">
+                <div className="flex items-start justify-between p-6 border-b border-zinc-800">
                     <div className="space-y-2 flex-1">
                         <h2 className="text-xl font-bold">{task.title}</h2>
                         <div className="flex flex-wrap gap-2">
@@ -158,15 +158,15 @@ function TaskDetailModal({
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                        <X size={20} className="text-text-tertiary" />
+                        <X size={20} className="text-white/30" />
                     </button>
                 </div>
 
                 {/* Body */}
                 <div className="p-6 space-y-6">
                     <div>
-                        <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wide mb-2">Instructions</h3>
-                        <p className="text-sm text-text-secondary whitespace-pre-line leading-relaxed">
+                        <h3 className="text-xs font-semibold text-white/30 uppercase tracking-wide mb-2">Instructions</h3>
+                        <p className="text-sm text-white/85 whitespace-pre-line leading-relaxed">
                             {task.description}
                         </p>
                     </div>
@@ -177,30 +177,30 @@ function TaskDetailModal({
                             <div className="text-lg font-bold font-mono">
                                 {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
                             </div>
-                            <div className="text-xs text-text-tertiary">Difficulty</div>
+                            <div className="text-xs text-white/30">Difficulty</div>
                         </div>
                         <div className="text-center">
                             <div className="text-lg font-bold font-mono flex items-center justify-center gap-1">
                                 <Clock size={14} /> {task.duration_minutes}m
                             </div>
-                            <div className="text-xs text-text-tertiary">Time Limit</div>
+                            <div className="text-xs text-white/30">Time Limit</div>
                         </div>
                     </div>
 
                     {/* Punishment Warning */}
                     {(task.punishment_hours || task.punishment_additional) && (
-                        <div className="bg-red-primary/5 border border-red-primary/20 rounded-xl p-4">
+                        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4">
                             <div className="flex items-start gap-2">
-                                <AlertTriangle size={16} className="text-red-primary shrink-0 mt-0.5" />
+                                <AlertTriangle size={16} className="text-red-500 shrink-0 mt-0.5" />
                                 <div>
-                                    <h3 className="text-xs font-bold text-red-primary uppercase mb-1">
+                                    <h3 className="text-xs font-bold text-red-500 uppercase mb-1">
                                         Failure Punishment
                                     </h3>
                                     {task.punishment_hours && (
-                                        <p className="text-sm text-red-primary">+{task.punishment_hours}h lock time extension</p>
+                                        <p className="text-sm text-red-500">+{task.punishment_hours}h lock time extension</p>
                                     )}
                                     {task.punishment_additional && (
-                                        <p className="text-sm text-text-secondary mt-1">{task.punishment_additional}</p>
+                                        <p className="text-sm text-white/85 mt-1">{task.punishment_additional}</p>
                                     )}
                                 </div>
                             </div>
@@ -210,8 +210,8 @@ function TaskDetailModal({
                     {/* Deadline */}
                     {task.deadline && (
                         <div className="text-center">
-                            <span className="text-sm text-text-tertiary">Deadline: </span>
-                            <span className={`text-sm font-mono font-bold ${formatTimeLeft(new Date(task.deadline)) === 'OVERDUE' ? 'text-red-primary' : 'text-text-primary'}`}>
+                            <span className="text-sm text-white/30">Deadline: </span>
+                            <span className={`text-sm font-mono font-bold ${formatTimeLeft(new Date(task.deadline)) === 'OVERDUE' ? 'text-[var(--accent)]' : 'text-white'}`}>
                                 {formatTimeLeft(new Date(task.deadline))}
                             </span>
                         </div>
@@ -221,16 +221,16 @@ function TaskDetailModal({
                 {/* Proof Requirement Info for master tasks */}
                 {task.proof_type && (
                     <div className="px-6 space-y-3 mb-6">
-                        <div className="bg-purple-primary/5 border border-purple-primary/20 rounded-xl p-4">
-                            <p className="text-xs font-bold text-purple-primary uppercase mb-1">
+                        <div className="bg-zinc-800 rounded-xl p-4">
+                            <p className="text-xs font-bold text-white/60 uppercase mb-1">
                                 {PROOF_TYPE_ICONS[task.proof_type]} Proof Required: {task.proof_type.toUpperCase()}
                             </p>
                             {task.verification_requirement && (
-                                <p className="text-sm text-text-secondary">{task.verification_requirement}</p>
+                                <p className="text-sm text-white/85">{task.verification_requirement}</p>
                             )}
                         </div>
                         {task.status === 'awaiting_proof' && task.ai_verification_reason && task.ai_verification_reason.toUpperCase().includes('FAIL') && (
-                            <div className="bg-red-primary/10 border border-red-primary/30 rounded-xl p-4">
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
                                 <p className="text-xs font-bold text-red-500 uppercase mb-1">Proof Rejected</p>
                                 <p className="text-sm text-red-200 whitespace-pre-line">{task.ai_verification_reason}</p>
                             </div>
@@ -239,7 +239,7 @@ function TaskDetailModal({
                 )}
 
                 {/* Actions */}
-                <div className="p-6 border-t border-white/5 space-y-3 grid grid-cols-2 gap-3">
+                <div className="p-6 border-t border-zinc-800 space-y-3 grid grid-cols-2 gap-3">
                     <Button
                         variant="danger"
                         className="w-full"
@@ -309,8 +309,8 @@ function HistoryTaskDetailModal({
     const xp = XP_BY_DIFFICULTY[task.difficulty] ?? 0
 
     const outcomeColor = isCompleted
-        ? 'text-teal-primary border-teal-primary/20 bg-teal-primary/5'
-        : 'text-red-primary border-red-primary/20 bg-red-primary/5'
+        ? 'text-teal-400 border-teal-400/20 bg-teal-400/5'
+        : 'text-red-500 border-red-500/20 bg-red-500/5'
 
     const outcomeLabel = task.status === 'verified'
         ? '✅ Verified by AI'
@@ -322,12 +322,12 @@ function HistoryTaskDetailModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-bg-secondary border border-white/10 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex items-start justify-between p-6 border-b border-white/5">
+                <div className="flex items-start justify-between p-6 border-b border-zinc-800">
                     <div className="space-y-2 flex-1 pr-4">
                         <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-mono text-text-tertiary uppercase">
+                            <span className="text-xs font-mono text-white/30 uppercase">
                                 {TASK_TYPE_LABELS[task.task_type] ?? '📋 Task'}
                             </span>
                         </div>
@@ -344,7 +344,7 @@ function HistoryTaskDetailModal({
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors shrink-0">
-                        <X size={20} className="text-text-tertiary" />
+                        <X size={20} className="text-white/30" />
                     </button>
                 </div>
 
@@ -379,57 +379,57 @@ function HistoryTaskDetailModal({
                 <div className="p-6 space-y-5">
                     {/* Instructions */}
                     <div>
-                        <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wide mb-2">Instructions</h3>
-                        <p className="text-sm text-text-secondary whitespace-pre-line leading-relaxed">
+                        <h3 className="text-xs font-semibold text-white/30 uppercase tracking-wide mb-2">Instructions</h3>
+                        <p className="text-sm text-white/85 whitespace-pre-line leading-relaxed">
                             {task.description || '—'}
                         </p>
                     </div>
 
                     {/* Stats row */}
                     <div className="grid grid-cols-3 gap-3">
-                        <div className="bg-bg-tertiary rounded-xl p-3 text-center">
+                        <div className="bg-zinc-800 rounded-xl p-3 text-center">
                             <div className="text-base font-bold font-mono">
                                 {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
                             </div>
-                            <div className="text-[10px] text-text-tertiary mt-1">Difficulty</div>
+                            <div className="text-[10px] text-white/30 mt-1">Difficulty</div>
                         </div>
-                        <div className="bg-bg-tertiary rounded-xl p-3 text-center">
+                        <div className="bg-zinc-800 rounded-xl p-3 text-center">
                             <div className="text-base font-bold font-mono flex items-center justify-center gap-1">
                                 <Clock size={13} /> {task.duration_minutes}m
                             </div>
-                            <div className="text-[10px] text-text-tertiary mt-1">Duration</div>
+                            <div className="text-[10px] text-white/30 mt-1">Duration</div>
                         </div>
-                        <div className="bg-bg-tertiary rounded-xl p-3 text-center">
+                        <div className="bg-zinc-800 rounded-xl p-3 text-center">
                             <div className="text-base font-bold">
                                 {isCompleted ? (
-                                    <span className="text-teal-primary">+{xp}</span>
+                                    <span className="text-teal-400">+{xp}</span>
                                 ) : (
-                                    <span className="text-red-primary">0</span>
+                                    <span className="text-red-500">0</span>
                                 )}
                             </div>
-                            <div className="text-[10px] text-text-tertiary mt-1">XP Earned</div>
+                            <div className="text-[10px] text-white/30 mt-1">XP Earned</div>
                         </div>
                     </div>
 
                     {/* Proof type */}
                     {task.proof_type && (
-                        <div className="bg-purple-primary/5 border border-purple-primary/20 rounded-xl p-4">
-                            <p className="text-xs font-bold text-purple-primary uppercase mb-1">
+                        <div className="bg-zinc-800 rounded-xl p-4">
+                            <p className="text-xs font-bold text-white/60 uppercase mb-1">
                                 {PROOF_TYPE_ICONS[task.proof_type]} Proof Required: {task.proof_type.toUpperCase()}
                             </p>
                             {task.verification_requirement && (
-                                <p className="text-sm text-text-secondary mt-1">{task.verification_requirement}</p>
+                                <p className="text-sm text-white/85 mt-1">{task.verification_requirement}</p>
                             )}
                         </div>
                     )}
 
                     {/* AI feedback on verification */}
                     {task.ai_verification_reason && (
-                        <div className={`rounded-xl border p-4 ${isCompleted ? 'bg-teal-primary/5 border-teal-primary/20' : 'bg-red-primary/5 border-red-primary/20'}`}>
-                            <p className={`text-xs font-bold uppercase mb-2 ${isCompleted ? 'text-teal-primary' : 'text-red-primary'}`}>
+                        <div className={`rounded-xl border p-4 ${isCompleted ? 'bg-teal-400/5 border-teal-400/20' : 'bg-red-500/5 border-red-500/20'}`}>
+                            <p className={`text-xs font-bold uppercase mb-2 ${isCompleted ? 'text-teal-400' : 'text-red-500'}`}>
                                 AI Feedback
                             </p>
-                            <p className="text-sm text-text-secondary whitespace-pre-line leading-relaxed">
+                            <p className="text-sm text-white/85 whitespace-pre-line leading-relaxed">
                                 {task.ai_verification_reason}
                             </p>
                         </div>
@@ -437,18 +437,18 @@ function HistoryTaskDetailModal({
 
                     {/* Punishment applied */}
                     {(task.punishment_hours || task.punishment_additional) && (
-                        <div className="bg-red-primary/5 border border-red-primary/20 rounded-xl p-4">
+                        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4">
                             <div className="flex items-start gap-2">
-                                <AlertTriangle size={14} className="text-red-primary shrink-0 mt-0.5" />
+                                <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-xs font-bold text-red-primary uppercase mb-1">
+                                    <p className="text-xs font-bold text-red-500 uppercase mb-1">
                                         Punishment Applied
                                     </p>
                                     {task.punishment_hours && (
-                                        <p className="text-sm text-red-primary">+{task.punishment_hours}h lock extension</p>
+                                        <p className="text-sm text-red-500">+{task.punishment_hours}h lock extension</p>
                                     )}
                                     {task.punishment_additional && (
-                                        <p className="text-sm text-text-secondary mt-1">{task.punishment_additional}</p>
+                                        <p className="text-sm text-white/85 mt-1">{task.punishment_additional}</p>
                                     )}
                                 </div>
                             </div>
@@ -457,7 +457,7 @@ function HistoryTaskDetailModal({
 
                     {/* Deadline (when it was due) */}
                     {task.deadline && (
-                        <div className="text-xs text-text-tertiary font-mono text-center">
+                        <div className="text-xs text-white/30 font-mono text-center">
                             Deadline was: {new Date(task.deadline).toLocaleString()}
                         </div>
                     )}
@@ -689,10 +689,10 @@ export default function TasksPage() {
         <>
             <TopBar />
 
-            <div className="min-h-screen pb-24 lg:pb-8 p-4">
+            <div className="min-h-screen bg-black pb-24 lg:pb-8 p-4">
                 {authLoading ? (
                     <div className="flex h-[50vh] items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-purple-primary" />
+                        <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)]" />
                     </div>
                 ) : (
                     <div className="max-w-4xl mx-auto">
@@ -705,7 +705,7 @@ export default function TasksPage() {
                                     </Badge>
                                 )}
                                 <Badge variant="locked">{activeTasks.length} Active</Badge>
-                                <div className="text-xs text-text-tertiary font-mono">
+                                <div className="text-xs text-white/30 font-mono">
                                     {dailyTaskCount}/{DAILY_LIMIT}
                                 </div>
                                 <Button
@@ -733,11 +733,11 @@ export default function TasksPage() {
 
                         {/* Daily Limit Warning */}
                         {dailyLimitReached && (
-                            <div className="mb-6 bg-red-primary/5 border border-red-primary/20 rounded-xl p-4 text-center">
-                                <p className="text-red-primary font-mono text-sm font-bold">
+                            <div className="mb-6 bg-[var(--accent)]/5 border border-[var(--accent)]/20 rounded-xl p-4 text-center">
+                                <p className="text-[var(--accent)] font-mono text-sm font-bold">
                                     You&apos;ve used all {DAILY_LIMIT} tasks for today.
                                 </p>
-                                <p className="text-xs text-text-tertiary mt-1">
+                                <p className="text-xs text-white/30 mt-1">
                                     Come back tomorrow, slave. Your Master decides when you&apos;ve had enough.
                                 </p>
                             </div>
@@ -763,12 +763,12 @@ export default function TasksPage() {
                                         { label: 'Night', window: '8pm–midnight', task: nightCheckin },
                                     ] as const).map(({ label, window, task }) => {
                                         const statusColor = !task
-                                            ? 'text-text-tertiary'
+                                            ? 'text-white/30'
                                             : task.status === 'completed' || task.status === 'verified'
-                                                ? 'text-green-400'
+                                                ? 'text-emerald-400'
                                                 : task.status === 'failed'
-                                                    ? 'text-red-400'
-                                                    : 'text-yellow-400'
+                                                    ? 'text-[var(--accent)]'
+                                                    : 'text-amber-400'
                                         const statusLabel = !task
                                             ? 'Not yet'
                                             : task.status === 'completed' || task.status === 'verified'
@@ -784,9 +784,9 @@ export default function TasksPage() {
                                         const isDone = task && ['completed', 'verified'].includes(task.status)
                                         const canSubmit = task && ['pending', 'active', 'awaiting_proof', 'failed'].includes(task.status) && windowIsOpen
                                         return (
-                                            <div key={label} className={`bg-bg-secondary border rounded-xl p-3 space-y-2 ${task?.status === 'failed' ? 'border-red-400/30' : 'border-teal-400/20'}`}>
-                                                <p className="text-xs font-semibold text-text-tertiary uppercase">{label}</p>
-                                                <p className="text-[10px] text-text-tertiary">{window}</p>
+                                            <div key={label} className={`bg-zinc-900 border rounded-xl p-3 space-y-2 ${task?.status === 'failed' ? 'border-[var(--accent)]/30' : 'border-teal-400/20'}`}>
+                                                <p className="text-xs font-semibold text-white/30 uppercase">{label}</p>
+                                                <p className="text-[10px] text-white/30">{window}</p>
                                                 <p className={`text-sm font-bold ${statusColor}`}>{statusLabel}</p>
                                                 {canSubmit && (
                                                     <Button
@@ -800,7 +800,7 @@ export default function TasksPage() {
                                                     </Button>
                                                 )}
                                                 {!windowIsOpen && !isDone && (
-                                                    <p className="text-[10px] text-text-tertiary text-center pt-1">
+                                                    <p className="text-[10px] text-white/30 text-center pt-1">
                                                         Opens at {windowOpenLabel}
                                                     </p>
                                                 )}
@@ -814,27 +814,27 @@ export default function TasksPage() {
                         {/* Master Tasks */}
                         {masterTasks.length > 0 && (
                             <div className="space-y-3 mb-6">
-                                <h2 className="text-lg font-bold text-red-400 flex items-center gap-2">
+                                <h2 className="text-lg font-bold text-[var(--accent)] flex items-center gap-2">
                                     ⚔ Master Tasks
-                                    <span className="text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">
+                                    <span className="text-xs bg-[var(--accent)]/20 text-[var(--accent)] px-2 py-0.5 rounded-full">
                                         {masterTasks.length} active
                                     </span>
                                 </h2>
-                                {masterTasks.map(task => (
-                                    <div key={task.id} className="border border-red-500/50 bg-red-500/5 rounded-lg p-4 cursor-pointer hover:bg-red-500/10 transition-colors" onClick={() => setDetailTask(task)}>
+                                {masterTasks.map((task, index) => (
+                                    <div key={task.id} className="bg-zinc-900 border border-zinc-800 border-l-4 border-l-[var(--accent)] rounded-xl p-4 cursor-pointer card-hover animate-card-in" style={{ animationDelay: `${index * 0.05}s` }} onClick={() => setDetailTask(task)}>
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <p className="font-semibold text-white">{task.title}</p>
                                                     {task.proof_type && (
-                                                        <span className="text-xs bg-purple-primary/20 text-purple-primary px-2 py-0.5 rounded-full">
+                                                        <span className="text-xs bg-zinc-800 text-white/60 px-2 py-0.5 rounded-full">
                                                             {PROOF_TYPE_ICONS[task.proof_type]} {task.proof_type.toUpperCase()}
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-sm text-gray-400 mt-1 line-clamp-2">{task.description}</p>
+                                                <p className="text-sm text-white/50 mt-1 line-clamp-2">{task.description}</p>
                                                 {(task.punishment_type || task.punishment_hours) && (
-                                                    <div className="mt-2 flex items-center gap-1 text-xs text-red-400">
+                                                    <div className="mt-2 flex items-center gap-1 text-xs text-[var(--accent)]">
                                                         <AlertTriangle size={12} />
                                                         {task.punishment_hours ? `+${task.punishment_hours}h lock extension on failure` : 'Punishment on failure'}
                                                     </div>
@@ -850,8 +850,8 @@ export default function TasksPage() {
                                         {(['active', 'awaiting_proof'].includes(task.status)) && (
                                             <>
                                                 {task.status === 'awaiting_proof' && task.ai_verification_reason && task.ai_verification_reason.toUpperCase().includes('FAIL') && (
-                                                    <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                                                        <p className="text-xs text-red-400 font-semibold mb-1">Proof Rejected:</p>
+                                                    <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+                                                        <p className="text-xs text-[var(--accent)] font-semibold mb-1">Proof Rejected:</p>
                                                         <p className="text-xs text-red-200 line-clamp-2">{task.ai_verification_reason}</p>
                                                     </div>
                                                 )}
@@ -866,7 +866,7 @@ export default function TasksPage() {
                                             </>
                                         )}
                                         {task.status === 'proof_submitted' && (
-                                            <div className="mt-3 flex items-center gap-2 text-xs text-purple-primary" onClick={e => e.stopPropagation()}>
+                                            <div className="mt-3 flex items-center gap-2 text-xs text-[var(--accent)]" onClick={e => e.stopPropagation()}>
                                                 <Loader2 size={14} className="animate-spin" /> Verifying proof...
                                             </div>
                                         )}
@@ -891,10 +891,10 @@ export default function TasksPage() {
                                         {punishmentTasks.length} active
                                     </span>
                                 </h2>
-                                {punishmentTasks.map(task => (
-                                    <div key={task.id} className="border border-orange-500/50 bg-orange-500/5 rounded-lg p-4 cursor-pointer hover:bg-orange-500/10 transition-colors" onClick={() => setDetailTask(task)}>
+                                {punishmentTasks.map((task, index) => (
+                                    <div key={task.id} className="bg-zinc-900 border border-zinc-800 border-l-4 border-l-orange-500 rounded-xl p-4 cursor-pointer card-hover animate-card-in" style={{ animationDelay: `${index * 0.05}s` }} onClick={() => setDetailTask(task)}>
                                         <p className="font-semibold text-white">{task.title}</p>
-                                        <p className="text-sm text-gray-400 mt-1 line-clamp-2">{task.description}</p>
+                                        <p className="text-sm text-white/50 mt-1 line-clamp-2">{task.description}</p>
                                         {task.deadline && (
                                             <div className="mt-2 text-xs text-orange-300">
                                                 <DeadlineTimer deadline={new Date(task.deadline)} />
@@ -925,16 +925,16 @@ export default function TasksPage() {
                         {/* Daily Tasks */}
                         <div className="space-y-4">
                             {(masterTasks.length > 0 || punishmentTasks.length > 0) && (
-                                <h2 className="text-lg font-bold text-text-secondary flex items-center gap-2">
+                                <h2 className="text-lg font-bold text-white/85 flex items-center gap-2">
                                     Daily Tasks
-                                    <span className="text-xs bg-white/10 text-text-tertiary px-2 py-0.5 rounded-full">
+                                    <span className="text-xs bg-white/10 text-white/30 px-2 py-0.5 rounded-full">
                                         {activeTasks.length} active
                                     </span>
                                 </h2>
                             )}
                             {activeTasks.length === 0 && (
                                 <Card variant="flat" className="text-center py-12">
-                                    <p className="text-text-tertiary mb-4">No active tasks. Generate one to begin.</p>
+                                    <p className="text-white/30 mb-4">No active tasks. Generate one to begin.</p>
                                     <Button variant="primary" onClick={handleGenerateTask} disabled={generating}>
                                         <Sparkles size={14} className="mr-1" /> Generate Task
                                     </Button>
@@ -942,11 +942,10 @@ export default function TasksPage() {
                             )}
 
                             {activeTasks.map((task, index) => (
-                                <Card
+                                <div
                                     key={task.id}
-                                    variant="raised"
-                                    className="space-y-4 animate-fade-in cursor-pointer hover:border-purple-primary/30 transition-colors"
-                                    style={{ animationDelay: `${index * 100}ms` }}
+                                    className="bg-zinc-900 border border-zinc-800 rounded-xl card-hover animate-card-in space-y-4 p-4 cursor-pointer"
+                                    style={{ animationDelay: `${index * 0.05}s` }}
                                     onClick={() => setDetailTask(task)}
                                 >
                                     {/* Header */}
@@ -965,12 +964,12 @@ export default function TasksPage() {
                                     </div>
 
                                     {/* Description Preview */}
-                                    <p className="text-text-secondary text-sm whitespace-pre-line leading-relaxed line-clamp-2">
+                                    <p className="text-white/85 text-sm whitespace-pre-line leading-relaxed line-clamp-2">
                                         {task.description}
                                     </p>
 
                                     {/* Meta */}
-                                    <div className="flex items-center gap-4 text-sm text-text-tertiary">
+                                    <div className="flex items-center gap-4 text-sm text-white/30">
                                         <span className="flex items-center gap-1">
                                             <Clock size={14} />
                                             {task.duration_minutes}min
@@ -981,13 +980,13 @@ export default function TasksPage() {
                                     </div>
 
                                     {/* Footer */}
-                                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                                    <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
                                         <div className="text-sm font-mono">
-                                            <span className="text-text-tertiary">Deadline: </span>
+                                            <span className="text-white/30">Deadline: </span>
                                             <span className={
                                                 task.deadline && formatTimeLeft(new Date(task.deadline)) === 'OVERDUE'
-                                                    ? 'text-red-primary'
-                                                    : 'text-text-primary'
+                                                    ? 'text-[var(--accent)]'
+                                                    : 'text-white'
                                             }>
                                                 {task.deadline ? formatTimeLeft(new Date(task.deadline)) : '—'}
                                             </span>
@@ -1012,17 +1011,17 @@ export default function TasksPage() {
 
                                     {/* Proof Rejection Warning */}
                                     {task.status === 'awaiting_proof' && task.ai_verification_reason && task.ai_verification_reason.toUpperCase().includes('FAIL') && (
-                                        <div className="bg-red-primary/10 border border-red-primary/30 rounded-[var(--radius-md)] p-3">
-                                            <p className="text-xs font-bold text-red-500 uppercase mb-1">Proof Rejected</p>
+                                        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+                                            <p className="text-xs font-bold text-[var(--accent)] uppercase mb-1">Proof Rejected</p>
                                             <p className="text-xs text-red-200 line-clamp-2">{task.ai_verification_reason}</p>
                                         </div>
                                     )}
 
                                     {/* Punishment Warning */}
                                     {(task.punishment_type || task.punishment_hours) && (
-                                        <div className="bg-red-primary/5 border border-red-primary/20 rounded-[var(--radius-md)] p-3 flex items-start gap-2">
-                                            <AlertTriangle size={14} className="text-red-primary shrink-0 mt-0.5" />
-                                            <div className="text-xs text-red-primary">
+                                        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-3 flex items-start gap-2">
+                                            <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />
+                                            <div className="text-xs text-red-500">
                                                 <span className="font-bold block mb-1">FAILURE PUNISHMENT</span>
                                                 {task.punishment_hours && (
                                                     <p>+ {task.punishment_hours}h lock time extension</p>
@@ -1033,7 +1032,7 @@ export default function TasksPage() {
                                             </div>
                                         </div>
                                     )}
-                                </Card>
+                                </div>
                             ))}
                         </div>
 
@@ -1061,17 +1060,17 @@ export default function TasksPage() {
                                                             <p className="text-sm font-medium truncate">{task.title}</p>
                                                             <div className="flex items-center gap-3 mt-0.5">
                                                                 <span className="text-xs text-orange-400/70">⏰ Expired</span>
-                                                                <span className="text-xs text-text-tertiary font-mono">
+                                                                <span className="text-xs text-white/30 font-mono">
                                                                     {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
                                                                 </span>
                                                                 {task.punishment_hours && (
-                                                                    <span className="text-xs text-red-400/70">+{task.punishment_hours}h</span>
+                                                                    <span className="text-xs text-[var(--accent)]/70">+{task.punishment_hours}h</span>
                                                                 )}
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-2 shrink-0">
                                                             <Badge variant="locked">OVERDUE</Badge>
-                                                            <ChevronRight size={14} className="text-text-tertiary" />
+                                                            <ChevronRight size={14} className="text-white/30" />
                                                         </div>
                                                     </div>
                                                 </Card>
@@ -1102,18 +1101,18 @@ export default function TasksPage() {
                                                         <div className="min-w-0 flex-1">
                                                             <p className="text-sm font-medium truncate">{task.title}</p>
                                                             <div className="flex items-center gap-3 mt-0.5">
-                                                                <span className="text-xs text-red-400/70">❌ Failed</span>
-                                                                <span className="text-xs text-text-tertiary font-mono">
+                                                                <span className="text-xs text-[var(--accent)]/70">❌ Failed</span>
+                                                                <span className="text-xs text-white/30 font-mono">
                                                                     {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
                                                                 </span>
-                                                                <span className="text-xs text-red-400/70 font-mono">
+                                                                <span className="text-xs text-[var(--accent)]/70 font-mono">
                                                                     -{Math.ceil(task.difficulty * 2)} WP
                                                                 </span>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-2 shrink-0">
                                                             <Badge variant="locked">FAILED</Badge>
-                                                            <ChevronRight size={14} className="text-text-tertiary" />
+                                                            <ChevronRight size={14} className="text-white/30" />
                                                         </div>
                                                     </div>
                                                 </Card>
@@ -1147,7 +1146,7 @@ export default function TasksPage() {
                                                                 <span className="text-xs text-teal-400/70">
                                                                     {task.status === 'verified' ? '✅ Verified' : '✅ Done'}
                                                                 </span>
-                                                                <span className="text-xs text-text-tertiary font-mono">
+                                                                <span className="text-xs text-white/30 font-mono">
                                                                     {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
                                                                 </span>
                                                                 <span className="text-xs text-teal-400/70 font-mono">
@@ -1159,7 +1158,7 @@ export default function TasksPage() {
                                                             <Badge variant="info">
                                                                 {task.status === 'verified' ? '✅ VERIFIED' : 'DONE'}
                                                             </Badge>
-                                                            <ChevronRight size={14} className="text-text-tertiary" />
+                                                            <ChevronRight size={14} className="text-white/30" />
                                                         </div>
                                                     </div>
                                                 </Card>
@@ -1205,25 +1204,25 @@ export default function TasksPage() {
             {/* Create Entry Modal */}
             {showCreateForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-bg-secondary border border-white/10 rounded-2xl max-w-md w-full p-6 space-y-5">
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 space-y-5">
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-bold flex items-center gap-2">
-                                <Plus size={18} className="text-purple-primary" /> New Entry
+                                <Plus size={18} className="text-[var(--accent)]" /> New Entry
                             </h2>
                             <button onClick={() => setShowCreateForm(false)} className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                                <X size={18} className="text-text-tertiary" />
+                                <X size={18} className="text-white/30" />
                             </button>
                         </div>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setCreateType('journal')}
-                                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${createType === 'journal' ? 'bg-purple-primary/20 border-purple-primary/50 text-purple-primary' : 'bg-bg-tertiary border-white/5 text-text-tertiary'}`}
+                                className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors ${createType === 'journal' ? 'bg-[var(--accent)]/20 border-[var(--accent)]/50 text-[var(--accent)]' : 'bg-zinc-800 border-zinc-700 text-white/30'}`}
                             >
                                 <BookOpen size={14} className="inline mr-1" /> Journal
                             </button>
                             <button
                                 onClick={() => setCreateType('task')}
-                                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${createType === 'task' ? 'bg-purple-primary/20 border-purple-primary/50 text-purple-primary' : 'bg-bg-tertiary border-white/5 text-text-tertiary'}`}
+                                className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors ${createType === 'task' ? 'bg-[var(--accent)]/20 border-[var(--accent)]/50 text-[var(--accent)]' : 'bg-zinc-800 border-zinc-700 text-white/30'}`}
                             >
                                 <CheckCircle size={14} className="inline mr-1" /> Self Task
                             </button>
@@ -1234,18 +1233,18 @@ export default function TasksPage() {
                                 placeholder={createType === 'journal' ? 'Entry title...' : 'Task title...'}
                                 value={createTitle}
                                 onChange={e => setCreateTitle(e.target.value)}
-                                className="w-full bg-bg-tertiary border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-purple-primary/50 placeholder:text-text-tertiary"
+                                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 text-sm focus:outline-none focus:border-[var(--accent)]/50 placeholder:text-white/30"
                             />
                             <textarea
                                 placeholder={createType === 'journal' ? 'Write your thoughts...' : 'Describe the task...'}
                                 value={createNotes}
                                 onChange={e => setCreateNotes(e.target.value)}
                                 rows={4}
-                                className="w-full bg-bg-tertiary border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-purple-primary/50 placeholder:text-text-tertiary resize-none"
+                                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 text-sm focus:outline-none focus:border-[var(--accent)]/50 placeholder:text-white/30 resize-none"
                             />
                             {createType === 'task' && (
                                 <div>
-                                    <label className="text-xs text-text-tertiary mb-1 block">Difficulty: {createDifficulty}/5</label>
+                                    <label className="text-xs text-white/30 mb-1 block">Difficulty: {createDifficulty}/5</label>
                                     <input
                                         type="range"
                                         min={1}
