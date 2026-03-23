@@ -404,7 +404,7 @@ export default function DashboardPage() {
                             <div className="space-y-4 animate-card-in" style={{ animationDelay: '0.1s' }}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <Target size={16} className="text-red-500" />
+                                        <Target size={16} className="text-[var(--accent)]" />
                                         <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
                                             Current Task
                                         </h3>
