@@ -40,29 +40,29 @@ function SessionSummaryOverlay({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 overflow-y-auto">
-            <div className="bg-gray-900 border border-gray-700 rounded-xl max-w-lg w-full p-6 space-y-4 my-4">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl max-w-lg w-full p-6 space-y-4 my-4">
                 <div className="text-center">
                     <div className="text-4xl mb-2">🏁</div>
                     <h2 className="text-2xl font-bold">Session Complete</h2>
-                    <p className="text-gray-400 text-sm mt-1">
+                    <p className="text-white/50 text-sm mt-1">
                         {grade && <>Grade: <span className="text-white font-bold text-lg">{grade}</span>{' · '}</>}
                         {compliance !== null && <>Compliance: <span className="text-white">{compliance}%</span></>}
                     </p>
                 </div>
 
                 {narrative && (
-                    <div className="bg-gray-800 rounded-lg p-4 text-sm text-gray-200 italic leading-relaxed">
+                    <div className="bg-zinc-800/50 rounded-xl p-4 text-sm text-white/85 italic leading-relaxed">
                         {narrative}
                     </div>
                 )}
 
                 {highlights.length > 0 && (
                     <div>
-                        <p className="text-sm font-semibold text-green-400 mb-2">Highlights</p>
+                        <p className="text-sm font-semibold text-emerald-400 mb-2">Highlights</p>
                         <ul className="space-y-1">
                             {highlights.map((h, i) => (
-                                <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
-                                    <span className="text-green-400 mt-0.5">✓</span> {h}
+                                <li key={i} className="text-sm text-white/85 flex items-start gap-2">
+                                    <span className="text-emerald-400 mt-0.5">✓</span> {h}
                                 </li>
                             ))}
                         </ul>
@@ -71,11 +71,11 @@ function SessionSummaryOverlay({
 
                 {improvements.length > 0 && (
                     <div>
-                        <p className="text-sm font-semibold text-yellow-400 mb-2">Areas to Improve</p>
+                        <p className="text-sm font-semibold text-amber-400 mb-2">Areas to Improve</p>
                         <ul className="space-y-1">
                             {improvements.map((a, i) => (
-                                <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
-                                    <span className="text-yellow-400 mt-0.5">→</span> {a}
+                                <li key={i} className="text-sm text-white/85 flex items-start gap-2">
+                                    <span className="text-amber-400 mt-0.5">→</span> {a}
                                 </li>
                             ))}
                         </ul>
@@ -83,7 +83,7 @@ function SessionSummaryOverlay({
                 )}
 
                 {isArchiving && (
-                    <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+                    <div className="flex items-center justify-center gap-2 text-sm text-white/50">
                         <Loader2 size={14} className="animate-spin" />
                         Archiving session data...
                     </div>
@@ -91,7 +91,8 @@ function SessionSummaryOverlay({
 
                 <button
                     onClick={onContinue}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold transition-colors"
+                    className="w-full py-3 rounded-xl font-semibold text-white transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: 'var(--accent)' }}
                 >
                     Continue
                 </button>
@@ -303,7 +304,7 @@ export default function DashboardPage() {
                 />
             )}
 
-            <div className="min-h-screen pb-24 lg:pb-8">
+            <div className="min-h-screen bg-black pb-24 lg:pb-8">
                 {/* Progressive Onboarding Banner removed */}
 
                 {(authLoading || (loading && user)) ? (
@@ -362,7 +363,7 @@ export default function DashboardPage() {
 
                         {/* Willpower */}
                         <BentoItem>
-                            <div className="space-y-4">
+                            <div className="space-y-4 animate-card-in" style={{ animationDelay: '0.05s' }}>
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">
                                         Willpower
@@ -399,7 +400,7 @@ export default function DashboardPage() {
 
                         {/* Current Task */}
                         <BentoItem span="wide">
-                            <div className="space-y-4">
+                            <div className="space-y-4 animate-card-in" style={{ animationDelay: '0.1s' }}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <Target size={16} className="text-red-primary" />
@@ -448,7 +449,7 @@ export default function DashboardPage() {
 
                         {/* Compliance Streak */}
                         <BentoItem>
-                            <div className="text-center space-y-3">
+                            <div className="text-center space-y-3 animate-card-in" style={{ animationDelay: '0.15s' }}>
                                 <Flame size={32} className="mx-auto text-tier-slave" />
                                 <div>
                                     <div className="text-4xl font-bold font-mono">
@@ -472,7 +473,7 @@ export default function DashboardPage() {
 
                         {/* Next Release */}
                         <BentoItem>
-                            <div className="space-y-3">
+                            <div className="space-y-3 animate-card-in" style={{ animationDelay: '0.2s' }}>
                                 <div className="flex items-center gap-2">
                                     <Calendar size={16} className="text-teal-primary" />
                                     <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">
@@ -493,7 +494,7 @@ export default function DashboardPage() {
 
                         {/* Session Stats */}
                         <BentoItem>
-                            <div className="space-y-3">
+                            <div className="space-y-3 animate-card-in" style={{ animationDelay: '0.25s' }}>
                                 <div className="flex items-center gap-2">
                                     <TrendingUp size={16} className="text-teal-primary" />
                                     <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">
@@ -531,7 +532,7 @@ export default function DashboardPage() {
 
                         {/* Quick Links */}
                         <BentoItem>
-                            <div className="space-y-3">
+                            <div className="space-y-3 animate-card-in" style={{ animationDelay: '0.3s' }}>
                                 <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide">Quick Access</h3>
                                 <div className="grid grid-cols-2 gap-2">
                                     <Link href="/achievements" className="p-3 bg-bg-tertiary hover:bg-bg-hover rounded-[var(--radius-md)] border border-white/5 transition-colors flex items-center gap-2">
