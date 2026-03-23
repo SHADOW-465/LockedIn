@@ -421,6 +421,8 @@ export default function ChatPage() {
                             disabled={isLoading}
                         />
                         <button
+                            type="button"
+                            aria-label="Send message"
                             onClick={handleSend}
                             disabled={isLoading || !inputValue.trim()}
                             className="p-3 rounded-xl text-white disabled:opacity-40 transition-opacity shrink-0"
