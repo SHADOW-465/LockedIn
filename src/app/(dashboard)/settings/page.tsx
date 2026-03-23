@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle, Loader2 } from 'lucide-react'
+import Link from 'next/link'
 import { ProfileStrengthRing } from '@/components/features/profile/profile-strength-ring'
 import { MasterPreferenceEditor } from '@/components/features/profile/editors/master-preference-editor'
 import { SessionIntentEditor } from '@/components/features/profile/editors/session-intent-editor'
@@ -393,8 +394,19 @@ export default function SettingsPage() {
                 </div>
             </div>
 
+            {/* Help link */}
+            <div className="px-4 mt-6">
+                <Link href="/settings/help" className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition">
+                    <div>
+                        <p className="font-medium text-white text-sm">Help & Tutorial Guide</p>
+                        <p className="text-xs text-white/40 mt-0.5">How to use every feature in LockedIn</p>
+                    </div>
+                    <span className="text-white/30">›</span>
+                </Link>
+            </div>
+
             {/* Danger Zone */}
-            <div className="px-4 mt-8 space-y-3">
+            <div className="px-4 mt-4 space-y-3">
                 <p className="text-xs text-white/30 uppercase tracking-widest">Danger Zone</p>
 
                 {/* Emergency Release */}
