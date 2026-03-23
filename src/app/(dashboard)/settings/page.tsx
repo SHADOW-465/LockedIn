@@ -23,6 +23,7 @@ import { emergencyRelease, getActiveSession } from '@/lib/supabase/sessions'
 import { getSupabase } from '@/lib/supabase/client'
 import { signOut } from '@/lib/supabase/auth'
 import { PunishmentPoolEditor } from '@/components/features/punishment/punishment-pool-editor'
+import { THEMES, applyTheme } from '@/lib/themes'
 
 export default function SettingsPage() {
     const { user, profile, loading, refreshProfile } = useAuth()
@@ -35,6 +36,7 @@ export default function SettingsPage() {
     const [masterReview, setMasterReview] = useState<string | null>(null)
     const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false)
     const [processing, setProcessing] = useState(false)
+    const [themeChanging, setThemeChanging] = useState(false)
 
     // Check for active session on mount
     useEffect(() => {
@@ -115,6 +117,25 @@ export default function SettingsPage() {
             console.error('Sign out failed:', error)
             setProcessing(false)
         }
+    }
+
+    async function handleThemeChange(themeName: string) {
+        if (themeChanging || hasActiveSession) return
+        setThemeChanging(true)
+        // Apply immediately for instant preview
+        applyTheme(themeName)
+        const res = await fetch('/api/profile/update', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user?.id, theme: themeName }),
+        })
+        if (res.ok) {
+            await refreshProfile()
+        } else {
+            // Revert on failure
+            applyTheme(profile?.theme ?? 'crimson')
+        }
+        setThemeChanging(false)
     }
 
     if (loading) {
@@ -370,6 +391,47 @@ export default function SettingsPage() {
 
             {/* 13 Profile Cards */}
             <div className="px-4 space-y-2">
+                {/* ── Appearance ── */}
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                    <div>
+                        <p className="text-white font-semibold text-sm">Appearance</p>
+                        <p className="text-white/40 text-xs mt-0.5">Theme color — reflects your training dynamic</p>
+                    </div>
+                    <div className="flex items-center gap-3 flex-wrap">
+                        {Object.entries(THEMES).map(([key, t]) => {
+                            const isActive = (profile?.theme ?? 'crimson') === key
+                            return (
+                                <button
+                                    key={key}
+                                    title={t.label}
+                                    disabled={themeChanging || hasActiveSession}
+                                    onClick={() => handleThemeChange(key)}
+                                    className="relative flex flex-col items-center gap-1.5 disabled:opacity-40"
+                                >
+                                    <span
+                                        className="w-9 h-9 rounded-full border-2 transition-all duration-200 flex items-center justify-center"
+                                        style={{
+                                            backgroundColor: t.accent,
+                                            borderColor: isActive ? '#ffffff' : 'transparent',
+                                            boxShadow: isActive ? `0 0 0 3px ${t.accentDim}` : undefined,
+                                        }}
+                                    >
+                                        {isActive && (
+                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                                <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                        )}
+                                    </span>
+                                    <span className="text-white/40 text-[10px]">{t.label}</span>
+                                </button>
+                            )
+                        })}
+                    </div>
+                    {hasActiveSession && (
+                        <p className="text-white/30 text-xs">Theme cannot change during an active session.</p>
+                    )}
+                </div>
+
                 {cards.map((card) => (
                     <button
                         key={card.id}
