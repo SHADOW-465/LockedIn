@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase/server'
 import { getActiveSessionId } from '@/lib/supabase/session-guard'
 import type { PrivacyConstraints, CommunicationStyle, Availability, UserProfile } from '@/lib/supabase/schema'
+import { THEMES } from '@/lib/themes'
 
 // Fields allowed to update even during an active session (set via Care Mode chat)
 const SESSION_EXEMPT_FIELDS = new Set(['master_preference', 'session_intent', 'privacy_constraints'])
 
-const VALID_THEMES = new Set(['crimson', 'amethyst', 'ice', 'gold', 'obsidian', 'bone'])
+const VALID_THEMES = new Set(Object.keys(THEMES))
 
 export async function PATCH(request: NextRequest) {
     try {
