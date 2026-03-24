@@ -18,6 +18,9 @@ import { getSupabase } from '@/lib/supabase/client'
 import { getActiveSession } from '@/lib/supabase/sessions'
 import { updateTaskStatus } from '@/lib/supabase/tasks'
 import type { Task, Session } from '@/lib/supabase/schema'
+import { getDriveState } from '@/lib/google-drive/drive-client'
+import { uploadProofAfterVerification } from '@/lib/google-drive/proof-uploader'
+import { buildSessionFolderName, buildProofFilename } from '@/lib/google-drive/drive-utils'
 
 const PROOF_TYPE_ICONS: Record<string, string> = {
     image: '📸',
@@ -1197,7 +1200,41 @@ export default function TasksPage() {
                     userId={user.id}
                     sessionId={session?.id}
                     onClose={() => setProofTask(null)}
-                    onSubmitted={() => { setProofTask(null); refetch() }}
+                    onSubmitted={(result) => {
+                        setProofTask(null)
+                        refetch()
+                        // Non-blocking Drive backup after verified proof
+                        if (result.verified && result.filePath && session && proofTask) {
+                            const driveState = getDriveState()
+                            if (driveState) {
+                                const sessionFolderName = buildSessionFolderName(
+                                    session.start_time,
+                                    session.scheduled_end_time,
+                                    session.created_at
+                                )
+                                // Task schema uses assigned_at (equivalent to created_at for tasks)
+                                const driveFilename = buildProofFilename(
+                                    proofTask.assigned_at,
+                                    proofTask.task_type,
+                                    proofTask.title,
+                                    proofTask.proof_type ?? 'image'
+                                )
+                                // Parse opfsCategory and opfsFilename from filePath
+                                // filePath format: /{userId}/{sessionId}/{category}/{filename}
+                                const parts = result.filePath.split('/')
+                                const opfsCategory = parts[parts.length - 2] as 'proofs' | 'videos'
+                                const opfsFilename = parts[parts.length - 1]
+                                uploadProofAfterVerification(
+                                    user!.id,
+                                    session.id,
+                                    sessionFolderName,
+                                    driveFilename,
+                                    opfsCategory,
+                                    opfsFilename
+                                ).catch(console.error)
+                            }
+                        }
+                    }}
                 />
             )}
 

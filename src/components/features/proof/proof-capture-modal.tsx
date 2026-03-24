@@ -16,7 +16,7 @@ interface ProofCaptureModalProps {
     userId: string
     sessionId?: string
     onClose: () => void
-    onSubmitted: (result: { verified: boolean; reason: string }) => void
+    onSubmitted: (result: { verified: boolean; reason: string; filePath?: string }) => void
 }
 
 const PROOF_ICONS: Record<string, typeof Camera> = {
@@ -154,6 +154,7 @@ export function ProofCaptureModal({ task, userId, sessionId, onClose, onSubmitte
             const verResult = {
                 verified: result.verified ?? false,
                 reason: result.verificationReason || result.error || 'Unknown',
+                filePath,
             }
             setSubmitResult(verResult)
             setPhase('result')
