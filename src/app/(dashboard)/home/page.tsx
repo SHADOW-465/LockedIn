@@ -19,6 +19,8 @@ import { SessionStartFlow } from '@/components/features/session-start-flow'
 import type { SessionConfig } from '@/components/features/session-start-flow'
 import { getSupabase } from '@/lib/supabase/client'
 import { archiveSession } from '@/lib/local-storage/session-archive'
+import { getDriveState } from '@/lib/google-drive/drive-client'
+import { uploadSessionArchive } from '@/lib/google-drive/session-uploader'
 import { MoodCheckinModal } from '@/components/features/mood/mood-checkin-modal'
 import { PunishmentWheelModal } from '@/components/features/punishment/punishment-wheel-modal'
 
@@ -180,6 +182,16 @@ export default function DashboardPage() {
                     proof_documents: proofsRes.data ?? [],
                     summary: null,
                 })
+
+                // 3b. Non-blocking Drive backup
+                const driveState = getDriveState()
+                if (driveState) {
+                    const { getSessionArchive } = await import('@/lib/local-storage/session-archive')
+                    const archive = await getSessionArchive(session.id)
+                    if (archive) {
+                        uploadSessionArchive(session.user_id, archive).catch(console.error)
+                    }
+                }
 
                 // 4. Generate AI summary
                 const completedTasks = (tasksRes.data ?? []).filter((t: { status: string }) => t.status === 'completed')
