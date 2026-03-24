@@ -52,7 +52,7 @@ export function ProofCaptureModal({ task, userId, sessionId, onClose, onSubmitte
         previewUrl?: string
         durationSeconds?: number
     } | null>(null)
-    const [submitResult, setSubmitResult] = useState<{ verified: boolean; reason: string } | null>(null)
+    const [submitResult, setSubmitResult] = useState<{ verified: boolean; reason: string; filePath?: string } | null>(null)
 
     const ProofIcon = PROOF_ICONS[proofType] || FileText
 

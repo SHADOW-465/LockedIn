@@ -1220,7 +1220,7 @@ export default function TasksPage() {
                                     proofTask.proof_type ?? 'image'
                                 )
                                 // Parse opfsCategory and opfsFilename from filePath
-                                // filePath format: /{userId}/{sessionId}/{category}/{filename}
+                                // filePath format: {userId}/{sessionId}/{category}/{filename}
                                 const parts = result.filePath.split('/')
                                 const opfsCategory = parts[parts.length - 2] as 'proofs' | 'videos'
                                 const opfsFilename = parts[parts.length - 1]
