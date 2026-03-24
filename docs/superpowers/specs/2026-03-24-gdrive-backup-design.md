@@ -159,6 +159,15 @@ export function getQueue(): QueueEntry[]
 export function removeFromQueue(id: string): void
 ```
 
+#### `drive-utils.ts`
+```typescript
+export function buildSessionFolderName(startTime: string | undefined, endTime: string | undefined, fallback: string): string
+// Returns "{YYYY-MM-DD}_to_{YYYY-MM-DD}".
+// Uses startTime and endTime if present (slice to 10 chars for ISO date).
+// Falls back to fallback.slice(0, 10) for both dates if either is absent.
+```
+Both `session-uploader.ts` and `tasks/page.tsx` import and call `buildSessionFolderName` — this guarantees identical folder names across all call sites.
+
 #### `proof-uploader.ts`
 ```typescript
 export async function uploadProofAfterVerification(
@@ -202,7 +211,12 @@ export async function retryQueueEntry(userId: string, entry: QueueEntry): Promis
   ```typescript
   onSubmitted: (result: { verified: boolean; reason: string; filePath?: string }) => void
   ```
-- The modal already computes `filePath` (OPFS path like `userId/sessionId/proofs/filename.ext`) as a local variable in `handleSubmit`. It now passes this through `onSubmitted` so the caller has it.
+- The modal already computes `filePath` as a local variable in `handleSubmit`. The `verResult` object passed to `onSubmitted` must explicitly include it:
+  ```typescript
+  const verResult = { verified: result.verified ?? false, reason: ..., filePath }
+  onSubmitted(verResult)
+  ```
+  `filePath` will be `undefined` if OPFS save failed or proof type is text — callers must handle this gracefully (skip Drive upload if `filePath` is undefined).
 - **The modal does NOT call `uploadProofAfterVerification` directly** — it lacks session date info needed to build `sessionFolderName`.
 
 #### `src/app/(dashboard)/tasks/page.tsx`
