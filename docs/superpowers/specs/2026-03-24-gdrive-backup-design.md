@@ -92,7 +92,7 @@ No chat messages included.
 ### OAuth2
 
 - **Library:** Google Identity Services (GIS) — loaded via `<Script>` in the Settings page (not globally, lazy-loaded only when the Drive card is rendered)
-- **Scope:** `https://www.googleapis.com/auth/drive.file` — narrowest possible; app can only access files it created
+- **Scope:** `https://www.googleapis.com/auth/drive.file` — narrowest possible; app can only access files it created. `files.list` queries are automatically scoped to app-created files only, so `fileExists()` will not see files placed manually in the `LockedIn/` folder by the user — this is acceptable since the app only needs to avoid re-uploading its own files.
 - **Token storage:** `localStorage` key `lockedin_gdrive_state`:
   ```typescript
   interface DriveState {
@@ -102,7 +102,7 @@ No chat messages included.
     rootFolderId: string    // ID of LockedIn/ folder in Drive root
   }
   ```
-- **Token refresh:** `getValidToken()` checks `expiresAt` before every API call. If expired (or within 5 min of expiry), calls GIS `requestAccessToken()` — silent after initial consent, no popup.
+- **Token refresh:** `getValidToken()` checks `expiresAt` before every API call. If expired (or within 5 min of expiry), calls GIS `requestAccessToken()` — silent after initial consent, no popup. Because `requestAccessToken()` is callback-based (not Promise-based), `drive-client.ts` wraps it in a **singleton Promise** stored in module scope (`let _refreshPromise: Promise<string> | null`). If a refresh is already in flight, concurrent callers await the same promise rather than firing parallel consent callbacks. The singleton is cleared (`null`) in the callback's `finally` path.
 
 ### New files: `src/lib/google-drive/`
 
@@ -180,18 +180,39 @@ export async function uploadSessionArchive(
   userId: string,
   archive: SessionArchive
 ): Promise<void>
-// Builds session.json, uploads to LockedIn/{sessionFolder}/session.json.
+// Builds session.json from archive. session_data is Record<string, unknown> —
+// all field access uses optional chaining with safe fallbacks (e.g.
+// (archive.session_data as Record<string, unknown>)?.tier ?? 'Unknown').
+// Uploads to LockedIn/{sessionFolder}/session.json.
 // Then uploads any proof files from the session not yet in Drive.
 // On failure: queueFailed() + notification.
+
+export async function retryQueueEntry(userId: string, entry: QueueEntry): Promise<void>
+// For type === 'proof': reads from OPFS using entry.opfsCategory + opfsFilename, uploads.
+// For type === 'session': calls getSessionArchive(entry.sessionId) from IndexedDB to
+// retrieve the archive, then calls uploadSessionArchive(). If archive is not found in
+// IndexedDB (storage cleared), removes entry from queue and creates a notification.
+// On success: removeFromQueue(entry.id).
 ```
 
 ### Modified files
 
 #### `src/components/features/proof/proof-capture-modal.tsx`
-After receiving `verified: true` from `/api/proof/submit`:
-- If Drive is connected (`getDriveState() !== null`)
-- Derive `sessionFolderName`, `driveFilename`, `opfsCategory`, `opfsFilename` from task and proofDoc
-- Fire `uploadProofAfterVerification()` — **non-blocking** (`void` call, no await in UI path)
+- `onSubmitted` callback signature extended to include the OPFS path:
+  ```typescript
+  onSubmitted: (result: { verified: boolean; reason: string; filePath?: string }) => void
+  ```
+- The modal already computes `filePath` (OPFS path like `userId/sessionId/proofs/filename.ext`) as a local variable in `handleSubmit`. It now passes this through `onSubmitted` so the caller has it.
+- **The modal does NOT call `uploadProofAfterVerification` directly** — it lacks session date info needed to build `sessionFolderName`.
+
+#### `src/app/(dashboard)/tasks/page.tsx`
+The tasks page owns the `session` object (which has `start_time` and `scheduled_end_time`) and calls `ProofCaptureModal`. Its `onSubmitted` handler is extended to:
+- Receive `filePath` from the modal result
+- If Drive is connected and `verified: true` and `filePath` is set:
+  - Derive `sessionFolderName` from `session.start_time` / `session.scheduled_end_time`
+  - Derive `driveFilename` from task fields (date, task_type, title, proof_type)
+  - Extract `opfsCategory` and `opfsFilename` from `filePath`
+  - Fire `uploadProofAfterVerification()` — **non-blocking**
 
 #### `src/app/(dashboard)/home/page.tsx`
 In the session completion flow, after `archiveSession()` resolves:
@@ -213,14 +234,15 @@ New "Google Drive Backup" card — see UI section.
 5. Card shows connected state
 
 ### Proof upload (real-time)
-1. `proof-capture-modal` gets `verified: true`
-2. Non-blocking `uploadProofAfterVerification()` fires
-3. `getValidToken()` → refresh if needed
-4. `ensureFolder(sessionFolderName, rootFolderId)` → session subfolder ID
-5. `fileExists()` check → skip if already uploaded
-6. `uploadFile()` → Drive
-7. **Success:** done silently
-8. **Failure:** `queueFailed()` + Supabase notification
+1. `proof-capture-modal` calls `onSubmitted({ verified: true, filePath })`
+2. Tasks page `onSubmitted` handler receives `filePath`, derives `sessionFolderName` and `driveFilename` from `session` and `task`
+3. Non-blocking `uploadProofAfterVerification()` fires
+4. `getValidToken()` → returns stored token or awaits singleton refresh promise
+5. `ensureFolder(sessionFolderName, rootFolderId)` → session subfolder ID
+6. `fileExists()` check → skip if already uploaded
+7. `uploadFile()` → Drive
+8. **Success:** done silently
+9. **Failure:** `queueFailed()` + Supabase notification
 
 ### Session archive upload (after session end)
 1. Session completion flow completes `archiveSession()`
@@ -231,9 +253,11 @@ New "Google Drive Backup" card — see UI section.
 ### Past sessions upload
 1. User clicks "Upload Past Sessions" in Settings
 2. `listUserArchives(userId)` from IndexedDB
-3. For each archive: `uploadSessionArchive()` (includes proof files)
+3. For each archive sequentially: `uploadSessionArchive()` (includes proof files)
 4. `fileExists()` skips already-uploaded files
 5. Progress: "Uploading session 3 of 7…"
+6. Each file calls `getValidToken()` independently — token refresh (singleton promise) handles expiry mid-batch transparently
+7. If `getValidToken()` throws mid-batch (e.g. user revoked access): remaining sessions are queued via `queueFailed()`, batch stops, notification shown
 
 ### Retry failed upload
 1. User clicks "Retry" next to a failed item in Settings
