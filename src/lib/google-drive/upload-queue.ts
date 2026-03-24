@@ -2,17 +2,25 @@
 
 const STORAGE_KEY = 'lockedin_gdrive_queue'
 
-export interface QueueEntry {
-  id: string
-  type: 'proof' | 'session'
-  sessionId: string
-  filename: string
-  sessionFolderName: string
-  failedAt: string
-  // For proof entries only:
-  opfsCategory?: 'proofs' | 'videos'
-  opfsFilename?: string
-}
+export type QueueEntry =
+  | {
+      id: string
+      type: 'proof'
+      sessionId: string
+      filename: string
+      sessionFolderName: string
+      failedAt: string
+      opfsCategory: 'proofs' | 'videos'
+      opfsFilename: string
+    }
+  | {
+      id: string
+      type: 'session'
+      sessionId: string
+      filename: string
+      sessionFolderName: string
+      failedAt: string
+    }
 
 export function queueFailed(entry: Omit<QueueEntry, 'id' | 'failedAt'>): void {
   const queue = getQueue()

@@ -1,5 +1,6 @@
 // src/__tests__/session-uploader.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { SessionArchive } from '@/lib/local-storage/db'
 
 vi.mock('@/lib/google-drive/drive-api', () => ({
   ensureFolder: vi.fn().mockResolvedValue('folder-abc'),
@@ -36,9 +37,9 @@ import { ensureFolder, fileExists, uploadFile } from '@/lib/google-drive/drive-a
 import { queueFailed } from '@/lib/google-drive/upload-queue'
 
 const mockArchive = {
-  sessionId: 'sess-1',
-  userId: 'user-1',
-  archivedAt: '2026-02-15T12:00:00Z',
+  session_id: 'sess-1',
+  user_id: 'user-1',
+  archived_at: '2026-02-15T12:00:00Z',
   session_data: {
     id: 'sess-1',
     start_time: '2026-02-15T10:00:00Z',
@@ -63,12 +64,12 @@ beforeEach(() => {
 
 describe('uploadSessionArchive', () => {
   it('calls ensureFolder with correct session folder name', async () => {
-    await uploadSessionArchive('user-1', mockArchive as never)
+    await uploadSessionArchive('user-1', mockArchive as SessionArchive)
     expect(ensureFolder).toHaveBeenCalledWith('2026-02-15_to_2026-02-22', 'root-folder-id')
   })
 
   it('uploads session.json', async () => {
-    await uploadSessionArchive('user-1', mockArchive as never)
+    await uploadSessionArchive('user-1', mockArchive as SessionArchive)
     expect(uploadFile).toHaveBeenCalledWith(
       'folder-abc',
       'session.json',
@@ -79,13 +80,13 @@ describe('uploadSessionArchive', () => {
 
   it('skips files that already exist in Drive', async () => {
     vi.mocked(fileExists).mockResolvedValueOnce(true)
-    await uploadSessionArchive('user-1', mockArchive as never)
+    await uploadSessionArchive('user-1', mockArchive as SessionArchive)
     expect(uploadFile).not.toHaveBeenCalled()
   })
 
   it('calls queueFailed when upload throws', async () => {
     vi.mocked(uploadFile).mockRejectedValueOnce(new Error('network error'))
-    await uploadSessionArchive('user-1', mockArchive as never)
+    await uploadSessionArchive('user-1', mockArchive as SessionArchive)
     expect(queueFailed).toHaveBeenCalled()
   })
 })

@@ -3,37 +3,15 @@ import { getDriveState } from './drive-client'
 import { ensureFolder, fileExists, uploadFile } from './drive-api'
 import { queueFailed, removeFromQueue } from './upload-queue'
 import type { QueueEntry } from './upload-queue'
-import { buildSessionFolderName } from './drive-utils'
+import { buildSessionFolderName, buildProofFilename } from './drive-utils'
+import type { TaskType, ProofType } from './drive-utils'
 import { readFileFromOPFS } from '@/lib/local-storage/opfs'
 import { getSessionArchive } from '@/lib/local-storage/session-archive'
 import { getSupabase } from '@/lib/supabase/client'
 import type { SessionArchive } from '@/lib/local-storage/db'
 
-// The test mocks pass camelCase fields; the real DB type uses snake_case.
-// This union type covers both shapes transparently.
-type ArchiveInput = SessionArchive | {
-  sessionId?: string
-  userId?: string
-  archivedAt?: string
-  session_id?: string
-  user_id?: string
-  archived_at?: string
-  session_data: Record<string, unknown>
-  chat_messages: unknown[]
-  tasks: Record<string, unknown>[]
-  session_events: Record<string, unknown>[]
-  proof_documents: Record<string, unknown>[]
-  summary: Record<string, unknown> | null
-}
-
-function getField(archive: ArchiveInput, snake: string, camel: string): unknown {
-  const a = archive as Record<string, unknown>
-  return a[snake] ?? a[camel]
-}
-
-function buildSessionJson(archive: ArchiveInput): Blob {
+function buildSessionJson(archive: SessionArchive): Blob {
   const d = archive.session_data as Record<string, unknown>
-  const archivedAt = String(getField(archive, 'archived_at', 'archivedAt') ?? '')
   const tasks = (archive.tasks ?? []).map((t: Record<string, unknown>) => ({
     title: t.title ?? '',
     type: t.task_type ?? 'daily',
@@ -44,9 +22,9 @@ function buildSessionJson(archive: ArchiveInput): Blob {
   }))
 
   const json = {
-    sessionId: String(getField(archive, 'session_id', 'sessionId') ?? ''),
-    startDate: String(d?.start_time ?? archivedAt).slice(0, 10),
-    endDate: String(d?.scheduled_end_time ?? archivedAt).slice(0, 10),
+    sessionId: archive.session_id,
+    startDate: String(d?.start_time ?? archive.archived_at).slice(0, 10),
+    endDate: String(d?.scheduled_end_time ?? archive.archived_at).slice(0, 10),
     tier: String(d?.tier ?? 'Unknown'),
     aiPersonality: String(d?.ai_personality ?? 'Unknown'),
     totalDurationMinutes: Number(d?.total_duration_minutes ?? 0),
@@ -60,18 +38,15 @@ function buildSessionJson(archive: ArchiveInput): Blob {
   return new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' })
 }
 
-export async function uploadSessionArchive(userId: string, archive: ArchiveInput): Promise<void> {
+export async function uploadSessionArchive(userId: string, archive: SessionArchive): Promise<void> {
   const state = getDriveState()
   if (!state) return
 
   const d = archive.session_data as Record<string, unknown>
-  const archivedAt = String(getField(archive, 'archived_at', 'archivedAt') ?? new Date().toISOString())
-  const sessionId = String(getField(archive, 'session_id', 'sessionId') ?? '')
-
   const sessionFolderName = buildSessionFolderName(
     d?.start_time as string | undefined,
     d?.scheduled_end_time as string | undefined,
-    archivedAt
+    archive.archived_at
   )
 
   try {
@@ -94,17 +69,16 @@ export async function uploadSessionArchive(userId: string, archive: ArchiveInput
       if (parts.length < 4) continue
       const category = parts[parts.length - 2] as 'proofs' | 'videos'
       const opfsFilename = parts[parts.length - 1]
-      const { buildProofFilename } = await import('./drive-utils')
       const driveFilename = buildProofFilename(
-        String(p.created_at ?? archivedAt),
-        String(p.task_type ?? 'daily') as never,
+        String(p.created_at ?? archive.archived_at),
+        String(p.task_type ?? 'daily') as TaskType,
         String(p.title ?? opfsFilename),
-        String(p.file_type ?? 'image') as never
+        String(p.file_type ?? 'image') as ProofType
       )
 
       if (await fileExists(sessionFolderId, driveFilename)) continue
 
-      const file = await readFileFromOPFS(userId, sessionId, category, opfsFilename)
+      const file = await readFileFromOPFS(userId, archive.session_id, category, opfsFilename)
       if (!file) continue
 
       const mimeType = category === 'videos' ? 'video/webm' : 'image/jpeg'
@@ -114,7 +88,7 @@ export async function uploadSessionArchive(userId: string, archive: ArchiveInput
     console.error('[DriveSession] Upload failed:', err)
     queueFailed({
       type: 'session',
-      sessionId,
+      sessionId: archive.session_id,
       filename: 'session.json',
       sessionFolderName,
     })
@@ -145,8 +119,8 @@ export async function retryQueueEntry(userId: string, entry: QueueEntry): Promis
         entry.sessionId,
         entry.sessionFolderName,
         entry.filename,
-        entry.opfsCategory!,
-        entry.opfsFilename!
+        entry.opfsCategory,
+        entry.opfsFilename
       )
     } else {
       const archive = await getSessionArchive(entry.sessionId)

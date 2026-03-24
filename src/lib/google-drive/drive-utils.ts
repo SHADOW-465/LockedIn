@@ -1,7 +1,7 @@
 // src/lib/google-drive/drive-utils.ts
 
-type TaskType = 'daily' | 'master' | 'punishment' | 'checkin' | 'journal'
-type ProofType = 'image' | 'video' | 'audio' | 'text'
+export type TaskType = 'daily' | 'master' | 'punishment' | 'checkin' | 'journal'
+export type ProofType = 'image' | 'video' | 'audio' | 'text'
 
 /**
  * Returns "{YYYY-MM-DD}_to_{YYYY-MM-DD}" for the Drive session subfolder name.
