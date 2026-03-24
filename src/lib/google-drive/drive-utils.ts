@@ -13,24 +13,9 @@ export function buildSessionFolderName(
   fallback: string
 ): string {
   const fallbackDate = fallback.slice(0, 10)
-
-  // If both are missing, use fallback for both
-  if (!startTime && !endTime) {
+  if (!startTime || !endTime) {
     return `${fallbackDate}_to_${fallbackDate}`
   }
-
-  // If startTime is missing but endTime exists, use fallback for both
-  if (!startTime) {
-    return `${fallbackDate}_to_${fallbackDate}`
-  }
-
-  // If endTime is missing but startTime exists, use startTime for both
-  if (!endTime) {
-    const startDate = startTime.slice(0, 10)
-    return `${startDate}_to_${startDate}`
-  }
-
-  // Both exist, use them
   return `${startTime.slice(0, 10)}_to_${endTime.slice(0, 10)}`
 }
 

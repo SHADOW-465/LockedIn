@@ -15,7 +15,7 @@ describe('buildSessionFolderName', () => {
 
   it('falls back to fallback date when endTime is missing', () => {
     expect(buildSessionFolderName('2026-02-15T10:00:00Z', undefined, '2026-03-01T08:00:00Z'))
-      .toBe('2026-02-15_to_2026-02-15')
+      .toBe('2026-03-01_to_2026-03-01')
   })
 
   it('falls back to fallback date when both are missing', () => {
