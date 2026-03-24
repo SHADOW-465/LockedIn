@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
         const body = await request.json()
         const {
             taskId, userId, sessionId, proofType,
-            textContent, fileBase64, localStorageKey,
+            textContent, fileBase64, filePath, localStorageKey,
             captureMetadata,
         } = body as {
             taskId: string
@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
             proofType: 'text' | 'image' | 'video' | 'audio'
             textContent?: string
             fileBase64?: string
+            filePath?: string
             localStorageKey?: string
             captureMetadata?: {
                 device_user_agent?: string
@@ -110,7 +111,8 @@ export async function POST(request: NextRequest) {
                 user_id: userId,
                 session_id: sessionId || task.session_id || null,
                 file_type: proofType,
-                text_content: proofType === 'text' ? textContent : null,
+                file_path: filePath || null,
+                text_content: proofType === 'text' ? (textContent ?? null) : null,
                 local_storage_key: localStorageKey || null,
                 verification_status: 'pending',
             })

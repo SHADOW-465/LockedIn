@@ -8,6 +8,7 @@ import { TextProofCapture } from './text-proof-capture'
 import { ImageProofCapture } from './image-proof-capture'
 import { VideoProofCapture } from './video-proof-capture'
 import { AudioProofCapture } from './audio-proof-capture'
+import { saveFileToOPFS } from '@/lib/local-storage/opfs'
 import type { Task } from '@/lib/supabase/schema'
 
 interface ProofCaptureModalProps {
@@ -101,13 +102,31 @@ export function ProofCaptureModal({ task, userId, sessionId, onClose, onSubmitte
         if (!capturedData) return
         setPhase('submitting')
 
-        // Save to localStorage first (device persistence)
+        // Save to localStorage first (device persistence — lightweight backup)
         const storageKey = `lockedin_proof_${userId}_${task.id}_${Date.now()}`
         saveProofToLocal(storageKey, {
             type: proofType,
             content: capturedData.textContent || capturedData.fileBase64 || '',
             capturedAt: new Date().toISOString(),
         })
+
+        // Save binary proof to OPFS for permanent device storage and export
+        let filePath: string | undefined
+        if (capturedData.fileBase64 && sessionId) {
+            try {
+                const ext = proofType === 'video' ? 'webm' : proofType === 'audio' ? 'webm' : 'jpg'
+                const category: 'videos' | 'proofs' = proofType === 'video' ? 'videos' : 'proofs'
+                const filename = `${task.id}_${Date.now()}.${ext}`
+                const binaryStr = atob(capturedData.fileBase64)
+                const bytes = new Uint8Array(binaryStr.length)
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i)
+                }
+                filePath = await saveFileToOPFS(userId, sessionId, category, filename, bytes.buffer)
+            } catch (opfsErr) {
+                console.warn('[Proof] OPFS save failed — file will not be exportable:', opfsErr)
+            }
+        }
 
         try {
             const res = await fetch('/api/proof/submit', {
@@ -120,6 +139,7 @@ export function ProofCaptureModal({ task, userId, sessionId, onClose, onSubmitte
                     proofType,
                     textContent: capturedData.textContent,
                     fileBase64: capturedData.fileBase64,
+                    filePath,
                     localStorageKey: storageKey,
                     captureMetadata: {
                         device_user_agent: navigator.userAgent,

@@ -233,6 +233,8 @@ export interface ProofDocument {
     user_id: string
     session_id: string | null
     file_type: 'image' | 'video' | 'text' | 'audio'
+    file_path: string | null
+    text_content: string | null
     local_storage_key: string | null
     verification_status: 'pending' | 'passed' | 'failed'
     verified_at: string | null
