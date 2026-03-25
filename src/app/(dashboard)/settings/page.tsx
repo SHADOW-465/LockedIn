@@ -5,6 +5,8 @@ import { useAuth } from '@/lib/contexts/auth-context'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import Script from 'next/script'
+import { HardDrive, ExternalLink, RefreshCw, Loader2 as DriveLoader } from 'lucide-react'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { ProfileStrengthRing } from '@/components/features/profile/profile-strength-ring'
 import { MasterPreferenceEditor } from '@/components/features/profile/editors/master-preference-editor'
@@ -24,6 +26,10 @@ import { getSupabase } from '@/lib/supabase/client'
 import { signOut } from '@/lib/supabase/auth'
 import { PunishmentPoolEditor } from '@/components/features/punishment/punishment-pool-editor'
 import { THEMES, applyTheme } from '@/lib/themes'
+import { connectDrive, disconnectDrive, getDriveState } from '@/lib/google-drive/drive-client'
+import { getQueue, type QueueEntry } from '@/lib/google-drive/upload-queue'
+import { retryQueueEntry, uploadSessionArchive } from '@/lib/google-drive/session-uploader'
+import { listUserArchives } from '@/lib/local-storage/session-archive'
 
 export default function SettingsPage() {
     const { user, profile, loading, refreshProfile } = useAuth()
@@ -37,6 +43,11 @@ export default function SettingsPage() {
     const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false)
     const [processing, setProcessing] = useState(false)
     const [themeChanging, setThemeChanging] = useState(false)
+    const [driveState, setDriveState] = useState<ReturnType<typeof getDriveState>>(null)
+    const [driveQueue, setDriveQueue] = useState<QueueEntry[]>([])
+    const [driveConnecting, setDriveConnecting] = useState(false)
+    const [driveUploading, setDriveUploading] = useState(false)
+    const [driveUploadProgress, setDriveUploadProgress] = useState<{ current: number; total: number } | null>(null)
 
     // Check for active session on mount
     useEffect(() => {
@@ -45,6 +56,56 @@ export default function SettingsPage() {
             setHasActiveSession(!!session)
         })
     }, [user])
+
+    // Load Drive state on mount
+    useEffect(() => {
+        setDriveState(getDriveState())
+        setDriveQueue(getQueue())
+    }, [])
+
+    const handleConnectDrive = async () => {
+        setDriveConnecting(true)
+        try {
+            await connectDrive()
+            setDriveState(getDriveState())
+        } catch (err) {
+            console.error('[Settings] Drive connect failed:', err)
+        } finally {
+            setDriveConnecting(false)
+        }
+    }
+
+    const handleDisconnectDrive = () => {
+        disconnectDrive()
+        setDriveState(null)
+    }
+
+    const handleRetryEntry = async (entry: QueueEntry) => {
+        if (!user) return
+        await retryQueueEntry(user.id, entry)
+        setDriveQueue(getQueue())
+    }
+
+    const handleUploadPastSessions = async () => {
+        if (!user || driveUploading) return
+        setDriveUploading(true)
+        try {
+            const archives = await listUserArchives(user.id)
+            setDriveUploadProgress({ current: 0, total: archives.length })
+            for (let i = 0; i < archives.length; i++) {
+                setDriveUploadProgress({ current: i + 1, total: archives.length })
+                try {
+                    await uploadSessionArchive(user.id, archives[i])
+                } catch {
+                    // individual session failures are queued inside uploadSessionArchive
+                }
+            }
+            setDriveQueue(getQueue())
+        } finally {
+            setDriveUploading(false)
+            setDriveUploadProgress(null)
+        }
+    }
 
     // Save helper — PATCH /api/profile/update
     async function saveField(fields: Record<string, unknown>) {
@@ -457,6 +518,114 @@ export default function SettingsPage() {
                 ))}
             </div>
 
+            {/* ── Google Drive Backup ── */}
+            <div className="px-4 mt-6">
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-white font-semibold text-sm flex items-center gap-2">
+                                <HardDrive size={14} className="text-[var(--accent)]" />
+                                Google Drive Backup
+                            </p>
+                            {!driveState && (
+                                <p className="text-white/40 text-xs mt-0.5">
+                                    Auto-backup proof files and session archives to your Google Drive.
+                                </p>
+                            )}
+                        </div>
+                        {driveState && (
+                            <span className="text-xs text-teal-400 font-medium flex items-center gap-1">
+                                ✓ Connected
+                            </span>
+                        )}
+                    </div>
+
+                    {!driveState ? (
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={handleConnectDrive}
+                            disabled={driveConnecting || hasActiveSession}
+                        >
+                            {driveConnecting ? <DriveLoader size={14} className="animate-spin mr-1" /> : null}
+                            Connect Google Drive
+                        </Button>
+                    ) : (
+                        <>
+                            <p className="text-white/50 text-xs">
+                                {driveState.email}
+                                {driveState.rootFolderId && (
+                                    <>
+                                        {' · Folder: LockedIn '}
+                                        <a
+                                            href={`https://drive.google.com/drive/folders/${driveState.rootFolderId}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-0.5 text-[var(--accent)] hover:underline"
+                                        >
+                                            <ExternalLink size={10} />
+                                        </a>
+                                    </>
+                                )}
+                            </p>
+
+                            {driveQueue.length > 0 && (
+                                <div className="space-y-2">
+                                    <p className="text-xs text-white/40 font-medium">Failed uploads ({driveQueue.length})</p>
+                                    {driveQueue.map((entry) => (
+                                        <div key={entry.id} className="flex items-center justify-between gap-2">
+                                            <span className="text-xs text-white/60 truncate flex-1">{entry.filename}</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleRetryEntry(entry)}
+                                            >
+                                                <RefreshCw size={12} className="mr-1" /> Retry
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {driveUploading && driveUploadProgress && (
+                                <div className="space-y-1">
+                                    <p className="text-xs text-white/40">
+                                        Uploading session {driveUploadProgress.current} of {driveUploadProgress.total}…
+                                    </p>
+                                    <div className="w-full bg-zinc-800 rounded-full h-1.5">
+                                        <div
+                                            className="bg-[var(--accent)] h-1.5 rounded-full transition-all"
+                                            style={{ width: `${(driveUploadProgress.current / driveUploadProgress.total) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleUploadPastSessions}
+                                    disabled={driveUploading || hasActiveSession}
+                                >
+                                    {driveUploading ? <DriveLoader size={12} className="animate-spin mr-1" /> : null}
+                                    Upload Past Sessions
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleDisconnectDrive}
+                                    disabled={hasActiveSession}
+                                    className="text-red-400 hover:text-red-300"
+                                >
+                                    Disconnect
+                                </Button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+
             {/* Punishment Pool */}
             <div className="px-4 mt-6">
                 <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800">
@@ -536,6 +705,9 @@ export default function SettingsPage() {
             </div>
 
             <BottomNav />
+
+            {/* GIS — lazy-loaded only when Drive card is rendered */}
+            <Script src="https://accounts.google.com/gsi/client" strategy="lazyOnload" />
 
             {/* Bottom Sheet Overlay */}
             {openCard && (
