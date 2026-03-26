@@ -49,6 +49,7 @@ export function conflictsWithPreferences(
     }
 
     // Check privacy constraints
+    // null constraints = no constraint flags apply (masterPreference has already been checked above)
     if (!privacyConstraints) return false
 
     for (const [constraint, active] of Object.entries(privacyConstraints) as [keyof PrivacyConstraints, boolean][]) {

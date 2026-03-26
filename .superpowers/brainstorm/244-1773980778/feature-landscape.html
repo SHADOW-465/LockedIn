@@ -1,0 +1,316 @@
+<h2>LockedIn — Full Feature Landscape</h2>
+<p class="subtitle">Everything I'm thinking about. Pick which areas excite you most (multi-select).</p>
+
+<style>
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+.feature-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.feature-card:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.2);
+}
+.feature-card.selected {
+  background: rgba(139,92,246,0.15);
+  border-color: rgba(139,92,246,0.5);
+}
+.feature-card.selected::after {
+  content: "✓";
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  color: #8b5cf6;
+  font-weight: bold;
+  font-size: 16px;
+}
+.feature-card .tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.tag-calendar { background: rgba(20,184,166,0.2); color: #14b8a6; }
+.tag-social { background: rgba(236,72,153,0.2); color: #ec4899; }
+.tag-tracking { background: rgba(139,92,246,0.2); color: #a78bfa; }
+.tag-control { background: rgba(239,68,68,0.2); color: #f87171; }
+.tag-content { background: rgba(245,158,11,0.2); color: #fbbf24; }
+.tag-device { background: rgba(34,197,94,0.2); color: #4ade80; }
+.tag-mind { background: rgba(99,102,241,0.2); color: #818cf8; }
+.feature-card h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #f1f5f9;
+}
+.feature-card p {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.5;
+}
+.feature-card ul {
+  margin: 8px 0 0;
+  padding-left: 14px;
+}
+.feature-card ul li {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.7;
+}
+</style>
+
+<div class="feature-grid" data-multiselect id="grid">
+
+  <div class="feature-card" data-choice="calendar" onclick="toggleCard(this)">
+    <span class="tag tag-calendar">📅 Calendar</span>
+    <h3>Rich Calendar Upgrade</h3>
+    <p>Transform the basic calendar into a full command center</p>
+    <ul>
+      <li>Click day → full day breakdown (tasks, mood, edges)</li>
+      <li>Multi-layer overlays (sessions, streaks, regimens)</li>
+      <li>Future scheduling & AI-planned check-in windows</li>
+      <li>Orgasm/edge tally per day</li>
+      <li>Punishment & reward history heatmap</li>
+      <li>Session timeline bands</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="denial-tracker" onclick="toggleCard(this)">
+    <span class="tag tag-tracking">🔢 Tracking</span>
+    <h3>Denial & Arousal Tracker</h3>
+    <p>The core of any serious chastity app</p>
+    <ul>
+      <li>Edge tally with timestamps</li>
+      <li>Ruined orgasm log</li>
+      <li>Orgasm history (denied vs granted)</li>
+      <li>Daily arousal level rating (1–10)</li>
+      <li>Horniness heatmap over time</li>
+      <li>Longest denial streak counter</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="keyholder" onclick="toggleCard(this)">
+    <span class="tag tag-control">🔑 Control</span>
+    <h3>Keyholder System</h3>
+    <p>Real human partner control alongside the AI</p>
+    <ul>
+      <li>Keyholder invite via link/code</li>
+      <li>Remote task assignment</li>
+      <li>Release approval/denial by keyholder</li>
+      <li>Live status view (KH sees your stats)</li>
+      <li>KH can add/remove lock time</li>
+      <li>KH chat lane (separate from AI chat)</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="rituals" onclick="toggleCard(this)">
+    <span class="tag tag-mind">🕯️ Rituals</span>
+    <h3>Ritual & Routine System</h3>
+    <p>Daily structure that reinforces headspace</p>
+    <ul>
+      <li>Morning inspection ritual (self-check, photo)</li>
+      <li>Evening obedience report</li>
+      <li>Mantra writing / lines tasks</li>
+      <li>Custom ritual builder</li>
+      <li>Ritual streak tracking</li>
+      <li>AI-assessed ritual quality</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="body-stats" onclick="toggleCard(this)">
+    <span class="tag tag-tracking">📊 Tracking</span>
+    <h3>Body Stats & Measurements</h3>
+    <p>Progressive body awareness system</p>
+    <ul>
+      <li>Erection frequency log</li>
+      <li>Arousal peak times (time-of-day graph)</li>
+      <li>Measurement tracking over time</li>
+      <li>Comfort rating for device</li>
+      <li>Physical changes journal</li>
+      <li>AI-generated body summary</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="contract" onclick="toggleCard(this)">
+    <span class="tag tag-control">📜 Control</span>
+    <h3>Contract & Rules System</h3>
+    <p>D/s contracts with enforceable rules</p>
+    <ul>
+      <li>AI-generated D/s contract</li>
+      <li>Custom rule builder (with consequences)</li>
+      <li>Daily rule acknowledgment</li>
+      <li>Violation tracking</li>
+      <li>Contract renewal milestones</li>
+      <li>PDF export / printable contract</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="permission" onclick="toggleCard(this)">
+    <span class="tag tag-control">🙏 Control</span>
+    <h3>Permission Request System</h3>
+    <p>Must ask the AI (or keyholder) before certain acts</p>
+    <ul>
+      <li>Request to edge / touch / orgasm</li>
+      <li>AI grants, denies, or sets conditions</li>
+      <li>Cooldown timers between requests</li>
+      <li>Permission history log</li>
+      <li>Denial streak earns XP</li>
+      <li>Emergency safe override</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="punishment-wheel" onclick="toggleCard(this)">
+    <span class="tag tag-content">🎰 Content</span>
+    <h3>Punishment Wheel / Auction</h3>
+    <p>Randomized consequence theatre</p>
+    <ul>
+      <li>Spin the wheel — random punishment</li>
+      <li>Weighted wheel (misbehavior = worse odds)</li>
+      <li>Custom punishment pool</li>
+      <li>Punishment auction (bid lock time to avoid)</li>
+      <li>AI-narrated punishment delivery</li>
+      <li>Completion proof required</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="device" onclick="toggleCard(this)">
+    <span class="tag tag-device">⚙️ Device</span>
+    <h3>Device Management</h3>
+    <p>Track your hardware like it matters (it does)</p>
+    <ul>
+      <li>Device profile (make, model, ring size)</li>
+      <li>Lock-on / lock-off history</li>
+      <li>Cleaning schedule reminders</li>
+      <li>Comfort & irritation log</li>
+      <li>Total locked hours counter</li>
+      <li>Bluetooth integration (Cellmate, Lovense)</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="analytics" onclick="toggleCard(this)">
+    <span class="tag tag-tracking">📈 Tracking</span>
+    <h3>Deep Analytics Dashboard</h3>
+    <p>Charts that make your training legible</p>
+    <ul>
+      <li>Willpower over time graph</li>
+      <li>Task completion rate trends</li>
+      <li>Session length history</li>
+      <li>Violation frequency heatmap</li>
+      <li>XP progression curve</li>
+      <li>AI-generated weekly report card</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="milestones" onclick="toggleCard(this)">
+    <span class="tag tag-content">🏆 Content</span>
+    <h3>Release Milestone System</h3>
+    <p>Earning release through accumulated proof</p>
+    <ul>
+      <li>Release requires N completed tasks / streaks</li>
+      <li>AI judges eligibility (not just time)</li>
+      <li>Edging milestones unlock bonuses</li>
+      <li>Failed milestones extend lock time</li>
+      <li>Milestone ceremony (AI-scripted release ritual)</li>
+      <li>Milestone badges on achievements page</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="humiliation" onclick="toggleCard(this)">
+    <span class="tag tag-content">😈 Content</span>
+    <h3>Humiliation & Psychological Tasks</h3>
+    <p>Mind games and headspace deepening</p>
+    <ul>
+      <li>Mantra recording (say it, prove it)</li>
+      <li>Writing lines tasks (100× "I am locked")</li>
+      <li>Exposure challenges (mirror tasks)</li>
+      <li>AI-scripted humiliation scripts</li>
+      <li>Degradation level slider (0–10)</li>
+      <li>Role-specific shame vocabulary</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="session-replay" onclick="toggleCard(this)">
+    <span class="tag tag-calendar">📼 Archive</span>
+    <h3>Session Replay & History</h3>
+    <p>Relive and review past sessions</p>
+    <ul>
+      <li>Full session timeline viewer</li>
+      <li>Task-by-task replay</li>
+      <li>Chat transcript browser</li>
+      <li>Proof gallery per session</li>
+      <li>AI commentary on past performance</li>
+      <li>Export session ZIP</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="mood-checkin" onclick="toggleCard(this)">
+    <span class="tag tag-mind">🧠 Mind</span>
+    <h3>Daily Mood & Mental State Check-in</h3>
+    <p>Real psychological depth beyond task compliance</p>
+    <ul>
+      <li>Submission depth slider</li>
+      <li>Frustration / desperation meter</li>
+      <li>Headspace tags (floaty, needy, defiant, broken)</li>
+      <li>AI responds to emotional state in chat</li>
+      <li>Mood graph over session timeline</li>
+      <li>Crisis detection → care mode auto-trigger</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="community" onclick="toggleCard(this)">
+    <span class="tag tag-social">👥 Social</span>
+    <h3>Community & Leaderboards</h3>
+    <p>Anonymous competition and camaraderie</p>
+    <ul>
+      <li>Anonymous denial streak leaderboard</li>
+      <li>Share achievements (no PII)</li>
+      <li>Community challenges (global events)</li>
+      <li>Proof gallery sharing (opt-in, blurred)</li>
+      <li>Session badge wall</li>
+      <li>D/s mentorship matching</li>
+    </ul>
+  </div>
+
+  <div class="feature-card" data-choice="notifications" onclick="toggleCard(this)">
+    <span class="tag tag-mind">🔔 System</span>
+    <h3>Smart Notifications & Check-ins</h3>
+    <p>The AI that stays in your head, on schedule</p>
+    <ul>
+      <li>Scheduled check-in push notifications</li>
+      <li>Task deadline warnings</li>
+      <li>"Thinking of you" messages from AI persona</li>
+      <li>Punishment reminders</li>
+      <li>Streak milestone alerts</li>
+      <li>Custom quiet hours</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+function toggleCard(el) {
+  el.classList.toggle('selected');
+  var selected = document.querySelectorAll('.feature-card.selected');
+  var choices = Array.from(selected).map(function(c) { return c.getAttribute('data-choice'); });
+  if (window.__recordSelection) {
+    window.__recordSelection(choices.join(','), choices.map(function(c) {
+      return document.querySelector('[data-choice="' + c + '"] h3').textContent;
+    }).join(', '));
+  }
+}
+</script>

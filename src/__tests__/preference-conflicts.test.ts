@@ -72,4 +72,12 @@ describe('conflictsWithPreferences', () => {
             noConstraints
         )).toBe(true)
     })
+
+    it('checks masterPreference even when privacyConstraints is null', () => {
+        expect(conflictsWithPreferences(
+            'GO OUTSIDE AND TAKE A PHOTO',
+            'no outdoor activities',
+            null
+        )).toBe(true)
+    })
 })

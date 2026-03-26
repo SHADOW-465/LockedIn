@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LockedIn — Themes</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000;
+    font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, sans-serif;
+    color: #fff;
+    padding: 48px 24px 100px;
+  }
+
+  h1 { text-align:center; font-size:10px; letter-spacing:0.4em; text-transform:uppercase; color:rgba(255,255,255,0.2); margin-bottom:6px; font-weight:500; }
+  .sub { text-align:center; font-size:12px; color:rgba(255,255,255,0.15); margin-bottom:56px; font-style:italic; }
+
+  .themes-grid {
+    display: flex;
+    gap: 28px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 72px;
+  }
+
+  .theme-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 200px;
+  }
+
+  /* Theme name + description */
+  .theme-meta { text-align: center; }
+  .theme-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .theme-desc {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+  }
+  .theme-keyword {
+    display: inline-block;
+    font-size: 8px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  /* Mini phone */
+  .mini-phone {
+    width: 200px;
+    background: #000;
+    border-radius: 32px;
+    border: 1px solid #1c1c1e;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 32px 64px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.03);
+    padding-bottom: 16px;
+  }
+
+  .mini-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px 6px;
+    font-size: 9px;
+    color: rgba(255,255,255,0.3);
+    font-weight: 500;
+  }
+
+  /* Day header */
+  .mini-header {
+    padding: 2px 14px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .mini-day { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.03em; }
+  .mini-xp {
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 8px;
+    padding: 5px 9px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  /* Timer card */
+  .mini-timer {
+    margin: 0 10px 8px;
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 14px;
+    padding: 14px 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .mini-timer-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .mini-session {
+    font-size: 7px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .mini-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    animation: pulse 2.5s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .mini-tier {
+    font-size: 7px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    background: #27272a;
+    border-radius: 20px;
+    padding: 3px 7px;
+    font-weight: 600;
+  }
+
+  /* Ring */
+  .mini-ring-wrap { display:flex; flex-direction:column; align-items:center; margin-bottom:12px; }
+  .mini-ring-container { position:relative; width:80px; height:80px; }
+  .mini-ring-container svg { transform: rotate(-90deg); }
+  .ring-track { fill:none; stroke:#27272a; stroke-width:2.5; }
+  .ring-fill-anim {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 207;
+    stroke-dashoffset: 207;
+    animation: drawRing 1.8s cubic-bezier(0.4,0,0.2,1) forwards 0.2s;
+  }
+  @keyframes drawRing { to { stroke-dashoffset: 74; } }
+  .mini-ring-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
+  .mini-time { font-size:16px; font-weight:700; color:#fff; letter-spacing:-0.04em; display:block; line-height:1; }
+  .mini-sub { font-size:6px; letter-spacing:0.15em; text-transform:uppercase; color:rgba(255,255,255,0.25); margin-top:3px; display:block; }
+
+  .mini-btns { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .mini-btn-ghost {
+    background:transparent; border:1px solid #27272a; border-radius:9px;
+    padding:7px; font-size:7px; letter-spacing:0.1em; text-transform:uppercase;
+    color:rgba(255,255,255,0.2); font-weight:600; text-align:center;
+    transition: border-color 0.2s ease;
+  }
+  .mini-btn-ghost:hover { border-color: #3f3f46; }
+  .mini-btn-white {
+    background:#fff; border:none; border-radius:9px;
+    padding:7px; font-size:7px; letter-spacing:0.1em; text-transform:uppercase;
+    color:#000; font-weight:800; text-align:center;
+    transition: opacity 0.15s ease;
+  }
+  .mini-btn-white:hover { opacity: 0.9; }
+
+  /* Stats */
+  .mini-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin:0 10px 7px; }
+  .mini-stat {
+    background:#18181b; border:1px solid #27272a; border-radius:10px;
+    padding:8px 5px; text-align:center;
+    animation: cardIn 0.5s ease both;
+  }
+  .mini-stat-n { font-size:14px; font-weight:700; color:#fff; letter-spacing:-0.03em; display:block; line-height:1; margin-bottom:2px; }
+  .mini-stat-l { font-size:6px; letter-spacing:0.15em; text-transform:uppercase; color:rgba(255,255,255,0.3); font-weight:600; }
+
+  /* Willpower */
+  .mini-wp { margin:0 10px 7px; background:#18181b; border:1px solid #27272a; border-radius:11px; padding:10px 11px; }
+  .mini-wp-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .mini-wp-l { font-size:8px; font-weight:600; color:#fff; }
+  .mini-wp-v { font-size:8px; color:rgba(255,255,255,0.4); font-family:monospace; }
+  .mini-bar-track { height:2px; background:#27272a; border-radius:99px; overflow:hidden; }
+  .mini-bar-fill { height:100%; border-radius:99px; width:0; transition:width 1.2s cubic-bezier(0.4,0,0.2,1); }
+
+  /* Directive */
+  .mini-directive {
+    margin:0 10px 7px; background:#18181b; border:1px solid #27272a; border-radius:11px; padding:10px 11px;
+    transition: border-color 0.2s ease, transform 0.15s ease; cursor:pointer;
+    animation: cardIn 0.5s ease 0.3s both;
+  }
+  .mini-directive:hover { border-color:#3f3f46; transform:translateY(-1px); }
+  .mini-dir-tag { font-size:6px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; margin-bottom:4px; }
+  .mini-dir-text { font-size:9px; color:rgba(255,255,255,0.75); line-height:1.4; margin-bottom:7px; font-weight:500; }
+  .mini-comply {
+    width:100%; background:#fff; border:none; border-radius:8px; padding:7px;
+    font-size:7px; letter-spacing:0.15em; text-transform:uppercase; color:#000; font-weight:800;
+    transition: opacity 0.15s ease; cursor:pointer; display:block; text-align:center;
+  }
+  .mini-comply:hover { opacity:0.9; }
+
+  @keyframes cardIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+  /* Selected indicator */
+  .selected-badge {
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+    justify-content: center;
+  }
+
+  /* Settings theme picker preview */
+  .settings-preview {
+    max-width: 400px;
+    margin: 0 auto 64px;
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 20px;
+    padding: 20px;
+  }
+  .sp-label { font-size: 9px; letter-spacing:0.25em; text-transform:uppercase; color:rgba(255,255,255,0.3); font-weight:700; margin-bottom:4px; }
+  .sp-title { font-size: 15px; font-weight: 600; color:#fff; margin-bottom:16px; }
+  .sp-swatches { display:flex; gap:12px; flex-wrap:wrap; }
+  .sp-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .sp-dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    position: relative;
+  }
+  .sp-dot:hover { transform: scale(1.1); }
+  .sp-dot.active {
+    border-color: rgba(255,255,255,0.5);
+    box-shadow: 0 0 12px rgba(255,255,255,0.1);
+  }
+  .sp-dot.active::after {
+    content: '✓';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-size: 14px;
+    color: #000;
+    font-weight: 800;
+  }
+  .sp-name { font-size: 8px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.4); font-weight:600; }
+
+  /* Section label */
+  .section-label { text-align:center; font-size:9px; letter-spacing:0.4em; text-transform:uppercase; color:rgba(255,255,255,0.15); margin-bottom:28px; font-weight:600; }
+</style>
+</head>
+<body>
+
+<h1>LockedIn — Theme System</h1>
+<p class="sub">"Every colour chosen for what it makes you feel, not how it looks."</p>
+
+<!-- HOW IT LOOKS IN SETTINGS -->
+<div class="section-label">How It Looks In Settings</div>
+<div class="settings-preview" style="margin-bottom:56px;">
+  <div class="sp-label">Appearance</div>
+  <div class="sp-title">Theme</div>
+  <div class="sp-swatches">
+    <div class="sp-swatch">
+      <div class="sp-dot active" style="background:#ef4444; box-shadow:0 0 16px rgba(239,68,68,0.4);"></div>
+      <div class="sp-name">Crimson</div>
+    </div>
+    <div class="sp-swatch">
+      <div class="sp-dot" style="background:#a855f7; box-shadow:0 0 12px rgba(168,85,247,0.2);"></div>
+      <div class="sp-name">Amethyst</div>
+    </div>
+    <div class="sp-swatch">
+      <div class="sp-dot" style="background:#38bdf8; box-shadow:0 0 12px rgba(56,189,248,0.2);"></div>
+      <div class="sp-name">Ice</div>
+    </div>
+    <div class="sp-swatch">
+      <div class="sp-dot" style="background:#f59e0b; box-shadow:0 0 12px rgba(245,158,11,0.2);"></div>
+      <div class="sp-name">Gold</div>
+    </div>
+    <div class="sp-swatch">
+      <div class="sp-dot" style="background:#14b8a6; box-shadow:0 0 12px rgba(20,184,166,0.2);"></div>
+      <div class="sp-name">Obsidian</div>
+    </div>
+    <div class="sp-swatch">
+      <div class="sp-dot" style="background:#e2e8f0; border-color:#3f3f46; box-shadow:0 0 12px rgba(226,232,240,0.1);"></div>
+      <div class="sp-name">Bone</div>
+    </div>
+  </div>
+</div>
+
+<!-- THEMES -->
+<div class="section-label" style="margin-bottom:36px;">All Themes — Same Black Base, Different Dominance</div>
+<div class="themes-grid">
+
+  <!-- 1. CRIMSON — current default -->
+  <div class="theme-col">
+    <div class="mini-phone">
+      <div class="mini-status">
+        <span>9:41</span>
+        <span style="color:#ef4444;font-size:8px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;display:flex;align-items:center;gap:4px;">
+          <span class="mini-dot" style="background:#ef4444;box-shadow:0 0 5px rgba(239,68,68,0.8);"></span>Active
+        </span>
+      </div>
+      <div class="mini-header">
+        <div class="mini-day">Day 12</div>
+        <div class="mini-xp">73 XP</div>
+      </div>
+      <div class="mini-timer">
+        <div class="mini-timer-top">
+          <div class="mini-session" style="color:#ef4444;">
+            <span class="mini-dot" style="background:#ef4444;box-shadow:0 0 5px rgba(239,68,68,0.7);"></span>
+            Session Active
+          </div>
+          <div class="mini-tier">Slave</div>
+        </div>
+        <div class="mini-ring-wrap">
+          <div class="mini-ring-container">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#7f1d1d"/><stop offset="100%" style="stop-color:#ef4444"/></linearGradient></defs>
+              <circle class="ring-track" cx="40" cy="40" r="33"/>
+              <circle class="ring-fill-anim" cx="40" cy="40" r="33" stroke="url(#g1)" style="filter:drop-shadow(0 0 4px rgba(239,68,68,0.5))"/>
+            </svg>
+            <div class="mini-ring-center"><span class="mini-time">47:23</span><span class="mini-sub">Left</span></div>
+          </div>
+        </div>
+        <div class="mini-btns">
+          <div class="mini-btn-ghost">Emergency</div>
+          <div class="mini-btn-white">Extend</div>
+        </div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><span class="mini-stat-n">8</span><span class="mini-stat-l">Complied</span></div>
+        <div class="mini-stat"><span class="mini-stat-n" style="color:#ef4444;">2</span><span class="mini-stat-l">Failed</span></div>
+        <div class="mini-stat"><span class="mini-stat-n">73</span><span class="mini-stat-l">Willpower</span></div>
+      </div>
+      <div class="mini-wp">
+        <div class="mini-wp-row"><div class="mini-wp-l">Willpower</div><div class="mini-wp-v">73/100</div></div>
+        <div class="mini-bar-track"><div class="mini-bar-fill" style="background:linear-gradient(90deg,#7f1d1d,#ef4444);width:73%;"></div></div>
+      </div>
+      <div class="mini-directive" style="border-color:rgba(239,68,68,0.2);">
+        <div class="mini-dir-tag" style="color:#ef4444;">Active Directive</div>
+        <div class="mini-dir-text">Write a 200-word reflection on your obedience.</div>
+        <div class="mini-comply">Comply</div>
+      </div>
+    </div>
+    <div class="theme-meta">
+      <div class="theme-keyword" style="color:#ef4444;">Pain · Punishment · Control</div>
+      <div class="theme-name">Crimson</div>
+      <div class="theme-desc">Blood and authority. The default — because compliance isn't optional.</div>
+    </div>
+    <div class="selected-badge">
+      <span style="width:4px;height:4px;background:#ef4444;border-radius:50%;display:inline-block;"></span>
+      Default Theme
+    </div>
+  </div>
+
+  <!-- 2. AMETHYST — hypnosis, psychological control -->
+  <div class="theme-col">
+    <div class="mini-phone">
+      <div class="mini-status">
+        <span>9:41</span>
+        <span style="color:#a855f7;font-size:8px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;display:flex;align-items:center;gap:4px;">
+          <span class="mini-dot" style="background:#a855f7;box-shadow:0 0 5px rgba(168,85,247,0.8);"></span>Active
+        </span>
+      </div>
+      <div class="mini-header">
+        <div class="mini-day">Day 12</div>
+        <div class="mini-xp">73 XP</div>
+      </div>
+      <div class="mini-timer">
+        <div class="mini-timer-top">
+          <div class="mini-session" style="color:#a855f7;">
+            <span class="mini-dot" style="background:#a855f7;box-shadow:0 0 5px rgba(168,85,247,0.7);"></span>
+            Session Active
+          </div>
+          <div class="mini-tier">Slave</div>
+        </div>
+        <div class="mini-ring-wrap">
+          <div class="mini-ring-container">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <defs><linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#4c1d95"/><stop offset="100%" style="stop-color:#a855f7"/></linearGradient></defs>
+              <circle class="ring-track" cx="40" cy="40" r="33"/>
+              <circle class="ring-fill-anim" cx="40" cy="40" r="33" stroke="url(#g2)" style="filter:drop-shadow(0 0 4px rgba(168,85,247,0.5))"/>
+            </svg>
+            <div class="mini-ring-center"><span class="mini-time">47:23</span><span class="mini-sub">Left</span></div>
+          </div>
+        </div>
+        <div class="mini-btns">
+          <div class="mini-btn-ghost">Emergency</div>
+          <div class="mini-btn-white">Extend</div>
+        </div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><span class="mini-stat-n">8</span><span class="mini-stat-l">Complied</span></div>
+        <div class="mini-stat"><span class="mini-stat-n" style="color:#a855f7;">2</span><span class="mini-stat-l">Failed</span></div>
+        <div class="mini-stat"><span class="mini-stat-n">73</span><span class="mini-stat-l">Willpower</span></div>
+      </div>
+      <div class="mini-wp">
+        <div class="mini-wp-row"><div class="mini-wp-l">Willpower</div><div class="mini-wp-v">73/100</div></div>
+        <div class="mini-bar-track"><div class="mini-bar-fill" style="background:linear-gradient(90deg,#4c1d95,#a855f7);width:73%;"></div></div>
+      </div>
+      <div class="mini-directive" style="border-color:rgba(168,85,247,0.2);">
+        <div class="mini-dir-tag" style="color:#a855f7;">Active Directive</div>
+        <div class="mini-dir-text">Write a 200-word reflection on your obedience.</div>
+        <div class="mini-comply">Comply</div>
+      </div>
+    </div>
+    <div class="theme-meta">
+      <div class="theme-keyword" style="color:#a855f7;">Hypnosis · Mind Control · Surrender</div>
+      <div class="theme-name">Amethyst</div>
+      <div class="theme-desc">The gaze that holds you. You stare into it and forget to resist.</div>
+    </div>
+  </div>
+
+  <!-- 3. ICE — clinical sadism, cold control -->
+  <div class="theme-col">
+    <div class="mini-phone">
+      <div class="mini-status">
+        <span>9:41</span>
+        <span style="color:#38bdf8;font-size:8px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;display:flex;align-items:center;gap:4px;">
+          <span class="mini-dot" style="background:#38bdf8;box-shadow:0 0 5px rgba(56,189,248,0.8);"></span>Active
+        </span>
+      </div>
+      <div class="mini-header">
+        <div class="mini-day">Day 12</div>
+        <div class="mini-xp">73 XP</div>
+      </div>
+      <div class="mini-timer">
+        <div class="mini-timer-top">
+          <div class="mini-session" style="color:#38bdf8;">
+            <span class="mini-dot" style="background:#38bdf8;box-shadow:0 0 5px rgba(56,189,248,0.7);"></span>
+            Session Active
+          </div>
+          <div class="mini-tier">Slave</div>
+        </div>
+        <div class="mini-ring-wrap">
+          <div class="mini-ring-container">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <defs><linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#0c4a6e"/><stop offset="100%" style="stop-color:#38bdf8"/></linearGradient></defs>
+              <circle class="ring-track" cx="40" cy="40" r="33"/>
+              <circle class="ring-fill-anim" cx="40" cy="40" r="33" stroke="url(#g3)" style="filter:drop-shadow(0 0 4px rgba(56,189,248,0.5))"/>
+            </svg>
+            <div class="mini-ring-center"><span class="mini-time">47:23</span><span class="mini-sub">Left</span></div>
+          </div>
+        </div>
+        <div class="mini-btns">
+          <div class="mini-btn-ghost">Emergency</div>
+          <div class="mini-btn-white">Extend</div>
+        </div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><span class="mini-stat-n">8</span><span class="mini-stat-l">Complied</span></div>
+        <div class="mini-stat"><span class="mini-stat-n" style="color:#38bdf8;">2</span><span class="mini-stat-l">Failed</span></div>
+        <div class="mini-stat"><span class="mini-stat-n">73</span><span class="mini-stat-l">Willpower</span></div>
+      </div>
+      <div class="mini-wp">
+        <div class="mini-wp-row"><div class="mini-wp-l">Willpower</div><div class="mini-wp-v">73/100</div></div>
+        <div class="mini-bar-track"><div class="mini-bar-fill" style="background:linear-gradient(90deg,#0c4a6e,#38bdf8);width:73%;"></div></div>
+      </div>
+      <div class="mini-directive" style="border-color:rgba(56,189,248,0.2);">
+        <div class="mini-dir-tag" style="color:#38bdf8;">Active Directive</div>
+        <div class="mini-dir-text">Write a 200-word reflection on your obedience.</div>
+        <div class="mini-comply">Comply</div>
+      </div>
+    </div>
+    <div class="theme-meta">
+      <div class="theme-keyword" style="color:#38bdf8;">Clinical · Detached · Precise</div>
+      <div class="theme-name">Ice</div>
+      <div class="theme-desc">Cold calculation. No emotion, only assessment. Your suffering is data.</div>
+    </div>
+  </div>
+
+  <!-- 4. GOLD — gilded cage, luxury submission -->
+  <div class="theme-col">
+    <div class="mini-phone">
+      <div class="mini-status">
+        <span>9:41</span>
+        <span style="color:#f59e0b;font-size:8px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;display:flex;align-items:center;gap:4px;">
+          <span class="mini-dot" style="background:#f59e0b;box-shadow:0 0 5px rgba(245,158,11,0.8);"></span>Active
+        </span>
+      </div>
+      <div class="mini-header">
+        <div class="mini-day">Day 12</div>
+        <div class="mini-xp">73 XP</div>
+      </div>
+      <div class="mini-timer">
+        <div class="mini-timer-top">
+          <div class="mini-session" style="color:#f59e0b;">
+            <span class="mini-dot" style="background:#f59e0b;box-shadow:0 0 5px rgba(245,158,11,0.7);"></span>
+            Session Active
+          </div>
+          <div class="mini-tier">Slave</div>
+        </div>
+        <div class="mini-ring-wrap">
+          <div class="mini-ring-container">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <defs><linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#78350f"/><stop offset="100%" style="stop-color:#f59e0b"/></linearGradient></defs>
+              <circle class="ring-track" cx="40" cy="40" r="33"/>
+              <circle class="ring-fill-anim" cx="40" cy="40" r="33" stroke="url(#g4)" style="filter:drop-shadow(0 0 4px rgba(245,158,11,0.5))"/>
+            </svg>
+            <div class="mini-ring-center"><span class="mini-time">47:23</span><span class="mini-sub">Left</span></div>
+          </div>
+        </div>
+        <div class="mini-btns">
+          <div class="mini-btn-ghost">Emergency</div>
+          <div class="mini-btn-white">Extend</div>
+        </div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><span class="mini-stat-n">8</span><span class="mini-stat-l">Complied</span></div>
+        <div class="mini-stat"><span class="mini-stat-n" style="color:#f59e0b;">2</span><span class="mini-stat-l">Failed</span></div>
+        <div class="mini-stat"><span class="mini-stat-n">73</span><span class="mini-stat-l">Willpower</span></div>
+      </div>
+      <div class="mini-wp">
+        <div class="mini-wp-row"><div class="mini-wp-l">Willpower</div><div class="mini-wp-v">73/100</div></div>
+        <div class="mini-bar-track"><div class="mini-bar-fill" style="background:linear-gradient(90deg,#78350f,#f59e0b);width:73%;"></div></div>
+      </div>
+      <div class="mini-directive" style="border-color:rgba(245,158,11,0.2);">
+        <div class="mini-dir-tag" style="color:#f59e0b;">Active Directive</div>
+        <div class="mini-dir-text">Write a 200-word reflection on your obedience.</div>
+        <div class="mini-comply">Comply</div>
+      </div>
+    </div>
+    <div class="theme-meta">
+      <div class="theme-keyword" style="color:#f59e0b;">Luxury · Gilded Cage · Trophy</div>
+      <div class="theme-name">Gold</div>
+      <div class="theme-desc">Beautiful chains. You are owned, and the cage is exquisite.</div>
+    </div>
+  </div>
+
+  <!-- 5. OBSIDIAN TEAL — deep submission, drowning -->
+  <div class="theme-col">
+    <div class="mini-phone">
+      <div class="mini-status">
+        <span>9:41</span>
+        <span style="color:#14b8a6;font-size:8px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;display:flex;align-items:center;gap:4px;">
+          <span class="mini-dot" style="background:#14b8a6;box-shadow:0 0 5px rgba(20,184,166,0.8);"></span>Active
+        </span>
+      </div>
+      <div class="mini-header">
+        <div class="mini-day">Day 12</div>
+        <div class="mini-xp">73 XP</div>
+      </div>
+      <div class="mini-timer">
+        <div class="mini-timer-top">
+          <div class="mini-session" style="color:#14b8a6;">
+            <span class="mini-dot" style="background:#14b8a6;box-shadow:0 0 5px rgba(20,184,166,0.7);"></span>
+            Session Active
+          </div>
+          <div class="mini-tier">Slave</div>
+        </div>
+        <div class="mini-ring-wrap">
+          <div class="mini-ring-container">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <defs><linearGradient id="g5" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#042f2e"/><stop offset="100%" style="stop-color:#14b8a6"/></linearGradient></defs>
+              <circle class="ring-track" cx="40" cy="40" r="33"/>
+              <circle class="ring-fill-anim" cx="40" cy="40" r="33" stroke="url(#g5)" style="filter:drop-shadow(0 0 4px rgba(20,184,166,0.5))"/>
+            </svg>
+            <div class="mini-ring-center"><span class="mini-time">47:23</span><span class="mini-sub">Left</span></div>
+          </div>
+        </div>
+        <div class="mini-btns">
+          <div class="mini-btn-ghost">Emergency</div>
+          <div class="mini-btn-white">Extend</div>
+        </div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><span class="mini-stat-n">8</span><span class="mini-stat-l">Complied</span></div>
+        <div class="mini-stat"><span class="mini-stat-n" style="color:#14b8a6;">2</span><span class="mini-stat-l">Failed</span></div>
+        <div class="mini-stat"><span class="mini-stat-n">73</span><span class="mini-stat-l">Willpower</span></div>
+      </div>
+      <div class="mini-wp">
+        <div class="mini-wp-row"><div class="mini-wp-l">Willpower</div><div class="mini-wp-v">73/100</div></div>
+        <div class="mini-bar-track"><div class="mini-bar-fill" style="background:linear-gradient(90deg,#042f2e,#14b8a6);width:73%;"></div></div>
+      </div>
+      <div class="mini-directive" style="border-color:rgba(20,184,166,0.2);">
+        <div class="mini-dir-tag" style="color:#14b8a6;">Active Directive</div>
+        <div class="mini-dir-text">Write a 200-word reflection on your obedience.</div>
+        <div class="mini-comply">Comply</div>
+      </div>
+    </div>
+    <div class="theme-meta">
+      <div class="theme-keyword" style="color:#14b8a6;">Depth · Surrender · Dissolution</div>
+      <div class="theme-name">Obsidian</div>
+      <div class="theme-desc">You sink willingly. The deeper you go, the less you want to surface.</div>
+    </div>
+  </div>
+
+  <!-- 6. BONE — exposure, vulnerability, stripped bare -->
+  <div class="theme-col">
+    <div class="mini-phone">
+      <div class="mini-status">
+        <span>9:41</span>
+        <span style="color:#e2e8f0;font-size:8px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;display:flex;align-items:center;gap:4px;">
+          <span class="mini-dot" style="background:#e2e8f0;box-shadow:0 0 5px rgba(226,232,240,0.5);"></span>Active
+        </span>
+      </div>
+      <div class="mini-header">
+        <div class="mini-day">Day 12</div>
+        <div class="mini-xp">73 XP</div>
+      </div>
+      <div class="mini-timer">
+        <div class="mini-timer-top">
+          <div class="mini-session" style="color:#e2e8f0;">
+            <span class="mini-dot" style="background:#e2e8f0;box-shadow:0 0 5px rgba(226,232,240,0.4);"></span>
+            Session Active
+          </div>
+          <div class="mini-tier">Slave</div>
+        </div>
+        <div class="mini-ring-wrap">
+          <div class="mini-ring-container">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <defs><linearGradient id="g6" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#334155"/><stop offset="100%" style="stop-color:#e2e8f0"/></linearGradient></defs>
+              <circle class="ring-track" cx="40" cy="40" r="33"/>
+              <circle class="ring-fill-anim" cx="40" cy="40" r="33" stroke="url(#g6)" style="filter:drop-shadow(0 0 4px rgba(226,232,240,0.3))"/>
+            </svg>
+            <div class="mini-ring-center"><span class="mini-time">47:23</span><span class="mini-sub">Left</span></div>
+          </div>
+        </div>
+        <div class="mini-btns">
+          <div class="mini-btn-ghost">Emergency</div>
+          <div class="mini-btn-white">Extend</div>
+        </div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><span class="mini-stat-n">8</span><span class="mini-stat-l">Complied</span></div>
+        <div class="mini-stat"><span class="mini-stat-n" style="color:#e2e8f0;">2</span><span class="mini-stat-l">Failed</span></div>
+        <div class="mini-stat"><span class="mini-stat-n">73</span><span class="mini-stat-l">Willpower</span></div>
+      </div>
+      <div class="mini-wp">
+        <div class="mini-wp-row"><div class="mini-wp-l">Willpower</div><div class="mini-wp-v">73/100</div></div>
+        <div class="mini-bar-track"><div class="mini-bar-fill" style="background:linear-gradient(90deg,#334155,#e2e8f0);width:73%;"></div></div>
+      </div>
+      <div class="mini-directive" style="border-color:rgba(226,232,240,0.15);">
+        <div class="mini-dir-tag" style="color:#e2e8f0;">Active Directive</div>
+        <div class="mini-dir-text">Write a 200-word reflection on your obedience.</div>
+        <div class="mini-comply">Comply</div>
+      </div>
+    </div>
+    <div class="theme-meta">
+      <div class="theme-keyword" style="color:#e2e8f0;">Exposed · Vulnerable · Bare</div>
+      <div class="theme-name">Bone</div>
+      <div class="theme-desc">Stripped of everything. Nowhere to hide. Pure, total exposure.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- COLOUR PSYCHOLOGY NOTES -->
+<div class="section-label">Why These Colours</div>
+<div style="max-width:860px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:48px;">
+
+  <div style="background:#18181b;border:1px solid #27272a;border-radius:18px;padding:18px;">
+    <div style="width:10px;height:10px;background:#ef4444;border-radius:50%;margin-bottom:10px;box-shadow:0 0 8px rgba(239,68,68,0.5);"></div>
+    <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);font-weight:700;margin-bottom:6px;">Crimson</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.65;">Blood. Pain. The colour of punishment and obedience enforced. Authority that is felt, not merely understood.</div>
+  </div>
+
+  <div style="background:#18181b;border:1px solid #27272a;border-radius:18px;padding:18px;">
+    <div style="width:10px;height:10px;background:#a855f7;border-radius:50%;margin-bottom:10px;box-shadow:0 0 8px rgba(168,85,247,0.4);"></div>
+    <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);font-weight:700;margin-bottom:6px;">Amethyst</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.65;">The hypnotist's colour. Psychological dominance — not force, but inevitability. You surrender because you can't imagine not surrendering.</div>
+  </div>
+
+  <div style="background:#18181b;border:1px solid #27272a;border-radius:18px;padding:18px;">
+    <div style="width:10px;height:10px;background:#38bdf8;border-radius:50%;margin-bottom:10px;box-shadow:0 0 8px rgba(56,189,248,0.4);"></div>
+    <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);font-weight:700;margin-bottom:6px;">Ice</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.65;">Clinical sadism. Cold precision. The Dominant who watches without emotion. Your suffering is quantified, not savoured.</div>
+  </div>
+
+  <div style="background:#18181b;border:1px solid #27272a;border-radius:18px;padding:18px;">
+    <div style="width:10px;height:10px;background:#f59e0b;border-radius:50%;margin-bottom:10px;box-shadow:0 0 8px rgba(245,158,11,0.4);"></div>
+    <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);font-weight:700;margin-bottom:6px;">Gold</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.65;">The gilded cage. Luxury submission — you are owned, but the ownership is exquisite. Golden chains are still chains.</div>
+  </div>
+
+  <div style="background:#18181b;border:1px solid #27272a;border-radius:18px;padding:18px;">
+    <div style="width:10px;height:10px;background:#14b8a6;border-radius:50%;margin-bottom:10px;box-shadow:0 0 8px rgba(20,184,166,0.4);"></div>
+    <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);font-weight:700;margin-bottom:6px;">Obsidian</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.65;">Deep water submission. You sink willingly, slowly. Also the Care Mode colour — the only safe harbour in the void.</div>
+  </div>
+
+  <div style="background:#18181b;border:1px solid #27272a;border-radius:18px;padding:18px;">
+    <div style="width:10px;height:10px;background:#e2e8f0;border-radius:50%;margin-bottom:10px;box-shadow:0 0 8px rgba(226,232,240,0.2);"></div>
+    <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);font-weight:700;margin-bottom:6px;">Bone</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.65;">Stripped bare. Total exposure. White on black — nothing hidden, nothing left to protect. The purest submission.</div>
+  </div>
+
+</div>
+
+<div style="text-align:center;padding-top:8px;">
+  <div style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.1);">6 Themes · CSS Custom Properties · One accent variable · Stored in profile</div>
+</div>
+
+</body>
+</html>

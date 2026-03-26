@@ -7,6 +7,7 @@ import { AlertTriangle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import Script from 'next/script'
 import { HardDrive, ExternalLink, RefreshCw, Loader2 as DriveLoader } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { ProfileStrengthRing } from '@/components/features/profile/profile-strength-ring'
 import { MasterPreferenceEditor } from '@/components/features/profile/editors/master-preference-editor'
@@ -711,14 +712,14 @@ export default function SettingsPage() {
 
             {/* Bottom Sheet Overlay */}
             {openCard && (
-                <div className="fixed inset-0 z-50">
+                <div className="fixed inset-0 z-[100]">
                     {/* Backdrop */}
                     <div
                         className="absolute inset-0 bg-black/70"
                         onClick={() => setOpenCard(null)}
                     />
                     {/* Sheet */}
-                    <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-zinc-950 border-t border-zinc-800">
+                    <div className="absolute bottom-0 left-0 right-0 max-h-[85dvh] overflow-y-auto rounded-t-2xl bg-zinc-950 border-t border-zinc-800">
                         {renderBottomSheet()}
                     </div>
                 </div>

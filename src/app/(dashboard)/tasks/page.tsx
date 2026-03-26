@@ -145,8 +145,8 @@ function TaskDetailModal({
     onSubmitProof?: () => void
 }) {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full max-h-[90dvh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-start justify-between p-6 border-b border-zinc-800">
                     <div className="space-y-2 flex-1">
@@ -324,8 +324,8 @@ function HistoryTaskDetailModal({
                 : '⏰ Overdue'
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full max-h-[90dvh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-start justify-between p-6 border-b border-zinc-800">
                     <div className="space-y-2 flex-1 pr-4">

@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LockedIn — Final UI</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ─── TRANSITIONS ─── */
+  /* Cards lift on hover */
+  .card-hover {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    cursor: pointer;
+  }
+  .card-hover:hover {
+    border-color: #3f3f46 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+  }
+  .card-hover:active {
+    transform: translateY(0);
+    transition-duration: 0.05s;
+  }
+
+  /* Buttons */
+  .btn-white { transition: opacity 0.15s ease, transform 0.1s ease; cursor: pointer; }
+  .btn-white:hover { opacity: 0.9; }
+  .btn-white:active { transform: scale(0.97); transition-duration: 0.05s; }
+
+  .btn-comply { transition: opacity 0.15s ease, transform 0.1s ease, box-shadow 0.2s ease; cursor: pointer; }
+  .btn-comply:hover { opacity: 0.92; box-shadow: 0 0 24px rgba(255,255,255,0.15); }
+  .btn-comply:active { transform: scale(0.97); transition-duration: 0.05s; }
+
+  .btn-ghost { transition: border-color 0.2s ease, color 0.2s ease; cursor: pointer; }
+  .btn-ghost:hover { border-color: #3f3f46; color: rgba(255,255,255,0.4); }
+
+  .btn-dismiss { transition: border-color 0.2s ease, color 0.2s ease; cursor: pointer; }
+  .btn-dismiss:hover { border-color: #3f3f46; color: rgba(255,255,255,0.5); }
+
+  /* Nav items */
+  .ni { transition: opacity 0.2s ease; cursor: pointer; }
+  .ni:not(.on):hover { opacity: 0.5; }
+
+  /* Task rows */
+  .task-row { transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease; cursor: pointer; }
+  .task-row:hover { background: #1c1c1f; border-color: #3f3f46; }
+  .task-row.m:hover { border-color: rgba(239,68,68,0.5); }
+  .task-row.p:hover { border-color: rgba(249,115,22,0.4); }
+  .task-row:active { transform: scale(0.99); }
+
+  /* Willpower bar — animates in on load */
+  .bar-fill { transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  /* Timer ring — draws in on load */
+  .ring-fill {
+    stroke-dashoffset: 358;
+    animation: drawRing 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards 0.3s;
+  }
+  @keyframes drawRing {
+    to { stroke-dashoffset: 129; }
+  }
+
+  /* Streak dots — stagger fade in */
+  .s-dot { animation: dotFadeIn 0.4s ease both; }
+  .s-dot:nth-child(1) { animation-delay: 0.05s; }
+  .s-dot:nth-child(2) { animation-delay: 0.1s; }
+  .s-dot:nth-child(3) { animation-delay: 0.15s; }
+  .s-dot:nth-child(4) { animation-delay: 0.2s; }
+  .s-dot:nth-child(5) { animation-delay: 0.25s; }
+  .s-dot:nth-child(6) { animation-delay: 0.3s; }
+  .s-dot:nth-child(7) { animation-delay: 0.35s; }
+  @keyframes dotFadeIn {
+    from { opacity: 0; transform: scale(0.7); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* Cards animate in on page load */
+  .timer-card, .stat-box, .wp-card, .directive, .streak-card, .qa-btn, .task-row {
+    animation: cardIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  .timer-card              { animation-delay: 0.05s; }
+  .stats-grid .stat-box:nth-child(1) { animation-delay: 0.1s; }
+  .stats-grid .stat-box:nth-child(2) { animation-delay: 0.15s; }
+  .stats-grid .stat-box:nth-child(3) { animation-delay: 0.2s; }
+  .wp-card    { animation-delay: 0.22s; }
+  .directive  { animation-delay: 0.27s; }
+  .streak-card { animation-delay: 0.32s; }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Chat bubble fade in */
+  .bubble-m, .bubble-s, .task-drop {
+    animation: bubbleIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  .m-master:nth-child(1) .bubble-m { animation-delay: 0.1s; }
+  .m-slave:nth-child(2)  .bubble-s { animation-delay: 0.2s; }
+  .task-drop             { animation-delay: 0.3s; }
+  .m-master:nth-child(4) .bubble-m { animation-delay: 0.4s; }
+  .m-slave:nth-child(5)  .bubble-s { animation-delay: 0.5s; }
+  @keyframes bubbleIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Stat numbers count up feel — fade in with slight scale */
+  .stat-n {
+    animation: numIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  .stats-grid .stat-box:nth-child(1) .stat-n { animation-delay: 0.15s; }
+  .stats-grid .stat-box:nth-child(2) .stat-n { animation-delay: 0.22s; }
+  .stats-grid .stat-box:nth-child(3) .stat-n { animation-delay: 0.28s; }
+  @keyframes numIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* Send button */
+  .send-b { transition: transform 0.1s ease, box-shadow 0.15s ease; cursor: pointer; }
+  .send-b:hover { box-shadow: 0 0 16px rgba(255,255,255,0.2); transform: scale(1.05); }
+  .send-b:active { transform: scale(0.95); }
+
+  /* Quick action buttons */
+  .qa-btn { transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease; cursor: pointer; }
+  .qa-btn:hover { border-color: #3f3f46; background: #1c1c1f; }
+  .qa-btn:active { transform: scale(0.98); }
+
+  /* XP pill and tier pill */
+  .xp-pill { transition: border-color 0.2s ease; }
+  .tier-pill { transition: border-color 0.2s ease, color 0.2s ease; }
+
+  /* Border on hover for chat input */
+  .chat-inp { transition: border-color 0.2s ease; }
+  .chat-inp:hover { border-color: #3f3f46; }
+
+  body {
+    background: #030303;
+    font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, sans-serif;
+    color: #fff;
+    min-height: 100vh;
+    padding: 48px 20px 100px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.2);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .tagline {
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255,255,255,0.15);
+    margin-bottom: 56px;
+    font-style: italic;
+    letter-spacing: 0.08em;
+  }
+  .section-label {
+    text-align: center;
+    font-size: 9px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.15);
+    margin-bottom: 28px;
+    font-weight: 600;
+  }
+
+  .screens-row {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 72px;
+  }
+  .screen-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .screen-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.2);
+    font-weight: 500;
+  }
+
+  /* ─── PHONE ─── */
+  .phone {
+    width: 320px;
+    background: #000;          /* Pure black — exactly like settings page */
+    border-radius: 48px;
+    border: 1.5px solid #1c1c1e;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 0.5px #111,
+      0 48px 96px rgba(0,0,0,0.99),
+      0 8px 32px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+    min-height: 680px;
+  }
+
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 22px 8px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    font-weight: 500;
+  }
+
+  .page { padding: 0 0 88px; }
+
+  /* ─── CARD — matches settings exactly ─── */
+  /* bg-zinc-900 = #18181b, border-zinc-800 = #27272a */
+  .card {
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 16px;       /* rounded-xl */
+  }
+
+  /* ─── HOME ─── */
+  .home-header {
+    padding: 4px 20px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .home-eye {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .home-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.03em;
+  }
+  .xp-pill {
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    padding: 8px 14px;
+    text-align: right;
+  }
+  .xp-n { font-size: 15px; font-weight: 700; color: #fff; display: block; letter-spacing: -0.02em; }
+  .xp-l { font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.3); display: block; margin-top: 1px; }
+
+  /* ─── TIMER CARD ─── */
+  .timer-card {
+    margin: 0 14px 10px;
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 20px;
+    padding: 20px 18px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Faint red ambient — session is alive */
+  .timer-card::before {
+    content: '';
+    position: absolute;
+    top: -30px; left: 50%;
+    transform: translateX(-50%);
+    width: 200px; height: 80px;
+    background: radial-gradient(ellipse, rgba(220,38,38,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .timer-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .session-live {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #ef4444;
+    font-weight: 600;
+  }
+  .pulse-dot {
+    width: 5px; height: 5px;
+    background: #ef4444;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(239,68,68,0.7);
+    animation: pulse 2.5s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; box-shadow:0 0 6px rgba(239,68,68,0.7); }
+    50% { opacity:0.35; box-shadow:0 0 2px rgba(239,68,68,0.2); }
+  }
+  .tier-pill {
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    background: #27272a;
+    border: 1px solid #3f3f46;
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-weight: 600;
+  }
+
+  /* Ring */
+  .ring-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .ring-container { position: relative; width: 138px; height: 138px; }
+  .ring-container svg { transform: rotate(-90deg); }
+  .ring-track { fill: none; stroke: #27272a; stroke-width: 3; }
+  .ring-fill {
+    fill: none;
+    stroke: url(#redGrad);
+    stroke-width: 3;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 5px rgba(220,38,38,0.45));
+  }
+  .ring-center {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .ring-time { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -0.04em; line-height: 1; display: block; }
+  .ring-sub { font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-top: 5px; display: block; }
+  .ends-label { font-size: 9px; color: rgba(255,255,255,0.2); letter-spacing: 0.1em; text-transform: uppercase; font-family: monospace; }
+
+  .timer-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    padding: 11px;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+    font-weight: 600;
+    text-align: center;
+  }
+  .btn-white {
+    background: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 11px;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #000;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 14px 10px; }
+  .stat-box {
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 14px;
+    padding: 13px 8px;
+    text-align: center;
+  }
+  .stat-n { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.04em; display: block; line-height: 1; margin-bottom: 4px; }
+  .stat-n.red { color: #ef4444; text-shadow: 0 0 10px rgba(239,68,68,0.3); }
+  .stat-l { font-size: 7px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.35); font-weight: 600; }
+
+  /* Willpower */
+  .wp-card { margin: 0 14px 10px; background: #18181b; border: 1px solid #27272a; border-radius: 16px; padding: 14px 16px; }
+  .wp-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .wp-l { font-size: 11px; font-weight: 600; color: #fff; }
+  .wp-v { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.5); font-family: monospace; }
+  .bar-track { height: 3px; background: #27272a; border-radius: 99px; overflow: hidden; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, #3f3f46, #fff); border-radius: 99px; }
+  .wp-note { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 8px; }
+
+  /* Active directive */
+  .directive {
+    margin: 0 14px 10px;
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 16px;
+    padding: 15px 16px;
+  }
+  .dir-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .dir-tag { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #ef4444; font-weight: 700; }
+  .dir-clock { font-size: 10px; color: rgba(255,255,255,0.4); font-family: monospace; }
+  .dir-text { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.85); line-height: 1.5; margin-bottom: 13px; }
+  .dir-btns { display: flex; gap: 8px; }
+  .btn-comply {
+    flex: 1; background: #fff; border: none; border-radius: 12px;
+    padding: 11px; font-size: 9px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: #000; font-weight: 800; text-align: center;
+  }
+  .btn-dismiss {
+    padding: 11px 14px; background: transparent;
+    border: 1px solid #27272a; border-radius: 12px;
+    font-size: 9px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: rgba(255,255,255,0.3); font-weight: 600;
+  }
+
+  /* Streak */
+  .streak-card { margin: 0 14px 10px; background: #18181b; border: 1px solid #27272a; border-radius: 16px; padding: 14px 16px; }
+  .streak-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .streak-title { font-size: 11px; font-weight: 600; color: #fff; }
+  .streak-count { font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 500; }
+  .streak-dots { display: flex; gap: 6px; }
+  .s-dot { width: 28px; height: 28px; border-radius: 50%; background: #27272a; border: 1px solid #3f3f46; display: flex; align-items: center; justify-content: center; }
+  .s-dot.done { border-color: rgba(255,255,255,0.3); }
+  .s-dot.done::after { content: ''; width: 8px; height: 8px; background: #fff; border-radius: 50%; display: block; }
+  .s-dot.today { border-color: #ef4444; box-shadow: 0 0 10px rgba(239,68,68,0.2); }
+  .s-dot.today::after { content: ''; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: block; box-shadow: 0 0 5px rgba(239,68,68,0.5); }
+
+  /* Quick actions */
+  .qa-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 14px 10px; }
+  .qa-btn { background: #18181b; border: 1px solid #27272a; border-radius: 14px; padding: 14px 12px; display: flex; align-items: center; gap: 10px; }
+  .qa-icon { font-size: 16px; }
+  .qa-lbl { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.6); font-weight: 600; }
+
+  /* ─── BOTTOM NAV ─── */
+  .bnav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.95);
+    border-top: 1px solid #1c1c1e;
+    display: flex; justify-content: space-around;
+    padding: 10px 0 28px;
+    backdrop-filter: blur(20px);
+  }
+  .ni { display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: 0.25; min-width: 44px; }
+  .ni.on { opacity: 1; }
+  .ni svg { width: 20px; height: 20px; }
+  .ni span { font-size: 7px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; }
+
+  /* ─── CHAT ─── */
+  .chat-hdr { padding: 6px 20px 14px; border-bottom: 1px solid #1c1c1e; }
+  .chat-eye { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 3px; font-weight: 600; }
+  .chat-name { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+  .chat-live { font-size: 9px; color: #ef4444; text-transform: uppercase; margin-top: 4px; display: flex; align-items: center; gap: 5px; letter-spacing: 0.1em; font-weight: 600; }
+
+  .msgs { padding: 14px 14px; display: flex; flex-direction: column; gap: 12px; }
+  .m-master { align-self: flex-start; max-width: 84%; }
+  .m-slave { align-self: flex-end; max-width: 76%; }
+  .m-lbl { font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.3); font-weight: 600; margin-bottom: 4px; }
+  .m-slave .m-lbl { text-align: right; }
+
+  .bubble-m {
+    background: #18181b; border: 1px solid #27272a;
+    border-radius: 6px 18px 18px 18px;
+    padding: 12px 14px; font-size: 12px; color: rgba(255,255,255,0.85); line-height: 1.6;
+  }
+  .bubble-s {
+    background: #18181b; border: 1px solid #27272a;
+    border-radius: 18px 6px 18px 18px;
+    padding: 12px 14px; font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.6; text-align: right;
+  }
+  .task-drop {
+    align-self: flex-start; max-width: 94%;
+    background: #18181b; border: 1px solid #27272a;
+    border-top: 2px solid #ef4444;
+    border-radius: 0 18px 18px 18px;
+    padding: 13px 15px;
+  }
+  .td-tag { font-size: 8px; letter-spacing: 0.25em; text-transform: uppercase; color: #ef4444; font-weight: 700; margin-bottom: 5px; }
+  .td-title { font-size: 12px; font-weight: 600; color: #fff; margin-bottom: 5px; line-height: 1.4; }
+  .td-meta { font-size: 9px; color: rgba(255,255,255,0.4); letter-spacing: 0.05em; }
+
+  .chat-inp {
+    margin: 8px 14px;
+    background: #18181b; border: 1px solid #27272a; border-radius: 16px;
+    padding: 12px 14px; display: flex; align-items: center; gap: 10px;
+  }
+  .inp-ph { flex: 1; font-size: 11px; color: rgba(255,255,255,0.25); font-style: italic; }
+  .send-b { width: 28px; height: 28px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* ─── TASKS ─── */
+  .tasks-hdr { padding: 6px 20px 14px; border-bottom: 1px solid #1c1c1e; }
+  .tasks-titlerow { display: flex; justify-content: space-between; align-items: flex-end; }
+  .tasks-title { font-size: 26px; font-weight: 700; color: #fff; letter-spacing: -0.03em; }
+  .tasks-meta { font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 500; padding-bottom: 4px; }
+
+  .mini-bar { margin: 0 14px; padding: 12px 0; border-bottom: 1px solid #1c1c1e; }
+  .mini-bar-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .mini-bar-l { font-size: 11px; font-weight: 600; color: #fff; }
+  .mini-bar-v { font-size: 10px; color: rgba(255,255,255,0.5); }
+
+  .sec-lbl { padding: 14px 14px 8px; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(255,255,255,0.3); font-weight: 700; }
+
+  .task-row {
+    margin: 0 14px 8px;
+    background: #18181b; border: 1px solid #27272a; border-radius: 16px;
+    padding: 13px 14px; display: flex; align-items: flex-start; gap: 12px;
+  }
+  .task-row.m { border-color: rgba(239,68,68,0.3); }
+  .task-row.p { border-color: rgba(249,115,22,0.2); }
+  .task-row.done { opacity: 0.3; }
+
+  .chk { width: 20px; height: 20px; min-width: 20px; border: 1.5px solid #3f3f46; border-radius: 50%; margin-top: 1px; display: flex; align-items: center; justify-content: center; }
+  .task-row.m .chk { border-color: rgba(239,68,68,0.4); }
+  .chk.done-c { border-color: rgba(255,255,255,0.3); }
+  .chk.done-c::after { content: ''; width: 7px; height: 7px; background: #fff; border-radius: 50%; display: block; }
+
+  .tbody { flex: 1; }
+  .t-type { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.4); font-weight: 600; margin-bottom: 3px; }
+  .task-row.m .t-type { color: #ef4444; }
+  .task-row.p .t-type { color: #f97316; }
+  .t-title { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.85); line-height: 1.4; margin-bottom: 5px; }
+  .task-row.done .t-title { text-decoration: line-through; color: rgba(255,255,255,0.3); }
+  .t-meta { font-size: 9px; color: rgba(255,255,255,0.35); }
+  .t-overdue { color: #f97316; font-weight: 600; }
+  .t-cd { font-size: 11px; font-weight: 600; color: #f97316; font-family: monospace; align-self: center; white-space: nowrap; }
+
+  /* ─── DESIGN TOKENS ─── */
+  .principles {
+    max-width: 860px;
+    margin: 0 auto 64px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  .pc { background: #18181b; border: 1px solid #27272a; border-radius: 18px; padding: 20px; }
+  .pc-icon { font-size: 18px; margin-bottom: 10px; display: block; }
+  .pc-title { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.6); font-weight: 700; margin-bottom: 8px; }
+  .pc-body { font-size: 11px; color: rgba(255,255,255,0.4); line-height: 1.7; }
+  .pc-body em { color: rgba(255,255,255,0.7); font-style: normal; }
+
+  .palette { display: flex; gap: 12px; justify-content: center; margin-bottom: 48px; flex-wrap: wrap; }
+  .sw { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+  .sw-c { width: 48px; height: 48px; border-radius: 14px; border: 1px solid #27272a; }
+  .sw-n { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+  .sw-h { font-size: 8px; color: rgba(255,255,255,0.2); font-family: monospace; }
+</style>
+</head>
+<body>
+
+<h1>LockedIn — Final UI Direction</h1>
+<p class="tagline">"Pure black. Clear text. Cards that pull you in."</p>
+
+<div class="section-label" style="margin-bottom:32px;">Screen Mockups</div>
+<div class="screens-row">
+
+  <!-- HOME -->
+  <div class="screen-wrap">
+    <div class="screen-label">Home — Session Active</div>
+    <div class="phone">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span style="color:#ef4444;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
+          <span style="width:5px;height:5px;background:#ef4444;border-radius:50%;box-shadow:0 0 6px rgba(239,68,68,0.7);display:inline-block;flex-shrink:0;"></span>
+          Session Active
+        </span>
+      </div>
+      <div class="page">
+        <div class="home-header">
+          <div>
+            <div class="home-eye">LockedIn</div>
+            <div class="home-title">Day 12</div>
+          </div>
+          <div class="xp-pill"><span class="xp-n">73</span><span class="xp-l">XP</span></div>
+        </div>
+
+        <!-- Timer -->
+        <div class="timer-card">
+          <div class="timer-top">
+            <div class="session-live"><div class="pulse-dot"></div>Session Active</div>
+            <div class="tier-pill">Slave Tier</div>
+          </div>
+          <div class="ring-wrap">
+            <div class="ring-container">
+              <svg width="138" height="138" viewBox="0 0 138 138">
+                <defs>
+                  <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#7f1d1d"/>
+                    <stop offset="100%" style="stop-color:#ef4444"/>
+                  </linearGradient>
+                </defs>
+                <circle class="ring-track" cx="69" cy="69" r="57"/>
+                <circle class="ring-fill" cx="69" cy="69" r="57" stroke-dasharray="358" stroke-dashoffset="129"/>
+              </svg>
+              <div class="ring-center">
+                <span class="ring-time">47:23</span>
+                <span class="ring-sub">Remaining</span>
+              </div>
+            </div>
+            <div class="ends-label">Ends Thursday 22:00</div>
+          </div>
+          <div class="timer-btns">
+            <div class="btn-ghost">Emergency</div>
+            <div class="btn-white">Extend</div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-box"><span class="stat-n">8</span><span class="stat-l">Complied</span></div>
+          <div class="stat-box"><span class="stat-n red">2</span><span class="stat-l">Failed</span></div>
+          <div class="stat-box"><span class="stat-n">73</span><span class="stat-l">Willpower</span></div>
+        </div>
+
+        <!-- Willpower -->
+        <div class="wp-card">
+          <div class="wp-row"><div class="wp-l">Willpower Score</div><div class="wp-v">73 / 100</div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:73%"></div></div>
+          <div class="wp-note">Failure costs you. Compliance rebuilds it.</div>
+        </div>
+
+        <!-- Active Directive -->
+        <div class="directive card-hover">
+          <div class="dir-top">
+            <div class="dir-tag">Active Directive</div>
+            <div class="dir-clock">01:47 left</div>
+          </div>
+          <div class="dir-text">Write a 200-word reflection on your obedience this week and submit it.</div>
+          <div class="dir-btns">
+            <div class="btn-comply">Comply</div>
+            <div class="btn-dismiss">Fail</div>
+          </div>
+        </div>
+
+        <!-- Streak -->
+        <div class="streak-card">
+          <div class="streak-row">
+            <div class="streak-title">Compliance Record</div>
+            <div class="streak-count">12 Days</div>
+          </div>
+          <div class="streak-dots">
+            <div class="s-dot done"></div>
+            <div class="s-dot done"></div>
+            <div class="s-dot done"></div>
+            <div class="s-dot done"></div>
+            <div class="s-dot done"></div>
+            <div class="s-dot done"></div>
+            <div class="s-dot today"></div>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="qa-strip">
+          <div class="qa-btn"><span class="qa-icon">🩺</span><span class="qa-lbl">Check In</span></div>
+          <div class="qa-btn"><span class="qa-icon">🎡</span><span class="qa-lbl">Punishment</span></div>
+        </div>
+      </div>
+
+      <div class="bnav">
+        <div class="ni on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg><span>Home</span></div>
+        <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>Tasks</span></div>
+        <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Chat</span></div>
+        <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+        <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><span>More</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="screen-wrap">
+    <div class="screen-label">Chat — Master Speaks</div>
+    <div class="phone">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span style="color:#ef4444;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
+          <span style="width:5px;height:5px;background:#ef4444;border-radius:50%;box-shadow:0 0 6px rgba(239,68,68,0.7);display:inline-block;flex-shrink:0;"></span>
+          Observing
+        </span>
+      </div>
+      <div class="page">
+        <div class="chat-hdr">
+          <div class="chat-eye">AI Master</div>
+          <div class="chat-name">Cruel Mistress</div>
+          <div class="chat-live">
+            <span style="width:5px;height:5px;background:#ef4444;border-radius:50%;box-shadow:0 0 6px rgba(239,68,68,0.7);display:inline-block;flex-shrink:0;animation:pulse 2.5s infinite;"></span>
+            Session Active — Watching
+          </div>
+        </div>
+        <div class="msgs">
+          <div class="m-master">
+            <div class="m-lbl">Master</div>
+            <div class="bubble-m">You have been compliant today. I have decided to reward this with a new directive. Do not mistake this for mercy.</div>
+          </div>
+          <div class="m-slave">
+            <div class="m-lbl">You</div>
+            <div class="bubble-s">Yes. Thank you.</div>
+          </div>
+          <div class="task-drop">
+            <div class="td-tag">Directive Assigned</div>
+            <div class="td-title">Write a 200-word reflection on your obedience this week.</div>
+            <div class="td-meta">2h deadline · Text proof required · ★★★</div>
+          </div>
+          <div class="m-master">
+            <div class="m-lbl">Master</div>
+            <div class="bubble-m">Submit within the hour. Eloquence is not optional. Begin immediately.</div>
+          </div>
+          <div class="m-slave">
+            <div class="m-lbl">You</div>
+            <div class="bubble-s">Yes, Master. Beginning now.</div>
+          </div>
+        </div>
+        <div class="chat-inp">
+          <div class="inp-ph">Speak when addressed...</div>
+          <div class="send-b"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg></div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg><span>Home</span></div>
+        <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>Tasks</span></div>
+        <div class="ni on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Chat</span></div>
+        <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+        <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><span>More</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TASKS -->
+  <div class="screen-wrap">
+    <div class="screen-label">Tasks — Directives</div>
+    <div class="phone">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span style="color:#ef4444;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;display:flex;align-items:center;gap:5px;">
+          <span style="width:5px;height:5px;background:#ef4444;border-radius:50%;box-shadow:0 0 6px rgba(239,68,68,0.7);display:inline-block;flex-shrink:0;"></span>
+          3 Pending
+        </span>
+      </div>
+      <div class="page">
+        <div class="tasks-hdr">
+          <div class="tasks-titlerow">
+            <div class="tasks-title">Directives</div>
+            <div class="tasks-meta">5 / 8 done</div>
+          </div>
+        </div>
+        <div class="mini-bar">
+          <div class="mini-bar-row"><div class="mini-bar-l">Willpower</div><div class="mini-bar-v">73 / 100</div></div>
+          <div class="bar-track"><div class="bar-fill" style="width:73%"></div></div>
+        </div>
+
+        <div class="sec-lbl">Master Directives</div>
+        <div class="task-row m">
+          <div class="chk"></div>
+          <div class="tbody">
+            <div class="t-type">Master · Proof Required</div>
+            <div class="t-title">Write a 200-word reflection on your obedience this week.</div>
+            <div class="t-meta">01:47 left · ★★★ · Text proof</div>
+          </div>
+        </div>
+
+        <div class="sec-lbl">Punishment Directives</div>
+        <div class="task-row p">
+          <div class="chk" style="border-color:rgba(249,115,22,0.4);"></div>
+          <div class="tbody">
+            <div class="t-type">Punishment · Overdue</div>
+            <div class="t-title">Hold stress position for 10 minutes continuously.</div>
+            <div class="t-meta t-overdue">OVERDUE · ★★★★</div>
+          </div>
+          <div class="t-cd">−02:14</div>
+        </div>
+
+        <div class="sec-lbl">Daily Directives</div>
+        <div class="task-row">
+          <div class="chk"></div>
+          <div class="tbody">
+            <div class="t-type">Daily · Training</div>
+            <div class="t-title">Morning journal — 3 lines on your submission goals today.</div>
+            <div class="t-meta">4:22 left · ★★</div>
+          </div>
+        </div>
+        <div class="task-row done">
+          <div class="chk done-c"></div>
+          <div class="tbody">
+            <div class="t-type">Daily · Completed</div>
+            <div class="t-title">50 kegel exercises.</div>
+            <div class="t-meta">Complied · +20 XP</div>
+          </div>
+        </div>
+        <div class="task-row done">
+          <div class="chk done-c"></div>
+          <div class="tbody">
+            <div class="t-type">Daily · Completed</div>
+            <div class="t-title">Morning check-in submitted.</div>
+            <div class="t-meta">Complied · +10 XP</div>
+          </div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg><span>Home</span></div>
+        <div class="ni on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>Tasks</span></div>
+        <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Chat</span></div>
+        <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+        <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><span>More</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- DESIGN TOKENS -->
+<div class="section-label">Design System</div>
+<div class="principles">
+  <div class="pc">
+    <span class="pc-icon">⬛</span>
+    <div class="pc-title">Background</div>
+    <div class="pc-body"><em>#000000 — pure black.</em> Same as the settings page. Cards sit above it as `bg-zinc-900` surfaces with `border-zinc-800` edges.</div>
+  </div>
+  <div class="pc">
+    <span class="pc-icon">🔲</span>
+    <div class="pc-title">Cards</div>
+    <div class="pc-body"><em>bg-zinc-900 (#18181b) · border-zinc-800 (#27272a) · rounded-xl/2xl.</em> Exactly the settings card style. Rounded, floating, consistent.</div>
+  </div>
+  <div class="pc">
+    <span class="pc-icon">📝</span>
+    <div class="pc-title">Text Hierarchy</div>
+    <div class="pc-body"><em>text-white for titles · white/85 for body · white/50 for secondary · white/30 for labels.</em> All legible. No invisible grey.</div>
+  </div>
+  <div class="pc">
+    <span class="pc-icon">🔴</span>
+    <div class="pc-title">Red Accent</div>
+    <div class="pc-body"><em>#ef4444 with a soft glow.</em> Session indicator, active directive tag, master task border. Pulses subtly — alive, watching.</div>
+  </div>
+  <div class="pc">
+    <span class="pc-icon">⭕</span>
+    <div class="pc-title">Rounded Everything</div>
+    <div class="pc-body"><em>rounded-xl on cards, rounded-full on dots, rounded-2xl on the timer card.</em> Soft, inviting, hypnotic — not harsh.</div>
+  </div>
+  <div class="pc">
+    <span class="pc-icon">💫</span>
+    <div class="pc-title">Glows</div>
+    <div class="pc-body"><em>Red dot glows. Timer ring has drop-shadow. Comply button is bright white.</em> Light used sparingly — it draws the eye exactly where it needs to go.</div>
+  </div>
+</div>
+
+<!-- PALETTE -->
+<div class="section-label">Color System</div>
+<div class="palette">
+  <div class="sw"><div class="sw-c" style="background:#000;border-color:#1c1c1e;"></div><div class="sw-n">Background</div><div class="sw-h">#000000</div></div>
+  <div class="sw"><div class="sw-c" style="background:#18181b;"></div><div class="sw-n">Card (zinc-900)</div><div class="sw-h">#18181b</div></div>
+  <div class="sw"><div class="sw-c" style="background:#27272a;"></div><div class="sw-n">Border (zinc-800)</div><div class="sw-h">#27272a</div></div>
+  <div class="sw"><div class="sw-c" style="background:#3f3f46;"></div><div class="sw-n">Subtle (zinc-700)</div><div class="sw-h">#3f3f46</div></div>
+  <div class="sw"><div class="sw-c" style="background:rgba(255,255,255,0.5);border-color:#555;"></div><div class="sw-n">Secondary</div><div class="sw-h">white/50</div></div>
+  <div class="sw"><div class="sw-c" style="background:#fff;border-color:#555;"></div><div class="sw-n">Command</div><div class="sw-h">#ffffff</div></div>
+  <div class="sw"><div class="sw-c" style="background:#ef4444;"></div><div class="sw-n">Session Red</div><div class="sw-h">#ef4444</div></div>
+  <div class="sw"><div class="sw-c" style="background:#f97316;"></div><div class="sw-n">Punishment</div><div class="sw-h">#f97316</div></div>
+</div>
+
+<div style="text-align:center;padding-top:12px;">
+  <div style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.15);">Pure Black · Zinc-900 Cards · White Text · Red Authority</div>
+</div>
+
+</body>
+</html>

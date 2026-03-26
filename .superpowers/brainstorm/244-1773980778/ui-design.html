@@ -1,0 +1,425 @@
+<h2>UI Design — Phase 1 Features</h2>
+<p class="subtitle">Four screens. Review each mockup and let me know what to adjust.</p>
+
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #1a1a24;
+  --border: rgba(255,255,255,0.08);
+  --purple: #8b5cf6;
+  --red: #ef4444;
+  --teal: #14b8a6;
+  --gold: #f59e0b;
+  --text: #f1f5f9;
+  --text2: #94a3b8;
+  --text3: #475569;
+}
+
+.screens {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+@media (max-width: 700px) {
+  .screens { grid-template-columns: 1fr; }
+}
+
+.screen-wrap {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.screen-label {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.screen-label span { color: var(--purple); }
+
+.phone {
+  background: var(--bg);
+  margin: 12px auto;
+  width: 240px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.phone-header {
+  background: var(--bg2);
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.phone-body { padding: 12px; }
+
+/* Mood Check-in */
+.mood-modal {
+  background: var(--bg2);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 14px;
+  margin: 8px 0;
+}
+.mood-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+.mood-sub { font-size: 10px; color: var(--text3); margin-bottom: 12px; }
+.mood-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 5px; }
+.mood-slider { width: 100%; height: 4px; background: var(--bg3); border-radius: 2px; margin-bottom: 12px; position: relative; }
+.mood-slider-fill { height: 100%; border-radius: 2px; width: 70%; }
+.mood-slider-fill.purple { background: var(--purple); }
+.mood-slider-fill.red { background: var(--red); }
+.mood-dot { width: 10px; height: 10px; border-radius: 50%; background: white; position: absolute; top: -3px; left: 68%; border: 2px solid #fff; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+.tag-chip { padding: 3px 8px; border-radius: 20px; font-size: 9px; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); color: var(--text2); background: var(--bg3); }
+.tag-chip.active { background: rgba(139,92,246,0.2); border-color: var(--purple); color: var(--purple); }
+.mood-btn { width: 100%; padding: 8px; background: var(--purple); border-radius: 8px; font-size: 11px; font-weight: 700; color: white; text-align: center; }
+
+/* Calendar */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 8px; }
+.cal-day-header { text-align: center; font-size: 8px; color: var(--text3); padding: 2px 0; }
+.cal-day { aspect-ratio: 1; border-radius: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; position: relative; cursor: pointer; }
+.cal-day.good { background: rgba(20,184,166,0.2); color: var(--teal); }
+.cal-day.bad { background: rgba(239,68,68,0.15); color: var(--red); }
+.cal-day.today { background: var(--purple); color: white; }
+.cal-day.release { background: var(--red); color: white; }
+.cal-day.session-day { outline: 1px solid rgba(139,92,246,0.4); }
+.mood-dot-cal { width: 4px; height: 4px; border-radius: 50%; position: absolute; bottom: 1px; right: 1px; }
+.mood-dot-cal.needy { background: var(--gold); }
+.mood-dot-cal.broken { background: var(--red); }
+.mood-dot-cal.floaty { background: var(--teal); }
+.overlay-chips { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+.overlay-chip { padding: 2px 7px; border-radius: 10px; font-size: 8px; font-weight: 700; border: 1px solid rgba(255,255,255,0.1); color: var(--text3); }
+.overlay-chip.on { background: rgba(139,92,246,0.2); border-color: var(--purple); color: var(--purple); }
+
+/* Day Detail Panel */
+.day-panel { background: var(--bg3); border-radius: 10px; padding: 10px; margin-top: 8px; }
+.day-panel-header { font-size: 11px; font-weight: 700; margin-bottom: 8px; color: var(--text); display: flex; justify-content: space-between; }
+.day-row { display: flex; align-items: center; gap-6px; margin-bottom: 5px; font-size: 9px; color: var(--text2); gap: 5px; }
+.day-row-icon { font-size: 10px; }
+.day-mood-bar { display: flex; gap: 3px; margin-top: 6px; }
+.mood-bar-item { flex: 1; height: 20px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 8px; }
+.mood-bar-item.s { background: rgba(139,92,246,0.3); color: var(--purple); }
+.mood-bar-item.f { background: rgba(239,68,68,0.3); color: var(--red); }
+
+/* Session Replay */
+.replay-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.replay-item { background: var(--bg3); border-radius: 8px; padding: 8px 10px; border: 1px solid var(--border); }
+.replay-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+.replay-item-title { font-size: 10px; font-weight: 700; color: var(--text); }
+.replay-grade { font-size: 9px; font-weight: 800; }
+.grade-a { color: var(--teal); }
+.grade-b { color: var(--gold); }
+.grade-c { color: var(--red); }
+.replay-item-meta { font-size: 8px; color: var(--text3); }
+.replay-timeline { background: var(--bg3); border-radius: 8px; padding: 10px; }
+.timeline-header { font-size: 10px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+.timeline-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: flex-start; }
+.timeline-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 1px; }
+.timeline-dot.complete { background: var(--teal); }
+.timeline-dot.fail { background: var(--red); }
+.timeline-dot.event { background: var(--purple); }
+.timeline-dot.mood { background: var(--gold); }
+.timeline-text { font-size: 8px; color: var(--text2); line-height: 1.4; }
+.timeline-text strong { color: var(--text); display: block; }
+
+/* Punishment Wheel */
+.wheel-container { display: flex; flex-direction: column; align-items: center; padding: 10px 0; }
+.wheel { width: 130px; height: 130px; border-radius: 50%; position: relative; border: 3px solid rgba(255,255,255,0.1); overflow: hidden; margin-bottom: 10px; }
+.wheel-slice { position: absolute; width: 100%; height: 100%; clip-path: polygon(50% 50%, 100% 0%, 100% 50%); transform-origin: 50% 50%; }
+.wheel-text { font-size: 7px; font-weight: 700; text-align: center; }
+.wheel-pointer { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 16px solid white; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+.wheel-center { position: absolute; width: 24px; height: 24px; border-radius: 50%; background: var(--bg); border: 2px solid rgba(255,255,255,0.2); top: 50%; left: 50%; transform: translate(-50%,-50%); }
+.spin-btn { padding: 8px 20px; background: var(--red); border-radius: 8px; font-size: 11px; font-weight: 800; color: white; letter-spacing: 0.05em; margin-bottom: 8px; }
+.wheel-result { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 8px; text-align: center; width: 100%; }
+.wheel-result-title { font-size: 10px; font-weight: 700; color: var(--red); margin-bottom: 2px; }
+.wheel-result-desc { font-size: 8px; color: var(--text2); }
+.wheel-result-btn { margin-top: 6px; width: 100%; padding: 5px; background: var(--red); border-radius: 6px; font-size: 9px; font-weight: 700; color: white; text-align: center; }
+.severity-row { display: flex; gap: 3px; justify-content: center; margin-bottom: 6px; }
+.sev-pip { width: 16px; height: 4px; border-radius: 2px; }
+.sev-pip.lit { background: var(--red); }
+.sev-pip.dim { background: var(--bg3); }
+.weight-note { font-size: 8px; color: var(--text3); text-align: center; margin-bottom: 8px; }
+
+/* Wheel visual slices using conic gradient */
+.wheel-visual {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #ef4444 0deg 60deg,
+    #f97316 60deg 110deg,
+    #eab308 110deg 170deg,
+    #8b5cf6 170deg 230deg,
+    #ef4444 230deg 280deg,
+    #dc2626 280deg 360deg
+  );
+  position: relative;
+  margin-bottom: 10px;
+  border: 3px solid rgba(255,255,255,0.15);
+  box-shadow: 0 0 30px rgba(239,68,68,0.3);
+  animation: none;
+}
+.wheel-label-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wheel-center2 {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+}
+</style>
+
+<div class="screens">
+
+  <!-- SCREEN 1: Mood Check-in -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>01</span> Mood Check-in Modal (session-only)</div>
+    <div class="phone">
+      <div class="phone-header">
+        <span>🔒 Session Active</span>
+        <span>Day 3</span>
+      </div>
+      <div class="phone-body">
+        <div class="mood-modal">
+          <div class="mood-title">How are you feeling?</div>
+          <div class="mood-sub">Daily check-in · Shapes your AI's tone today</div>
+
+          <div class="mood-label">Submission Depth</div>
+          <div class="mood-slider">
+            <div class="mood-slider-fill purple" style="width:70%"></div>
+            <div class="mood-dot" style="left:68%"></div>
+          </div>
+
+          <div class="mood-label">Frustration Level</div>
+          <div class="mood-slider">
+            <div class="mood-slider-fill red" style="width:40%"></div>
+            <div class="mood-dot" style="left:38%"></div>
+          </div>
+
+          <div class="mood-label">Headspace Tags</div>
+          <div class="tag-row">
+            <div class="tag-chip active">needy</div>
+            <div class="tag-chip active">floaty</div>
+            <div class="tag-chip">defiant</div>
+            <div class="tag-chip">broken</div>
+            <div class="tag-chip">eager</div>
+            <div class="tag-chip">desperate</div>
+          </div>
+
+          <div class="mood-label" style="margin-bottom:4px">Notes (optional)</div>
+          <div style="background:var(--bg3);border-radius:6px;padding:6px 8px;font-size:9px;color:var(--text3);margin-bottom:10px;">Struggling to focus today...</div>
+
+          <div class="mood-btn">Submit Check-in</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Calendar Upgrade -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>02</span> Calendar — Overlays + Day Detail</div>
+    <div class="phone">
+      <div class="phone-header">
+        <span>March 2026</span>
+        <span style="color:var(--red)">Release: Apr 2</span>
+      </div>
+      <div class="phone-body">
+        <div class="overlay-chips">
+          <div class="overlay-chip on">Tasks</div>
+          <div class="overlay-chip on">Mood</div>
+          <div class="overlay-chip">Sessions</div>
+          <div class="overlay-chip">Punish</div>
+        </div>
+
+        <div class="cal-grid">
+          <div class="cal-day-header">S</div><div class="cal-day-header">M</div><div class="cal-day-header">T</div><div class="cal-day-header">W</div><div class="cal-day-header">T</div><div class="cal-day-header">F</div><div class="cal-day-header">S</div>
+          <div class="cal-day"></div>
+          <div class="cal-day"></div>
+          <div class="cal-day"></div>
+          <div class="cal-day"></div>
+          <div class="cal-day"></div>
+          <div class="cal-day"></div>
+          <div class="cal-day good session-day">1<div class="mood-dot-cal floaty"></div></div>
+          <div class="cal-day good session-day">2<div class="mood-dot-cal floaty"></div></div>
+          <div class="cal-day good session-day">3<div class="mood-dot-cal needy"></div></div>
+          <div class="cal-day bad session-day">4<div class="mood-dot-cal broken"></div></div>
+          <div class="cal-day good session-day">5</div>
+          <div class="cal-day good session-day">6</div>
+          <div class="cal-day session-day">7</div>
+          <div class="cal-day good">8</div>
+          <div class="cal-day good">9</div>
+          <div class="cal-day">10</div>
+          <div class="cal-day bad">11</div>
+          <div class="cal-day good">12</div>
+          <div class="cal-day good">13</div>
+          <div class="cal-day">14</div>
+          <div class="cal-day good">15</div>
+          <div class="cal-day good">16</div>
+          <div class="cal-day good">17</div>
+          <div class="cal-day good">18</div>
+          <div class="cal-day good">19</div>
+          <div class="cal-day today">20</div>
+          <div class="cal-day"></div>
+          <div class="cal-day"></div>
+        </div>
+
+        <!-- Day detail panel (click day 3) -->
+        <div class="day-panel">
+          <div class="day-panel-header">
+            <span>Mar 3 — Day Detail</span>
+            <span style="color:var(--teal);font-size:9px">↗ Replay</span>
+          </div>
+          <div class="day-row"><span class="day-row-icon">✅</span> 4 tasks completed</div>
+          <div class="day-row"><span class="day-row-icon">❌</span> 1 task failed</div>
+          <div class="day-row"><span class="day-row-icon">⚡</span> Willpower: 72 → 68</div>
+          <div class="day-row"><span class="day-row-icon">🏴</span> Punishment: +2h lock extension</div>
+          <div style="font-size:8px;color:var(--text3);margin-top:6px;margin-bottom:3px">MOOD CHECK-IN</div>
+          <div class="day-mood-bar">
+            <div class="mood-bar-item s">😶 Depth 7</div>
+            <div class="mood-bar-item f">😤 Frust 4</div>
+            <div style="flex:1;height:20px;border-radius:3px;background:rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--gold)">needy</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: Session Replay -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>03</span> Session Replay — /history</div>
+    <div class="phone">
+      <div class="phone-header">
+        <span>Session History</span>
+        <span style="color:var(--text3)">3 archived</span>
+      </div>
+      <div class="phone-body">
+        <div class="replay-list">
+          <div class="replay-item" style="border-color:rgba(20,184,166,0.3)">
+            <div class="replay-item-header">
+              <div class="replay-item-title">Session #3 — Stern Master</div>
+              <div class="replay-grade grade-a">A</div>
+            </div>
+            <div class="replay-item-meta">Feb 28 → Mar 6 · 7 days · 23 tasks · 91% compliance</div>
+          </div>
+          <div class="replay-item">
+            <div class="replay-item-header">
+              <div class="replay-item-title">Session #2 — Cold Mistress</div>
+              <div class="replay-grade grade-b">B+</div>
+            </div>
+            <div class="replay-item-meta">Feb 14 → Feb 21 · 7 days · 18 tasks · 78% compliance</div>
+          </div>
+          <div class="replay-item" style="border-color:rgba(239,68,68,0.3)">
+            <div class="replay-item-header">
+              <div class="replay-item-title">Session #1 — Gentle Guide</div>
+              <div class="replay-grade grade-c">C</div>
+            </div>
+            <div class="replay-item-meta">Feb 1 → Feb 7 · 6 days · 12 tasks · 58% compliance</div>
+          </div>
+        </div>
+
+        <!-- Session detail timeline -->
+        <div class="replay-timeline">
+          <div class="timeline-header">Session #3 — Timeline</div>
+          <div class="timeline-row">
+            <div class="timeline-dot event"></div>
+            <div class="timeline-text"><strong>Session started</strong>Feb 28 · 10:14am · Stern Master</div>
+          </div>
+          <div class="timeline-row">
+            <div class="timeline-dot mood"></div>
+            <div class="timeline-text"><strong>Mood check-in</strong>Depth 6 · Frust 3 · floaty, eager</div>
+          </div>
+          <div class="timeline-row">
+            <div class="timeline-dot complete"></div>
+            <div class="timeline-text"><strong>Edge control ritual</strong>Completed · +20 XP</div>
+          </div>
+          <div class="timeline-row">
+            <div class="timeline-dot fail"></div>
+            <div class="timeline-text"><strong>Mirror inspection</strong>Failed · +1h punishment</div>
+          </div>
+          <div class="timeline-row">
+            <div class="timeline-dot complete"></div>
+            <div class="timeline-text"><strong>3× writing lines</strong>Verified · +10 XP</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <div style="flex:1;padding:5px;background:rgba(139,92,246,0.15);border-radius:6px;text-align:center;font-size:8px;color:var(--purple);font-weight:700">💬 Chat</div>
+            <div style="flex:1;padding:5px;background:rgba(20,184,166,0.15);border-radius:6px;text-align:center;font-size:8px;color:var(--teal);font-weight:700">📸 Proofs</div>
+            <div style="flex:1;padding:5px;background:rgba(245,158,11,0.15);border-radius:6px;text-align:center;font-size:8px;color:var(--gold);font-weight:700">📦 Export</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: Punishment Wheel -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>04</span> Punishment Wheel</div>
+    <div class="phone">
+      <div class="phone-header">
+        <span>🎰 Punishment Wheel</span>
+        <span style="color:var(--red)">5 violations</span>
+      </div>
+      <div class="phone-body">
+        <div class="weight-note">Weighted by violation count — more sins, worse odds</div>
+        <div class="severity-row">
+          <div style="font-size:8px;color:var(--text3);margin-right:4px">Current severity bias:</div>
+          <div class="sev-pip lit"></div>
+          <div class="sev-pip lit"></div>
+          <div class="sev-pip lit"></div>
+          <div class="sev-pip dim"></div>
+          <div class="sev-pip dim"></div>
+        </div>
+
+        <div class="wheel-container">
+          <div style="position:relative;margin-bottom:10px;">
+            <div class="wheel-visual"></div>
+            <div class="wheel-label-overlay">
+              <div class="wheel-center2">🎰</div>
+            </div>
+            <div class="wheel-pointer"></div>
+          </div>
+
+          <div class="spin-btn">SPIN</div>
+
+          <div class="wheel-result">
+            <div class="wheel-result-title">⚠ Edge Denial — 24h</div>
+            <div class="wheel-result-desc">No touching permitted for 24 hours. AI will check in to verify compliance. Proof required at end of window.</div>
+            <div class="wheel-result-btn">Accept Punishment →</div>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin-top:6px">
+          <div style="font-size:8px;color:var(--text3)">Pool: 12 punishments · <span style="color:var(--purple);cursor:pointer">Edit pool ↗</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

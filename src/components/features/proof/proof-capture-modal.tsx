@@ -169,8 +169,8 @@ export function ProofCaptureModal({ task, userId, sessionId, onClose, onSubmitte
     // ── Render ──
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-            <div className="bg-bg-secondary border border-white/10 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+            <div className="bg-bg-secondary border border-white/10 rounded-2xl max-w-lg w-full max-h-[90dvh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-start justify-between p-5 border-b border-white/5">
                     <div className="space-y-2">
