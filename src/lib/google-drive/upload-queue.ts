@@ -22,7 +22,23 @@ export type QueueEntry =
       failedAt: string
     }
 
-export function queueFailed(entry: Omit<QueueEntry, 'id' | 'failedAt'>): void {
+export type QueueEntryInput =
+  | {
+      type: 'proof'
+      sessionId: string
+      filename: string
+      sessionFolderName: string
+      opfsCategory: 'proofs' | 'videos'
+      opfsFilename: string
+    }
+  | {
+      type: 'session'
+      sessionId: string
+      filename: string
+      sessionFolderName: string
+    }
+
+export function queueFailed(entry: QueueEntryInput): void {
   const queue = getQueue()
   queue.push({
     ...entry,

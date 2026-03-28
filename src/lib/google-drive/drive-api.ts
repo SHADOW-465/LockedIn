@@ -67,7 +67,7 @@ export async function uploadFile(
   const token = await getValidToken()
   const metadata = { name: filename, parents: [folderId] }
   const metadataBlob = new Blob([JSON.stringify(metadata)], { type: 'application/json' })
-  const fileBlob = data instanceof Uint8Array ? new Blob([data], { type: mimeType }) : data
+  const fileBlob = data instanceof Uint8Array ? new Blob([data as any], { type: mimeType }) : data
 
   const form = new FormData()
   form.append('metadata', metadataBlob)
