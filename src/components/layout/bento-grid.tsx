@@ -39,8 +39,8 @@ export function BentoItem({
     return (
         <div
             className={cn(
-                'bg-bg-secondary rounded-[var(--radius-lg)] p-6 shadow-raised border border-white/5 min-h-[120px]',
-                'transition-all duration-300 animate-fade-in',
+                'bg-zinc-900 rounded-[var(--radius-lg)] p-6 border border-zinc-800 min-h-[120px]',
+                'transition-all duration-300 animate-fade-in hover:border-zinc-700',
                 spanClasses[span],
                 className
             )}

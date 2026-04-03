@@ -57,7 +57,7 @@ export default function TierStep({ onValid }: StepProps) {
         <div className="space-y-6 max-w-md mx-auto">
             <div className="text-center space-y-2">
                 <h2 className="text-2xl font-bold font-mono">Choose Your Tier</h2>
-                <p className="text-text-secondary text-sm">
+                <p className="text-white/80 text-sm">
                     This determines the intensity of your training. You can change this later.
                 </p>
             </div>
@@ -73,8 +73,8 @@ export default function TierStep({ onValid }: StepProps) {
                             key={t}
                             onClick={() => setTier(t)}
                             className={`w-full text-left p-4 rounded-[var(--radius-lg)] border transition-all duration-200 cursor-pointer ${isSelected
-                                    ? 'border-white/20 bg-bg-secondary'
-                                    : 'border-white/5 bg-bg-secondary/50 hover:bg-bg-secondary hover:border-white/10'
+                                    ? 'border-zinc-700 bg-zinc-900'
+                                    : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-800'
                                 }`}
                             style={isSelected ? { boxShadow: config.glow } : {}}
                         >
@@ -97,7 +97,7 @@ export default function TierStep({ onValid }: StepProps) {
                                             {config.intensity}
                                         </span>
                                     </div>
-                                    <p className="text-text-tertiary text-xs mt-1 leading-relaxed">{config.desc}</p>
+                                    <p className="text-white/30 text-xs mt-1 leading-relaxed">{config.desc}</p>
                                 </div>
                             </div>
                         </button>

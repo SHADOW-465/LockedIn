@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 const badgeVariants = cva(
-    'inline-flex items-center gap-1 rounded-[var(--radius-pill)] font-bold uppercase tracking-wide shadow-inset text-xs',
+    'inline-flex items-center gap-1 rounded-[var(--radius-pill)] font-bold uppercase tracking-wide text-xs',
     {
         variants: {
             variant: {
@@ -11,7 +11,7 @@ const badgeVariants = cva(
                 tier3: 'bg-tier-hardcore text-white px-3 py-1',
                 tier4: 'bg-tier-extreme text-white px-3 py-1',
                 tier5:
-                    'bg-black text-red-primary border-2 border-red-primary glow-red px-3 py-1',
+                    'bg-black text-[var(--accent)] border border-[var(--accent)]/50 px-3 py-1',
                 locked: 'bg-red-primary text-white px-3 py-1',
                 caged: 'bg-red-primary text-white px-2 py-1',
                 uncaged: 'bg-teal-primary text-black px-2 py-1',

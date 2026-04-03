@@ -146,23 +146,23 @@ export default function LimitsStep({ onValid }: StepProps) {
             {/* Header */}
             <div className="text-center space-y-2">
                 <h2 className="text-2xl font-bold font-mono">Set Your Limits</h2>
-                <p className="text-text-secondary text-sm leading-relaxed">
-                    <span className="text-red-primary font-semibold">Hard limits</span> are NEVER crossed.{' '}
-                    <span className="text-purple-primary font-semibold">Soft limits</span> may be gently pushed.
+                <p className="text-white/80 text-sm leading-relaxed">
+                    <span className="text-white font-semibold">Hard limits</span> are NEVER crossed.{' '}
+                    <span className="text-white font-semibold">Soft limits</span> may be gently pushed.
                     <br />
-                    <span className="text-text-disabled text-xs">Click <strong>Hard</strong> or <strong>Soft</strong> for each item. At least 1 hard limit required.</span>
+                    <span className="text-white/20 text-xs">Click <strong>Hard</strong> or <strong>Soft</strong> for each item. At least 1 hard limit required.</span>
                 </p>
             </div>
 
             {/* Search */}
             <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-disabled" />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" />
                 <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search limits..."
-                    className="w-full pl-8 pr-4 py-2.5 rounded-[var(--radius-lg)] bg-bg-secondary border border-white/5 text-sm text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-purple-primary/40 transition-colors"
+                    className="w-full pl-8 pr-4 py-2.5 rounded-[var(--radius-lg)] bg-zinc-900 border border-zinc-800 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-zinc-700 transition-colors"
                 />
             </div>
 
@@ -174,31 +174,31 @@ export default function LimitsStep({ onValid }: StepProps) {
                     const catSoftCount = cat.items.filter((i) => softLimits.includes(i)).length
 
                     return (
-                        <div key={cat.category} className="rounded-[var(--radius-lg)] border border-white/5 overflow-hidden bg-bg-secondary/40">
+                        <div key={cat.category} className="rounded-[var(--radius-lg)] border border-zinc-800 overflow-hidden bg-zinc-900/40">
                             {/* Category Header */}
                             <button
                                 onClick={() => toggleCategory(cat.category)}
                                 className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-bg-hover/40 transition-colors cursor-pointer"
                             >
-                                <span className="text-sm font-semibold text-text-primary">{cat.category}</span>
+                                <span className="text-sm font-semibold text-white">{cat.category}</span>
                                 <div className="flex items-center gap-2">
                                     {catHardCount > 0 && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-primary/15 text-red-primary font-medium">
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800/15 text-white font-medium">
                                             {catHardCount} hard
                                         </span>
                                     )}
                                     {catSoftCount > 0 && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-primary/15 text-purple-primary font-medium">
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800/15 text-white font-medium">
                                             {catSoftCount} soft
                                         </span>
                                     )}
-                                    <span className="text-text-disabled text-xs">{isExpanded ? '▲' : '▼'}</span>
+                                    <span className="text-white/20 text-xs">{isExpanded ? '▲' : '▼'}</span>
                                 </div>
                             </button>
 
                             {/* Items List */}
                             {isExpanded && (
-                                <div className="border-t border-white/5">
+                                <div className="border-t border-zinc-800">
                                     {cat.items.map((limit) => {
                                         const isHard = hardLimits.includes(limit)
                                         const isSoft = softLimits.includes(limit)
@@ -207,18 +207,18 @@ export default function LimitsStep({ onValid }: StepProps) {
                                             <div
                                                 key={limit}
                                                 className={`flex items-center justify-between px-4 py-2 border-b border-white/[0.03] last:border-b-0 transition-colors ${isHard
-                                                        ? 'bg-red-primary/[0.04]'
+                                                        ? 'bg-zinc-800/[0.04]'
                                                         : isSoft
-                                                            ? 'bg-purple-primary/[0.04]'
+                                                            ? 'bg-zinc-800/[0.04]'
                                                             : ''
                                                     }`}
                                             >
                                                 {/* Label */}
                                                 <span className={`text-xs font-medium ${isHard
-                                                        ? 'text-red-primary'
+                                                        ? 'text-white'
                                                         : isSoft
-                                                            ? 'text-purple-primary'
-                                                            : 'text-text-secondary'
+                                                            ? 'text-white'
+                                                            : 'text-white/80'
                                                     }`}>
                                                     {limit}
                                                 </span>
@@ -228,8 +228,8 @@ export default function LimitsStep({ onValid }: StepProps) {
                                                     <button
                                                         onClick={() => isHard ? clearLimit(limit) : setAsHard(limit)}
                                                         className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer ${isHard
-                                                                ? 'bg-red-primary text-white shadow-sm shadow-red-primary/25'
-                                                                : 'bg-bg-tertiary/60 text-text-disabled hover:bg-red-primary/20 hover:text-red-primary'
+                                                                ? 'bg-zinc-800 text-white shadow-sm shadow-red-primary/25'
+                                                                : 'bg-zinc-800/60 text-white/20 hover:bg-zinc-800/20 hover:text-white'
                                                             }`}
                                                     >
                                                         Hard
@@ -237,8 +237,8 @@ export default function LimitsStep({ onValid }: StepProps) {
                                                     <button
                                                         onClick={() => isSoft ? clearLimit(limit) : setAsSoft(limit)}
                                                         className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer ${isSoft
-                                                                ? 'bg-purple-primary text-white shadow-sm shadow-purple-primary/25'
-                                                                : 'bg-bg-tertiary/60 text-text-disabled hover:bg-purple-primary/20 hover:text-purple-primary'
+                                                                ? 'bg-zinc-800 text-white shadow-sm shadow-purple-primary/25'
+                                                                : 'bg-zinc-800/60 text-white/20 hover:bg-zinc-800/20 hover:text-white'
                                                             }`}
                                                     >
                                                         Soft
@@ -255,11 +255,11 @@ export default function LimitsStep({ onValid }: StepProps) {
 
                 {/* Custom Limits Section */}
                 {hasCustomLimits && (
-                    <div className="rounded-[var(--radius-lg)] border border-white/5 overflow-hidden bg-bg-secondary/40">
+                    <div className="rounded-[var(--radius-lg)] border border-zinc-800 overflow-hidden bg-zinc-900/40">
                         <div className="px-4 py-2.5">
-                            <span className="text-sm font-semibold text-text-primary">Custom Limits</span>
+                            <span className="text-sm font-semibold text-white">Custom Limits</span>
                         </div>
-                        <div className="border-t border-white/5">
+                        <div className="border-t border-zinc-800">
                             {[...customHardLimits, ...customSoftLimits].map((limit) => {
                                 const isHard = hardLimits.includes(limit)
                                 const isSoft = softLimits.includes(limit)
@@ -267,10 +267,10 @@ export default function LimitsStep({ onValid }: StepProps) {
                                 return (
                                     <div
                                         key={limit}
-                                        className={`flex items-center justify-between px-4 py-2 border-b border-white/[0.03] last:border-b-0 transition-colors ${isHard ? 'bg-red-primary/[0.04]' : 'bg-purple-primary/[0.04]'
+                                        className={`flex items-center justify-between px-4 py-2 border-b border-white/[0.03] last:border-b-0 transition-colors ${isHard ? 'bg-zinc-800/[0.04]' : 'bg-zinc-800/[0.04]'
                                             }`}
                                     >
-                                        <span className={`text-xs font-medium ${isHard ? 'text-red-primary' : 'text-purple-primary'
+                                        <span className={`text-xs font-medium ${isHard ? 'text-white' : 'text-white'
                                             }`}>
                                             {limit}
                                         </span>
@@ -278,8 +278,8 @@ export default function LimitsStep({ onValid }: StepProps) {
                                             <button
                                                 onClick={() => isHard ? clearLimit(limit) : setAsHard(limit)}
                                                 className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer ${isHard
-                                                        ? 'bg-red-primary text-white shadow-sm shadow-red-primary/25'
-                                                        : 'bg-bg-tertiary/60 text-text-disabled hover:bg-red-primary/20 hover:text-red-primary'
+                                                        ? 'bg-zinc-800 text-white shadow-sm shadow-red-primary/25'
+                                                        : 'bg-zinc-800/60 text-white/20 hover:bg-zinc-800/20 hover:text-white'
                                                     }`}
                                             >
                                                 Hard
@@ -287,15 +287,15 @@ export default function LimitsStep({ onValid }: StepProps) {
                                             <button
                                                 onClick={() => isSoft ? clearLimit(limit) : setAsSoft(limit)}
                                                 className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer ${isSoft
-                                                        ? 'bg-purple-primary text-white shadow-sm shadow-purple-primary/25'
-                                                        : 'bg-bg-tertiary/60 text-text-disabled hover:bg-purple-primary/20 hover:text-purple-primary'
+                                                        ? 'bg-zinc-800 text-white shadow-sm shadow-purple-primary/25'
+                                                        : 'bg-zinc-800/60 text-white/20 hover:bg-zinc-800/20 hover:text-white'
                                                     }`}
                                             >
                                                 Soft
                                             </button>
                                             <button
                                                 onClick={() => clearLimit(limit)}
-                                                className="p-1 rounded-md text-text-disabled hover:text-red-primary hover:bg-red-primary/10 transition-colors cursor-pointer"
+                                                className="p-1 rounded-md text-white/20 hover:text-white hover:bg-zinc-800/10 transition-colors cursor-pointer"
                                             >
                                                 <X size={12} />
                                             </button>
@@ -311,20 +311,20 @@ export default function LimitsStep({ onValid }: StepProps) {
             {/* Custom Limit Input */}
             <div className="flex gap-2">
                 <div className="relative flex-1">
-                    <Plus size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-disabled" />
+                    <Plus size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" />
                     <input
                         type="text"
                         value={customLimit}
                         onChange={(e) => setCustomLimit(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && addCustom()}
                         placeholder="Add a custom limit..."
-                        className="w-full pl-8 pr-4 py-2.5 rounded-[var(--radius-lg)] bg-bg-secondary border border-white/5 text-sm text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-red-primary/40 transition-colors"
+                        className="w-full pl-8 pr-4 py-2.5 rounded-[var(--radius-lg)] bg-zinc-900 border border-zinc-800 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-zinc-700 transition-colors"
                     />
                 </div>
                 <button
                     onClick={addCustom}
                     disabled={!customLimit.trim()}
-                    className="px-4 py-2.5 rounded-[var(--radius-lg)] bg-bg-tertiary text-text-secondary text-sm hover:bg-bg-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-4 py-2.5 rounded-[var(--radius-lg)] bg-zinc-800 text-white/80 text-sm hover:bg-bg-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                     Add
                 </button>
@@ -335,17 +335,17 @@ export default function LimitsStep({ onValid }: StepProps) {
                 <div className="flex items-center gap-4 justify-center text-xs">
                     {hardLimits.length > 0 && (
                         <div className="flex items-center gap-1.5">
-                            <ShieldOff size={13} className="text-red-primary" />
-                            <span className="text-text-secondary">
-                                <span className="text-red-primary font-semibold">{hardLimits.length}</span> hard
+                            <ShieldOff size={13} className="text-white" />
+                            <span className="text-white/80">
+                                <span className="text-white font-semibold">{hardLimits.length}</span> hard
                             </span>
                         </div>
                     )}
                     {softLimits.length > 0 && (
                         <div className="flex items-center gap-1.5">
-                            <ShieldCheck size={13} className="text-purple-primary" />
-                            <span className="text-text-secondary">
-                                <span className="text-purple-primary font-semibold">{softLimits.length}</span> soft
+                            <ShieldCheck size={13} className="text-white" />
+                            <span className="text-white/80">
+                                <span className="text-white font-semibold">{softLimits.length}</span> soft
                             </span>
                         </div>
                     )}

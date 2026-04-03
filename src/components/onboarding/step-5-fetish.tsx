@@ -27,9 +27,9 @@ export default function FetishStep({ onValid }: StepProps) {
         <div className="space-y-6 max-w-md mx-auto">
             <div className="text-center space-y-2">
                 <h2 className="text-2xl font-bold font-mono">Fetish & Kink Profile</h2>
-                <p className="text-text-secondary text-sm">
+                <p className="text-white/80 text-sm">
                     Select the genres that interest you. Tasks and content will be tailored accordingly.
-                    Select at least <span className="text-red-primary font-semibold">1</span>.
+                    Select at least <span className="text-white font-semibold">1</span>.
                 </p>
             </div>
 
@@ -42,16 +42,16 @@ export default function FetishStep({ onValid }: StepProps) {
                             key={genre}
                             onClick={() => toggleFetish(genre)}
                             className={`p-3 rounded-[var(--radius-lg)] border text-left transition-all duration-200 cursor-pointer ${isSelected
-                                    ? 'border-red-primary/40 bg-red-primary/10'
-                                    : 'border-white/5 bg-bg-secondary/50 hover:bg-bg-secondary hover:border-white/10'
+                                    ? 'border-zinc-700 bg-zinc-800/10'
+                                    : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-800'
                                 }`}
                         >
                             <div className="flex items-center gap-2">
                                 <Heart
                                     size={14}
-                                    className={isSelected ? 'text-red-primary fill-red-primary' : 'text-text-disabled'}
+                                    className={isSelected ? 'text-white fill-red-primary' : 'text-white/20'}
                                 />
-                                <span className={`text-xs font-medium ${isSelected ? 'text-red-primary' : 'text-text-secondary'}`}>
+                                <span className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-white/80'}`}>
                                     {genre}
                                 </span>
                             </div>
@@ -61,8 +61,8 @@ export default function FetishStep({ onValid }: StepProps) {
             </div>
 
             {fetishProfile.length > 0 && (
-                <p className="text-center text-xs text-text-tertiary">
-                    <span className="text-red-primary font-semibold">{fetishProfile.length}</span> genre{fetishProfile.length !== 1 ? 's' : ''} selected
+                <p className="text-center text-xs text-white/30">
+                    <span className="text-white font-semibold">{fetishProfile.length}</span> genre{fetishProfile.length !== 1 ? 's' : ''} selected
                 </p>
             )}
         </div>

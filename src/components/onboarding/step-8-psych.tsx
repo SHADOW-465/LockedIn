@@ -57,11 +57,11 @@ export default function PsychStep({ onValid }: StepProps) {
     return (
         <div className="space-y-6 max-w-md mx-auto">
             <div className="text-center space-y-2">
-                <div className="flex items-center justify-center gap-2 text-purple-primary">
+                <div className="flex items-center justify-center gap-2 text-white">
                     <Brain size={20} />
                     <h2 className="text-2xl font-bold font-mono">Psychological Profile</h2>
                 </div>
-                <p className="text-text-secondary text-sm">
+                <p className="text-white/80 text-sm">
                     Answer honestly. This shapes how the AI responds to you.
                 </p>
             </div>
@@ -69,8 +69,8 @@ export default function PsychStep({ onValid }: StepProps) {
             <div className="space-y-5 max-h-[50vh] overflow-y-auto pr-1">
                 {PSYCH_QUESTIONS.map((q, idx) => (
                     <div key={q.id} className="space-y-2">
-                        <p className="text-sm text-text-primary font-medium">
-                            <span className="text-text-disabled font-mono mr-2">{idx + 1}.</span>
+                        <p className="text-sm text-white font-medium">
+                            <span className="text-white/20 font-mono mr-2">{idx + 1}.</span>
                             {q.question}
                         </p>
                         <div className="flex flex-wrap gap-1.5">
@@ -82,8 +82,8 @@ export default function PsychStep({ onValid }: StepProps) {
                                         key={opt}
                                         onClick={() => setPsychAnswer(q.id, opt)}
                                         className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-all cursor-pointer border ${isSelected
-                                                ? 'bg-purple-primary/15 border-purple-primary/40 text-purple-primary'
-                                                : 'bg-bg-tertiary/50 border-white/5 text-text-tertiary hover:border-white/10'
+                                                ? 'bg-zinc-800/15 border-zinc-700 text-white'
+                                                : 'bg-zinc-800/50 border-zinc-800 text-white/30 hover:border-zinc-800'
                                             }`}
                                     >
                                         {opt}
@@ -95,8 +95,8 @@ export default function PsychStep({ onValid }: StepProps) {
                 ))}
             </div>
 
-            <p className="text-center text-xs text-text-tertiary">
-                <span className="text-purple-primary font-semibold">{Object.keys(psychAnswers).length}</span> / {PSYCH_QUESTIONS.length} answered
+            <p className="text-center text-xs text-white/30">
+                <span className="text-white font-semibold">{Object.keys(psychAnswers).length}</span> / {PSYCH_QUESTIONS.length} answered
             </p>
         </div>
     )

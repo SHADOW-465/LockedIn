@@ -35,9 +35,9 @@ export default function RegimensStep({ onValid }: StepProps) {
         <div className="space-y-6 max-w-md mx-auto">
             <div className="text-center space-y-2">
                 <h2 className="text-2xl font-bold font-mono">Training Regimens</h2>
-                <p className="text-text-secondary text-sm">
-                    Choose <span className="text-red-primary font-semibold">1 primary</span> and as many{' '}
-                    <span className="text-purple-primary font-semibold">secondary</span> regimens as you like.
+                <p className="text-white/80 text-sm">
+                    Choose <span className="text-white font-semibold">1 primary</span> and as many{' '}
+                    <span className="text-white font-semibold">secondary</span> regimens as you like.
                 </p>
             </div>
 
@@ -52,9 +52,9 @@ export default function RegimensStep({ onValid }: StepProps) {
                             key={reg.id}
                             className={`p-4 rounded-[var(--radius-lg)] border transition-all duration-200 ${isSelected
                                 ? isPrimary
-                                    ? 'border-red-primary/40 bg-red-primary/5 glow-red'
-                                    : 'border-purple-primary/40 bg-purple-primary/5'
-                                : 'border-white/5 bg-bg-secondary/50 hover:bg-bg-secondary'
+                                    ? 'border-zinc-700 bg-zinc-800/5 '
+                                    : 'border-zinc-700 bg-zinc-800/5'
+                                : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900'
                                 }`}
                         >
                             <div className="flex items-center justify-between">
@@ -62,11 +62,11 @@ export default function RegimensStep({ onValid }: StepProps) {
                                     onClick={() => toggleRegimen(reg.id, reg.name)}
                                     className="flex-1 text-left cursor-pointer"
                                 >
-                                    <span className={`font-semibold text-sm ${isPrimary ? 'text-red-primary' : isSelected ? 'text-purple-primary' : ''
+                                    <span className={`font-semibold text-sm ${isPrimary ? 'text-white' : isSelected ? 'text-white' : ''
                                         }`}>
                                         {reg.name}
                                     </span>
-                                    <p className="text-text-tertiary text-xs mt-0.5">{reg.description}</p>
+                                    <p className="text-white/30 text-xs mt-0.5">{reg.description}</p>
                                 </button>
 
                                 {isSelected && (
@@ -76,9 +76,9 @@ export default function RegimensStep({ onValid }: StepProps) {
                                         title={isPrimary ? 'Primary regimen' : 'Click to make primary'}
                                     >
                                         {isPrimary ? (
-                                            <Star size={18} className="text-red-primary fill-red-primary" />
+                                            <Star size={18} className="text-white fill-red-primary" />
                                         ) : (
-                                            <StarOff size={18} className="text-text-disabled hover:text-purple-primary transition-colors" />
+                                            <StarOff size={18} className="text-white/20 hover:text-white transition-colors" />
                                         )}
                                     </button>
                                 )}
@@ -89,7 +89,7 @@ export default function RegimensStep({ onValid }: StepProps) {
             </div>
 
             {selectedRegimens.length > 0 && (
-                <p className="text-center text-xs text-text-tertiary">
+                <p className="text-center text-xs text-white/30">
                     {selectedRegimens.length} selected • ⭐ = primary
                 </p>
             )}

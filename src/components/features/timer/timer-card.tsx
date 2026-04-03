@@ -111,30 +111,29 @@ export function TimerCard({ endTime, startTime, totalDurationMinutes, tier, stat
     return (
         <Card
             variant="hero"
-            className={`relative overflow-hidden ${punishmentActive ? 'animate-timer-pulse' : ''}`}
+            className={`relative overflow-hidden border border-zinc-800 ${punishmentActive ? 'animate-timer-pulse' : ''}`}
         >
-            {/* Background gradient effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-red-primary/5 to-purple-primary/5 pointer-events-none" />
+            <div className="absolute inset-0 bg-zinc-900 pointer-events-none" />
 
             {/* Progress bar at bottom */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-bg-tertiary">
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800 z-10">
                 <div
-                    className="h-full bg-gradient-to-r from-red-primary to-purple-primary transition-all duration-1000"
+                    className="h-full bg-[var(--accent)] transition-all duration-1000"
                     style={{ width: `${progress}%` }}
                 />
             </div>
 
             <div className="relative z-10">
                 <div className="flex items-start justify-between mb-6">
-                    <Badge variant="locked">🔒 LOCKED IN</Badge>
+                    <Badge variant="locked">LOCKED IN</Badge>
                     <Badge variant={tierVariant}>{tier.toUpperCase()}</Badge>
                 </div>
 
                 <div className="text-center py-4">
-                    <div className="text-5xl md:text-6xl font-mono font-bold mb-4 text-red-primary text-glow-red tracking-wider">
+                    <div className="text-5xl md:text-6xl font-mono font-bold mb-4 text-white tracking-wider">
                         {timeRemaining || '—'}
                     </div>
-                    <p className="text-text-secondary text-sm">Time Remaining Until Release</p>
+                    <p className="text-white/30 text-sm uppercase tracking-widest font-bold">Time Remaining Until Release</p>
                 </div>
 
                 {punishmentActive && (
@@ -160,67 +159,67 @@ export function TimerCard({ endTime, startTime, totalDurationMinutes, tier, stat
                             <div className="text-center">
                                 <button
                                     onClick={() => setShowAddTime(true)}
-                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[var(--radius-pill)] bg-red-primary/10 border border-red-primary/30 text-red-primary text-sm font-semibold hover:bg-red-primary/20 hover:border-red-primary/50 transition-all duration-200 cursor-pointer"
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[var(--radius-pill)] bg-zinc-800 border border-zinc-700 text-white text-sm font-semibold hover:bg-zinc-700 hover:border-zinc-600 transition-all duration-200 cursor-pointer"
                                 >
                                     <Plus size={14} />
                                     Add Time
                                 </button>
                             </div>
                         ) : (
-                            <div className="bg-bg-secondary/80 border border-white/10 rounded-[var(--radius-lg)] p-4 space-y-3 backdrop-blur-sm">
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-[var(--radius-lg)] p-4 space-y-3 backdrop-blur-sm shadow-xl">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm font-semibold text-text-secondary">Increase Lock Duration</span>
+                                    <span className="text-sm font-semibold text-white">Increase Lock Duration</span>
                                     <button
                                         onClick={() => setShowAddTime(false)}
-                                        className="text-text-tertiary hover:text-text-primary transition-colors cursor-pointer"
+                                        className="text-white/30 hover:text-white transition-colors cursor-pointer"
                                     >
                                         <X size={16} />
                                     </button>
                                 </div>
                                 <div className="grid grid-cols-3 gap-3">
                                     <div className="space-y-1">
-                                        <label className="text-xs text-text-tertiary">Days</label>
+                                        <label className="text-xs text-white/30">Days</label>
                                         <input
                                             type="number"
                                             min={0}
                                             max={30}
                                             value={addDays}
                                             onChange={e => setAddDays(Math.max(0, parseInt(e.target.value) || 0))}
-                                            className="w-full bg-bg-tertiary border border-white/10 rounded-[var(--radius-md)] p-2 text-center text-white text-sm focus:border-red-primary focus:outline-none transition-colors"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-[var(--radius-md)] p-2 text-center text-white text-sm focus:border-zinc-600 focus:outline-none transition-colors"
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs text-text-tertiary">Hours</label>
+                                        <label className="text-xs text-white/30">Hours</label>
                                         <input
                                             type="number"
                                             min={0}
                                             max={23}
                                             value={addHours}
                                             onChange={e => setAddHours(Math.max(0, Math.min(23, parseInt(e.target.value) || 0)))}
-                                            className="w-full bg-bg-tertiary border border-white/10 rounded-[var(--radius-md)] p-2 text-center text-white text-sm focus:border-red-primary focus:outline-none transition-colors"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-[var(--radius-md)] p-2 text-center text-white text-sm focus:border-zinc-600 focus:outline-none transition-colors"
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs text-text-tertiary">Minutes</label>
+                                        <label className="text-xs text-white/30">Minutes</label>
                                         <input
                                             type="number"
                                             min={0}
                                             max={59}
                                             value={addMinutes}
                                             onChange={e => setAddMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                                            className="w-full bg-bg-tertiary border border-white/10 rounded-[var(--radius-md)] p-2 text-center text-white text-sm focus:border-red-primary focus:outline-none transition-colors"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-[var(--radius-md)] p-2 text-center text-white text-sm focus:border-zinc-600 focus:outline-none transition-colors"
                                         />
                                     </div>
                                 </div>
                                 {(addDays * 24 * 60 + addHours * 60 + addMinutes) > 0 && (
-                                    <p className="text-xs text-center text-text-tertiary">
+                                    <p className="text-xs text-center text-white/30">
                                         Adding {addDays > 0 ? `${addDays}d ` : ''}{addHours > 0 ? `${addHours}h ` : ''}{addMinutes > 0 ? `${addMinutes}m` : ''}
                                     </p>
                                 )}
                                 <button
                                     onClick={handleAddTime}
                                     disabled={isAdding || (addDays * 24 * 60 + addHours * 60 + addMinutes) <= 0}
-                                    className="w-full py-2.5 rounded-[var(--radius-pill)] bg-red-primary text-white font-semibold text-sm uppercase tracking-wide hover:bg-red-hover transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                                    className="w-full py-2.5 rounded-[var(--radius-pill)] bg-zinc-800 border border-zinc-700 text-white font-bold text-sm uppercase tracking-wide hover:bg-zinc-700 hover:border-zinc-600 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
                                 >
                                     {isAdding ? (
                                         <>

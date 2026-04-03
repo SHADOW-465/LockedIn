@@ -33,7 +33,7 @@ function ProofStatusBadge({ task }: { task: Task }) {
     const statusMap: Record<string, { label: string; variant: 'info' | 'locked' | 'genre' }> = {
         awaiting_proof: { label: '⏳ AWAITING PROOF', variant: 'genre' },
         proof_submitted: { label: '🔄 VERIFYING...', variant: 'info' },
-        verified: { label: '✅ VERIFIED', variant: 'info' },
+        verified: { label: 'VERIFIED', variant: 'info' },
         overdue: { label: '⏰ OVERDUE', variant: 'locked' },
     }
     const config = statusMap[task.status]
@@ -156,7 +156,7 @@ function TaskDetailModal({
                                 <Badge key={g} variant="genre">{g}</Badge>
                             ))}
                             <Badge variant={task.cage_status === 'caged' ? 'caged' : 'uncaged'}>
-                                {task.cage_status === 'caged' ? '🔒' : '🗝️'} {task.cage_status.toUpperCase()}
+                                {task.cage_status.toUpperCase()}
                             </Badge>
                         </div>
                     </div>
@@ -290,7 +290,7 @@ const XP_BY_DIFFICULTY = [0, 5, 10, 20, 40, 80]
 const TASK_TYPE_LABELS: Record<string, string> = {
     master: '⚔ Master Task',
     punishment: '⚠ Punishment Task',
-    checkin: '🔒 Check-in',
+    checkin: 'Check-in',
     daily: '📋 Daily Task',
 }
 
@@ -316,11 +316,11 @@ function HistoryTaskDetailModal({
         : 'text-red-500 border-red-500/20 bg-red-500/5'
 
     const outcomeLabel = task.status === 'verified'
-        ? '✅ Verified by AI'
+        ? 'Verified by AI'
         : isCompleted
-            ? '✅ Completed'
+            ? 'Completed'
             : isFailed
-                ? '❌ Failed'
+                ? 'Failed'
                 : '⏰ Overdue'
 
     return (
@@ -341,7 +341,7 @@ function HistoryTaskDetailModal({
                             ))}
                             {task.cage_status && (
                                 <Badge variant={task.cage_status === 'caged' ? 'caged' : 'uncaged'}>
-                                    {task.cage_status === 'caged' ? '🔒' : '🗝️'} {task.cage_status.toUpperCase()}
+                                    {task.cage_status.toUpperCase()}
                                 </Badge>
                             )}
                         </div>
@@ -751,7 +751,7 @@ export default function TasksPage() {
                             <div className="space-y-3 mb-6">
                                 <div className="flex items-center justify-between">
                                     <h2 className="text-sm font-bold text-teal-400 uppercase tracking-wide">
-                                        🔒 Daily Check-ins
+                                        Daily Check-ins
                                     </h2>
                                     <Link
                                         href="/checkin-history"
@@ -775,9 +775,9 @@ export default function TasksPage() {
                                         const statusLabel = !task
                                             ? 'Not yet'
                                             : task.status === 'completed' || task.status === 'verified'
-                                                ? '✅ Done'
+                                                ? 'Done'
                                                 : task.status === 'failed'
-                                                    ? '❌ Missed (late ok)'
+                                                    ? 'Missed (late ok)'
                                                     : task.status === 'proof_submitted'
                                                         ? '🔄 Verifying'
                                                         : '⏳ Pending'
@@ -962,7 +962,7 @@ export default function TasksPage() {
                                             </div>
                                         </div>
                                         <Badge variant={task.cage_status === 'caged' ? 'caged' : 'uncaged'}>
-                                            {task.cage_status === 'caged' ? '🔒' : '🗝️'} {task.cage_status.toUpperCase()}
+                                            {task.cage_status.toUpperCase()}
                                         </Badge>
                                     </div>
 
@@ -1087,7 +1087,7 @@ export default function TasksPage() {
                             {failedTasks.length > 0 && (
                                 <div>
                                     <h2 className="text-lg font-semibold mb-3 text-red-500 flex items-center gap-2">
-                                        ❌ Failed
+                                        Failed
                                         <span className="text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">
                                             {failedTasks.length}
                                         </span>
@@ -1104,7 +1104,7 @@ export default function TasksPage() {
                                                         <div className="min-w-0 flex-1">
                                                             <p className="text-sm font-medium truncate">{task.title}</p>
                                                             <div className="flex items-center gap-3 mt-0.5">
-                                                                <span className="text-xs text-[var(--accent)]/70">❌ Failed</span>
+                                                                <span className="text-xs text-[var(--accent)]/70">Failed</span>
                                                                 <span className="text-xs text-white/30 font-mono">
                                                                     {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
                                                                 </span>
@@ -1129,7 +1129,7 @@ export default function TasksPage() {
                             {completedTasks.length > 0 && (
                                 <div>
                                     <h2 className="text-lg font-semibold mb-3 text-teal-400 flex items-center gap-2">
-                                        ✅ Completed
+                                        Completed
                                         <span className="text-xs bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full">
                                             {completedTasks.length}
                                         </span>
@@ -1147,7 +1147,7 @@ export default function TasksPage() {
                                                             <p className="text-sm font-medium truncate">{task.title}</p>
                                                             <div className="flex items-center gap-3 mt-0.5">
                                                                 <span className="text-xs text-teal-400/70">
-                                                                    {task.status === 'verified' ? '✅ Verified' : '✅ Done'}
+                                                                    {task.status === 'verified' ? 'Verified' : 'Done'}
                                                                 </span>
                                                                 <span className="text-xs text-white/30 font-mono">
                                                                     {'★'.repeat(task.difficulty)}{'☆'.repeat(5 - task.difficulty)}
@@ -1159,7 +1159,7 @@ export default function TasksPage() {
                                                         </div>
                                                         <div className="flex items-center gap-2 shrink-0">
                                                             <Badge variant="info">
-                                                                {task.status === 'verified' ? '✅ VERIFIED' : 'DONE'}
+                                                                {task.status === 'verified' ? 'VERIFIED' : 'DONE'}
                                                             </Badge>
                                                             <ChevronRight size={14} className="text-white/30" />
                                                         </div>

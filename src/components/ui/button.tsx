@@ -7,15 +7,15 @@ const buttonVariants = cva(
         variants: {
             variant: {
                 primary:
-                    'bg-red-primary text-white shadow-raised glow-red hover:bg-red-hover hover:shadow-raised-hover active:shadow-inset',
+                    'bg-[var(--accent)] text-white border border-[var(--accent)]/50 hover:bg-red-600 active:bg-red-700',
                 secondary:
-                    'bg-purple-primary text-white shadow-raised glow-purple hover:bg-purple-hover active:shadow-inset',
+                    'bg-zinc-800 text-white border border-zinc-700 hover:bg-zinc-700 active:bg-zinc-600',
                 ghost:
-                    'bg-bg-secondary shadow-raised hover:shadow-raised-hover active:shadow-inset text-text-primary',
+                    'hover:bg-zinc-800 text-text-primary active:bg-zinc-900',
                 outline:
-                    'border-2 border-purple-primary/50 text-purple-primary hover:bg-purple-primary/10 active:bg-purple-primary/20',
+                    'border border-zinc-700 text-text-secondary hover:text-white hover:bg-zinc-800 active:bg-zinc-900',
                 danger:
-                    'bg-red-primary/20 text-red-primary border border-red-primary/30 hover:bg-red-primary/30 active:bg-red-primary/40',
+                    'bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 active:bg-red-500/30',
             },
             size: {
                 sm: 'px-4 py-2 text-sm',

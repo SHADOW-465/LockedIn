@@ -17,7 +17,7 @@ const frequencies = [
     { id: 'low', label: 'Low', description: '2-4 notifications per day', icon: '🔔' },
     { id: 'medium', label: 'Medium', description: '6-10 notifications per day', icon: '🔔🔔' },
     { id: 'high', label: 'High', description: '12-20 notifications per day', icon: '🔔🔔🔔' },
-    { id: 'extreme', label: 'Extreme', description: 'Constant interruptions', icon: '⚡' },
+    { id: 'extreme', label: 'Extreme', description: 'Constant interruptions', icon: '' },
 ]
 
 export default function NotificationSettingsPage() {

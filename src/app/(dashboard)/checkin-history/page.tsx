@@ -178,9 +178,9 @@ export default function CheckinHistoryPage() {
                                                         ? 'bg-[var(--accent)]/10 text-[var(--accent)]'
                                                         : 'bg-amber-400/10 text-amber-400'
                                             }`}>
-                                                {record.verification_status === 'passed' ? '✅ Passed'
-                                                    : record.verification_status === 'failed' ? '❌ Rejected'
-                                                        : '⏳ Pending'}
+                                                {record.verification_status === 'passed' ? 'Passed'
+                                                    : record.verification_status === 'failed' ? 'Rejected'
+                                                        : 'Pending'}
                                             </span>
                                         </div>
 
@@ -188,7 +188,7 @@ export default function CheckinHistoryPage() {
                                         {record.ai_feedback && (
                                             <div className={`rounded-xl p-3 border ${
                                                 record.verification_status === 'passed'
-                                                    ? 'bg-teal-900/30 border-teal-500/20'
+                                                    ? 'bg-emerald-400/5 border-emerald-400/20'
                                                     : 'bg-[var(--accent)]/5 border-[var(--accent)]/20'
                                             }`}>
                                                 <p className="text-[10px] font-bold uppercase mb-1 text-white/30">

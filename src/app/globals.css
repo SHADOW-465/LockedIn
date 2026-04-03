@@ -99,40 +99,21 @@
 }
 
 /* ==========================================
-   NEUMORPHISM UTILITY CLASSES
+   MATTE UTILITY CLASSES
    ========================================== */
 
 @layer utilities {
-  .neumorphism-raised {
-    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.05);
+  .matte-panel {
+    background-color: var(--color-bg-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.05);
   }
 
-  .neumorphism-raised-hover {
-    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.05);
+  .matte-panel-hover {
+    transition: all 0.2s ease;
   }
-
-  .neumorphism-inset {
-    box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.5), inset -4px -4px 8px rgba(255, 255, 255, 0.03);
-  }
-
-  .glow-red {
-    box-shadow: 0 0 20px rgba(211, 47, 47, 0.3), 0 0 40px rgba(211, 47, 47, 0.15);
-  }
-
-  .glow-purple {
-    box-shadow: 0 0 20px rgba(124, 77, 255, 0.3), 0 0 40px rgba(124, 77, 255, 0.15);
-  }
-
-  .glow-teal {
-    box-shadow: 0 0 20px rgba(38, 166, 154, 0.3), 0 0 40px rgba(38, 166, 154, 0.15);
-  }
-
-  .text-glow-red {
-    text-shadow: 0 0 10px rgba(211, 47, 47, 0.5), 0 0 20px rgba(211, 47, 47, 0.3);
-  }
-
-  .text-glow-purple {
-    text-shadow: 0 0 10px rgba(124, 77, 255, 0.5), 0 0 20px rgba(124, 77, 255, 0.3);
+  .matte-panel-hover:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background-color: var(--color-bg-tertiary);
   }
 }
 
@@ -141,8 +122,8 @@
    ========================================== */
 
 @keyframes timer-pulse {
-  0%, 100% { box-shadow: 0 0 20px var(--accent-glow), 0 0 40px var(--accent-dim); }
-  50%       { box-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-dim); }
+  0%, 100% { border-color: rgba(239, 68, 68, 0.2); }
+  50%       { border-color: rgba(239, 68, 68, 0.6); background-color: rgba(239, 68, 68, 0.05); }
 }
 
 @keyframes fade-in {
@@ -216,8 +197,8 @@
 }
 
 @keyframes lock-glow {
-  0%, 100% { filter: drop-shadow(0 0 4px  var(--accent-dim)); }
-  50%       { filter: drop-shadow(0 0 12px var(--accent-glow)); }
+  0%, 100% { border-color: rgba(239, 68, 68, 0.2); }
+  50%       { border-color: rgba(239, 68, 68, 0.8); }
 }
 
 /* ==========================================
@@ -260,10 +241,10 @@
   }
 }
 
-/* Sealed state — glow pulse */
+/* Sealed state — matte pulse */
 @keyframes lockin-pulse {
-  0%, 100% { box-shadow: 0 0 12px var(--accent-dim),  inset 0 0 8px  rgba(0,0,0,0.05); }
-  50%       { box-shadow: 0 0 28px var(--accent-glow), inset 0 0 12px rgba(0,0,0,0.1); }
+  0%, 100% { border-color: rgba(255,255,255,0.1); background-color: transparent; }
+  50%       { border-color: var(--accent); background-color: var(--accent-dim); }
 }
 
 /* Fade up + slight scale for completion text */
@@ -375,17 +356,18 @@
   }
 
   .accent-glow {
-    box-shadow: 0 0 20px var(--accent-glow), 0 0 40px var(--accent-dim);
+    border-color: var(--accent);
   }
 
   .card-hover {
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
   }
 
   .card-hover:hover {
-    border-color: var(--color-bg-hover) !important;  /* zinc-700 — override Tailwind border utility */
+    border-color: var(--color-bg-hover) !important;
+    background-color: var(--color-bg-tertiary);
     transform: translateY(-1px);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+    box-shadow: none; /* Strip shadow completely on hover */
   }
 }
 
@@ -399,6 +381,7 @@
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: none; /* No shadow */
   }
 
   .glass-strong {
@@ -406,6 +389,7 @@
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: none; /* No shadow */
   }
 }
 

@@ -44,7 +44,7 @@ export default function PersonalityStep({ onValid }: StepProps) {
         <div className="space-y-6 max-w-md mx-auto">
             <div className="text-center space-y-2">
                 <h2 className="text-2xl font-bold font-mono">Choose Your AI Master</h2>
-                <p className="text-text-secondary text-sm">
+                <p className="text-white/80 text-sm">
                     Select the persona that will control your experience. You can change this later.
                 </p>
             </div>
@@ -58,22 +58,22 @@ export default function PersonalityStep({ onValid }: StepProps) {
                             key={p}
                             onClick={() => setPersonality(p)}
                             className={`w-full text-left p-4 rounded-[var(--radius-lg)] border transition-all duration-200 cursor-pointer ${isSelected
-                                    ? 'border-purple-primary/40 bg-bg-secondary glow-purple'
-                                    : 'border-white/5 bg-bg-secondary/50 hover:bg-bg-secondary hover:border-white/10'
+                                    ? 'border-zinc-700 bg-zinc-900 '
+                                    : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-800'
                                 }`}
                         >
                             <div className="flex items-center justify-between mb-1">
-                                <span className={`font-semibold text-sm ${isSelected ? 'text-purple-primary' : ''}`}>
+                                <span className={`font-semibold text-sm ${isSelected ? 'text-white' : ''}`}>
                                     {p}
                                 </span>
                                 {isSelected && (
-                                    <span className="text-[10px] font-mono bg-purple-primary/20 text-purple-primary px-2 py-0.5 rounded-full">
+                                    <span className="text-[10px] font-mono bg-zinc-800/20 text-white px-2 py-0.5 rounded-full">
                                         SELECTED
                                     </span>
                                 )}
                             </div>
-                            <p className="text-text-tertiary text-xs mb-2">{PERSONA_DESCRIPTIONS[p]}</p>
-                            <p className="text-text-secondary text-xs italic border-l-2 border-purple-primary/30 pl-3">
+                            <p className="text-white/30 text-xs mb-2">{PERSONA_DESCRIPTIONS[p]}</p>
+                            <p className="text-white/80 text-xs italic border-l-2 border-zinc-700 pl-3">
                                 {PERSONA_SAMPLES[p]}
                             </p>
                         </button>

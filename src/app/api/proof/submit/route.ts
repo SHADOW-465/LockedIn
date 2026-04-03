@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
         await supabase.from('notifications').insert({
             user_id: userId,
             type: verified ? 'reward' : 'punishment',
-            title: verified ? `✅ Proof Verified: ${task.title}` : `❌ Proof Rejected: ${task.title}`,
+            title: verified ? `Proof Verified: ${task.title}` : `Proof Rejected: ${task.title}`,
             body: verificationReason,
             read: false,
         })

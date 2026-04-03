@@ -28,7 +28,7 @@ export default function LockGoalStep({ onValid }: StepProps) {
         <div className="space-y-6 max-w-md mx-auto">
             <div className="text-center space-y-2">
                 <h2 className="text-2xl font-bold font-mono">Lock Goal & Safety</h2>
-                <p className="text-text-secondary text-sm">
+                <p className="text-white/80 text-sm">
                     Set your initial lock duration and emergency safeword.
                 </p>
             </div>
@@ -36,8 +36,8 @@ export default function LockGoalStep({ onValid }: StepProps) {
             {/* Lock Duration */}
             <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                    <Clock size={14} className="text-red-primary" />
-                    <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                    <Clock size={14} className="text-white" />
+                    <span className="text-xs font-semibold text-white/80 uppercase tracking-wider">
                         Lock Duration
                     </span>
                 </div>
@@ -51,20 +51,20 @@ export default function LockGoalStep({ onValid }: StepProps) {
                                 key={preset.hours}
                                 onClick={() => setInitialLockGoalHours(preset.hours)}
                                 className={`p-3 rounded-[var(--radius-lg)] border text-center transition-all cursor-pointer ${isSelected
-                                        ? 'border-red-primary/40 bg-red-primary/10 glow-red'
-                                        : 'border-white/5 bg-bg-secondary/50 hover:bg-bg-secondary hover:border-white/10'
+                                        ? 'border-zinc-700 bg-zinc-800/10 '
+                                        : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-800'
                                     }`}
                             >
-                                <span className={`block text-sm font-bold font-mono ${isSelected ? 'text-red-primary' : ''}`}>
+                                <span className={`block text-sm font-bold font-mono ${isSelected ? 'text-white' : ''}`}>
                                     {preset.label}
                                 </span>
-                                <span className="block text-[10px] text-text-tertiary mt-0.5">{preset.desc}</span>
+                                <span className="block text-[10px] text-white/30 mt-0.5">{preset.desc}</span>
                             </button>
                         )
                     })}
                 </div>
 
-                <p className="text-center text-xs text-text-tertiary">
+                <p className="text-center text-xs text-white/30">
                     AI may adjust this based on your performance.
                 </p>
             </div>
@@ -72,20 +72,20 @@ export default function LockGoalStep({ onValid }: StepProps) {
             {/* Safeword */}
             <div className="space-y-3 bg-teal-primary/5 border border-teal-primary/20 rounded-[var(--radius-lg)] p-4">
                 <div className="flex items-center gap-2">
-                    <Lock size={14} className="text-teal-primary" />
-                    <span className="text-xs font-semibold text-teal-primary uppercase tracking-wider">
+                    <Lock size={14} className="text-white" />
+                    <span className="text-xs font-semibold text-white uppercase tracking-wider">
                         Safeword
                     </span>
                 </div>
-                <p className="text-text-secondary text-xs">
-                    Typing this word in chat instantly activates <span className="text-teal-primary font-semibold">Care Mode</span>,
+                <p className="text-white/80 text-xs">
+                    Typing this word in chat instantly activates <span className="text-white font-semibold">Care Mode</span>,
                     pausing all tasks and punishment. Choose something you won&apos;t type accidentally.
                 </p>
                 <input
                     type="text"
                     value={safeword}
                     onChange={(e) => setSafeword(e.target.value.toUpperCase())}
-                    className="w-full px-4 py-2.5 rounded-[var(--radius-md)] bg-bg-primary border border-teal-primary/20 text-sm text-text-primary font-mono uppercase tracking-wider text-center focus:outline-none focus:border-teal-primary/40"
+                    className="w-full px-4 py-2.5 rounded-[var(--radius-md)] bg-black border border-teal-primary/20 text-sm text-white font-mono uppercase tracking-wider text-center focus:outline-none focus:border-zinc-700/40"
                     placeholder="MERCY"
                     maxLength={20}
                 />

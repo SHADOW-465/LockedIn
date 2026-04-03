@@ -60,7 +60,7 @@ export default function FeedbackPage() {
             await supabase.from('notifications').insert({
                 user_id: user.id,
                 type: 'reward',
-                title: '✨ +5 XP for Feedback',
+                title: '+5 XP for Feedback',
                 body: 'Thanks for your detailed suggestion!',
             })
         }

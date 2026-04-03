@@ -55,9 +55,7 @@ export default function SignupPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-6 bg-bg-primary relative overflow-hidden">
-            {/* Ambient effects */}
-            <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] bg-purple-primary/5 rounded-full blur-[150px] pointer-events-none" />
-            <div className="absolute bottom-1/4 right-1/3 w-[400px] h-[400px] bg-red-primary/5 rounded-full blur-[150px] pointer-events-none" />
+            {/* Ambient effects removed for matte design */}
 
             <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
                 style={{
@@ -69,15 +67,15 @@ export default function SignupPage() {
                 {/* Header */}
                 <div className="text-center space-y-4">
                     <div className="flex justify-center">
-                        <div className="w-16 h-16 rounded-full bg-bg-secondary shadow-raised flex items-center justify-center border border-white/5">
-                            <Lock size={28} className="text-purple-primary" />
+                        <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                            <Lock size={28} className="text-white" />
                         </div>
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold font-mono">
-                            Locked<span className="text-red-primary text-glow-red">In</span>
+                            Locked<span className="text-white">In</span>
                         </h1>
-                        <p className="text-text-tertiary text-sm mt-1">Begin your submission. Create your account.</p>
+                        <p className="text-white/30 text-sm mt-1">Begin your submission. Create your account.</p>
                     </div>
                 </div>
 
@@ -86,10 +84,10 @@ export default function SignupPage() {
                     <div className="flex flex-col items-center gap-4 py-8">
                         <CheckCircle2 size={48} className="text-teal-primary" />
                         <div className="text-center">
-                            <p className="text-text-primary font-semibold">Account Created</p>
-                            <p className="text-text-tertiary text-sm mt-1">Redirecting to onboarding...</p>
+                            <p className="text-white font-semibold">Account Created</p>
+                            <p className="text-white/30 text-sm mt-1">Redirecting to onboarding...</p>
                         </div>
-                        <div className="w-8 h-8 border-2 border-red-primary border-t-transparent rounded-full animate-spin" />
+                        <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : (
                     <>
@@ -113,7 +111,7 @@ export default function SignupPage() {
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="your@email.com"
                                         required
-                                        className="w-full pl-10 pr-4 py-3 rounded-[var(--radius-lg)] bg-bg-secondary border border-white/5 text-sm text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-purple-primary/40 focus:shadow-[0_0_0_3px_rgba(124,77,255,0.1)] transition-all"
+                                        className="w-full pl-10 pr-4 py-3 rounded-[var(--radius-lg)] bg-zinc-900 border border-zinc-800 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-zinc-700 transition-all"
                                     />
                                 </div>
                             </div>
@@ -128,7 +126,7 @@ export default function SignupPage() {
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="••••••••"
                                         required
-                                        className="w-full pl-10 pr-12 py-3 rounded-[var(--radius-lg)] bg-bg-secondary border border-white/5 text-sm text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-purple-primary/40 focus:shadow-[0_0_0_3px_rgba(124,77,255,0.1)] transition-all"
+                                        className="w-full pl-10 pr-12 py-3 rounded-[var(--radius-lg)] bg-zinc-900 border border-zinc-800 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-zinc-700 transition-all"
                                     />
                                     <button
                                         type="button"
@@ -150,7 +148,7 @@ export default function SignupPage() {
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         placeholder="••••••••"
                                         required
-                                        className="w-full pl-10 pr-4 py-3 rounded-[var(--radius-lg)] bg-bg-secondary border border-white/5 text-sm text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-purple-primary/40 focus:shadow-[0_0_0_3px_rgba(124,77,255,0.1)] transition-all"
+                                        className="w-full pl-10 pr-4 py-3 rounded-[var(--radius-lg)] bg-zinc-900 border border-zinc-800 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-zinc-700 transition-all"
                                     />
                                 </div>
                             </div>
@@ -178,7 +176,7 @@ export default function SignupPage() {
                             <button
                                 type="submit"
                                 disabled={loading || !allValid}
-                                className="w-full py-3.5 rounded-[var(--radius-pill)] bg-red-primary text-white font-semibold uppercase tracking-wide shadow-raised glow-red hover:bg-red-hover hover:shadow-raised-hover active:shadow-inset transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full py-3.5 rounded-[var(--radius-pill)] bg-zinc-800 border border-zinc-700 text-white font-semibold uppercase tracking-wide hover:bg-zinc-700 hover:border-zinc-600 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loading ? (
                                     <>
@@ -204,7 +202,7 @@ export default function SignupPage() {
                                 const { signInWithGoogle } = await import('@/lib/supabase/auth')
                                 await signInWithGoogle()
                             }}
-                            className="w-full py-3 rounded-[var(--radius-pill)] bg-bg-secondary border border-white/5 text-text-secondary font-medium hover:bg-bg-tertiary hover:border-white/10 transition-all duration-200 cursor-pointer flex items-center justify-center gap-3"
+                            className="w-full py-3 rounded-[var(--radius-pill)] bg-zinc-900 border border-zinc-800 text-white font-medium hover:bg-zinc-800 hover:border-zinc-700 transition-all duration-200 cursor-pointer flex items-center justify-center gap-3"
                         >
                             <svg width="18" height="18" viewBox="0 0 24 24">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -218,7 +216,7 @@ export default function SignupPage() {
                         {/* Footer */}
                         <p className="text-center text-sm text-text-tertiary">
                             Already have an account?{' '}
-                            <Link href="/login" className="text-red-primary font-medium hover:text-red-hover transition-colors">
+                            <Link href="/login" className="text-white font-medium hover:text-white/80 transition-colors">
                                 Sign In
                             </Link>
                         </p>

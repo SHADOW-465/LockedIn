@@ -330,8 +330,8 @@ export default function CalendarPage() {
                                         if (!detail) return <p className="text-white/30 text-xs">No tasks recorded for this day.</p>
                                         return (
                                             <div className="flex gap-4 text-sm">
-                                                <span className="text-teal-400">✅ {detail.completed} completed</span>
-                                                <span className="text-[var(--accent)]">❌ {detail.failed} failed</span>
+                                                <span className="text-teal-400">{detail.completed} completed</span>
+                                                <span className="text-[var(--accent)]">{detail.failed} failed</span>
                                             </div>
                                         )
                                     })()}

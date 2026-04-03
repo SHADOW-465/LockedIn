@@ -342,7 +342,7 @@ export default function ChatPage() {
                                     )}
                                     {isSafeword && message.sender === 'user' && (
                                         <p className="text-xs font-semibold mb-1.5 text-teal-300">
-                                            🛡️ Safeword Used
+                                            Safeword Used
                                         </p>
                                     )}
                                     <p className="text-sm whitespace-pre-line leading-relaxed">

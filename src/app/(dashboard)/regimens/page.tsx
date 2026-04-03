@@ -225,7 +225,7 @@ export default function RegimensPage() {
                                         <div>
                                             <p className="text-sm font-medium text-white">{r.name}</p>
                                             <p className="text-xs text-white/30">
-                                                {r.status === 'completed' ? '✅ Completed' : '❌ Abandoned'} — Day {r.current_day}/{r.total_days}
+                                                {r.status === 'completed' ? 'Completed' : 'Abandoned'} — Day {r.current_day}/{r.total_days}
                                             </p>
                                         </div>
                                         <Badge variant={r.status === 'completed' ? 'info' : 'locked'}>{r.status}</Badge>
@@ -315,7 +315,7 @@ function RegimenCard({
 
             {/* AI-generated next day task preview */}
             {nextDayTask && (
-                <div className="p-3 bg-[var(--accent-dim)] border border-[var(--accent)]/20 rounded-xl space-y-1">
+                <div className="p-3 bg-[var(--accent)]/5 border border-[var(--accent)]/20 rounded-xl space-y-1">
                     <p className="text-xs font-semibold text-[var(--accent)]">Tomorrow&apos;s Task</p>
                     <p className="text-xs font-medium text-white">{nextDayTask.title}</p>
                     <p className="text-xs text-white/30 line-clamp-2">{nextDayTask.description}</p>
@@ -323,7 +323,7 @@ function RegimenCard({
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+            <div className="flex items-center gap-2 pt-2 border-t border-zinc-800">
                 {isActive ? (
                     <>
                         <Button

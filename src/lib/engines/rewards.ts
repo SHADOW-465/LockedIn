@@ -120,7 +120,7 @@ export async function awardCompletion(
         await supabase.from('notifications').insert({
             user_id: userId,
             type: 'reward',
-            title: `✨ XP Earned`,
+            title: `XP Earned`,
             body: `+${xp} XP for completing a difficulty ${difficulty} task!`,
             read: false,
         })

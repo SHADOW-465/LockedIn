@@ -10,7 +10,7 @@ const TYPE_ICONS: Record<string, string> = {
     checkin: '⏰',
     task: '🎯',
     punishment: '⛓️',
-    reward: '✨',
+    reward: '',
     system: '⚙️',
     info: 'ℹ️',
 }

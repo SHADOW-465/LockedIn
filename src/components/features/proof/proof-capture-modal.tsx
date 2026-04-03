@@ -169,29 +169,29 @@ export function ProofCaptureModal({ task, userId, sessionId, onClose, onSubmitte
     // ── Render ──
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-            <div className="bg-bg-secondary border border-white/10 rounded-2xl max-w-lg w-full max-h-[90dvh] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 pb-24 sm:pb-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full max-h-[90dvh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex items-start justify-between p-5 border-b border-white/5">
+                <div className="flex items-start justify-between p-5 border-b border-zinc-800">
                     <div className="space-y-2">
                         <h2 className="text-lg font-bold flex items-center gap-2">
-                            <ProofIcon size={20} className="text-red-primary" />
+                            <ProofIcon size={20} className="text-[var(--accent)]" />
                             Submit Proof
                         </h2>
-                        <p className="text-sm text-text-secondary line-clamp-1">{task.title}</p>
+                        <p className="text-sm text-white/60 line-clamp-1">{task.title}</p>
                         <Badge variant="genre">{PROOF_LABELS[proofType] || proofType.toUpperCase()} Required</Badge>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer">
-                        <X size={20} className="text-text-tertiary" />
+                        <X size={20} className="text-white/30" />
                     </button>
                 </div>
 
                 {/* Requirement */}
                 {task.verification_requirement && (
                     <div className="px-5 pt-4">
-                        <div className="bg-purple-primary/5 border border-purple-primary/20 rounded-[var(--radius-md)] p-3">
-                            <p className="text-xs text-purple-primary font-bold uppercase mb-1">Requirement</p>
-                            <p className="text-sm text-text-secondary">{task.verification_requirement}</p>
+                        <div className="bg-zinc-800 border border-zinc-700 rounded-[var(--radius-md)] p-3">
+                            <p className="text-xs text-[var(--accent)] font-bold uppercase mb-1">Requirement</p>
+                            <p className="text-sm text-white/60">{task.verification_requirement}</p>
                         </div>
                     </div>
                 )}
@@ -232,27 +232,27 @@ export function ProofCaptureModal({ task, userId, sessionId, onClose, onSubmitte
                     {/* ── REVIEW PHASE — user confirms before submitting ── */}
                     {phase === 'review' && capturedData && (
                         <div className="space-y-4">
-                            <h3 className="text-sm font-bold text-text-secondary uppercase">Review Your Proof</h3>
+                            <h3 className="text-sm font-bold text-white/60 uppercase">Review Your Proof</h3>
 
                             {/* Text preview */}
                             {proofType === 'text' && capturedData.textContent && (
-                                <div className="bg-bg-tertiary border border-white/10 rounded-[var(--radius-md)] p-4 max-h-48 overflow-y-auto">
-                                    <p className="text-sm text-text-primary whitespace-pre-wrap">{capturedData.textContent}</p>
+                                <div className="bg-zinc-800 border border-zinc-700 rounded-[var(--radius-md)] p-4 max-h-48 overflow-y-auto">
+                                    <p className="text-sm text-white whitespace-pre-wrap">{capturedData.textContent}</p>
                                 </div>
                             )}
 
                             {/* Image preview */}
                             {proofType === 'image' && capturedData.previewUrl && (
-                                <div className="rounded-[var(--radius-lg)] overflow-hidden border border-white/10">
+                                <div className="rounded-[var(--radius-lg)] overflow-hidden border border-zinc-700">
                                     <img src={capturedData.previewUrl} alt="Captured proof" className="w-full" />
                                 </div>
                             )}
 
                             {/* Video preview */}
                             {proofType === 'video' && capturedData.previewUrl && (
-                                <div className="rounded-[var(--radius-lg)] overflow-hidden border border-white/10">
+                                <div className="rounded-[var(--radius-lg)] overflow-hidden border border-zinc-700">
                                     <video src={capturedData.previewUrl} controls className="w-full" />
-                                    <p className="text-xs text-text-tertiary text-center py-1">
+                                    <p className="text-xs text-white/30 text-center py-1">
                                         Duration: {capturedData.durationSeconds}s
                                     </p>
                                 </div>
@@ -260,9 +260,9 @@ export function ProofCaptureModal({ task, userId, sessionId, onClose, onSubmitte
 
                             {/* Audio preview */}
                             {proofType === 'audio' && capturedData.previewUrl && (
-                                <div className="bg-bg-tertiary rounded-[var(--radius-md)] p-4 space-y-2">
+                                <div className="bg-zinc-800 rounded-[var(--radius-md)] p-4 space-y-2">
                                     <audio src={capturedData.previewUrl} controls className="w-full" />
-                                    <p className="text-xs text-text-tertiary text-center">
+                                    <p className="text-xs text-white/30 text-center">
                                         Duration: {capturedData.durationSeconds}s
                                     </p>
                                 </div>
@@ -283,9 +283,9 @@ export function ProofCaptureModal({ task, userId, sessionId, onClose, onSubmitte
                     {/* ── SUBMITTING PHASE ── */}
                     {phase === 'submitting' && (
                         <div className="text-center py-10 space-y-3">
-                            <Loader2 size={32} className="mx-auto animate-spin text-purple-primary" />
-                            <p className="text-sm text-text-secondary">Verifying your proof...</p>
-                            <p className="text-xs text-text-tertiary italic">
+                            <Loader2 size={32} className="mx-auto animate-spin text-[var(--accent)]" />
+                            <p className="text-sm text-white/60">Verifying your proof...</p>
+                            <p className="text-xs text-white/30 italic">
                                 Your Master is reviewing your submission.
                             </p>
                         </div>
@@ -295,17 +295,17 @@ export function ProofCaptureModal({ task, userId, sessionId, onClose, onSubmitte
                     {phase === 'result' && submitResult && (
                         <div className="py-6 space-y-4">
                             <div className="text-center space-y-2">
-                                <div className="text-4xl">{submitResult.verified ? '✅' : '❌'}</div>
-                                <h3 className={`text-lg font-bold ${submitResult.verified ? 'text-teal-primary' : 'text-red-primary'}`}>
+                                <div className="text-xl font-bold tracking-widest">{submitResult.verified ? 'VERIFIED' : 'REJECTED'}</div>
+                                <h3 className={`text-lg font-bold ${submitResult.verified ? 'text-teal-400' : 'text-[var(--accent)]'}`}>
                                     {submitResult.verified ? 'Proof Verified!' : 'Proof Rejected'}
                                 </h3>
                             </div>
                             {/* AI Feedback */}
-                            <div className={`rounded-[var(--radius-md)] p-4 border text-left ${submitResult.verified ? 'bg-teal-primary/5 border-teal-primary/20' : 'bg-red-primary/5 border-red-primary/20'}`}>
-                                <p className={`text-xs font-bold uppercase mb-2 ${submitResult.verified ? 'text-teal-primary' : 'text-red-primary'}`}>
+                            <div className={`rounded-[var(--radius-md)] p-4 border text-left ${submitResult.verified ? 'bg-teal-400/5 border-teal-400/20' : 'bg-[var(--accent)]/5 border-[var(--accent)]/20'}`}>
+                                <p className={`text-xs font-bold uppercase mb-2 ${submitResult.verified ? 'text-teal-400' : 'text-[var(--accent)]'}`}>
                                     AI Feedback
                                 </p>
-                                <p className="text-sm text-text-secondary whitespace-pre-line leading-relaxed">{submitResult.reason}</p>
+                                <p className="text-sm text-white/60 whitespace-pre-line leading-relaxed">{submitResult.reason}</p>
                             </div>
                             <div className="flex justify-center gap-3">
                                 {!submitResult.verified && (

@@ -44,8 +44,7 @@ function SessionSummaryOverlay({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 overflow-y-auto">
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl max-w-lg w-full p-6 space-y-4 my-4">
                 <div className="text-center">
-                    <div className="text-4xl mb-2">🏁</div>
-                    <h2 className="text-2xl font-bold">Session Complete</h2>
+                    <h2 className="text-2xl font-bold uppercase tracking-wide">Session Complete</h2>
                     <p className="text-white/50 text-sm mt-1">
                         {grade && <>Grade: <span className="text-white font-bold text-lg">{grade}</span>{' · '}</>}
                         {compliance !== null && <>Compliance: <span className="text-white">{compliance}%</span></>}
@@ -64,7 +63,7 @@ function SessionSummaryOverlay({
                         <ul className="space-y-1">
                             {highlights.map((h, i) => (
                                 <li key={i} className="text-sm text-white/85 flex items-start gap-2">
-                                    <span className="text-emerald-400 mt-0.5">✓</span> {h}
+                                    <span className="text-emerald-400 mt-0.5 font-mono">+</span> {h}
                                 </li>
                             ))}
                         </ul>
@@ -77,7 +76,7 @@ function SessionSummaryOverlay({
                         <ul className="space-y-1">
                             {improvements.map((a, i) => (
                                 <li key={i} className="text-sm text-white/85 flex items-start gap-2">
-                                    <span className="text-amber-400 mt-0.5">→</span> {a}
+                                    <span className="text-amber-400 mt-0.5 font-mono">-</span> {a}
                                 </li>
                             ))}
                         </ul>
@@ -384,7 +383,7 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="relative w-28 h-28 mx-auto">
                                     <svg className="transform -rotate-90 w-28 h-28">
-                                        <circle cx="56" cy="56" r="48" stroke="currentColor" strokeWidth="6" fill="none" className="text-bg-tertiary" />
+                                        <circle cx="56" cy="56" r="48" stroke="currentColor" strokeWidth="6" fill="none" className="text-zinc-800" />
                                         <circle
                                             cx="56" cy="56" r="48"
                                             stroke="currentColor" strokeWidth="6" fill="none"
@@ -437,7 +436,7 @@ export default function DashboardPage() {
                                         </p>
                                         <div className="flex items-center gap-3">
                                             <Badge variant={currentTask.cage_status === 'uncaged' ? 'uncaged' : 'caged'}>
-                                                {currentTask.cage_status === 'uncaged' ? '🗝️' : '🔒'} {currentTask.cage_status.toUpperCase()}
+                                                {currentTask.cage_status.toUpperCase()}
                                             </Badge>
                                             {currentTask.deadline && (
                                                 <span className="text-sm text-white/30 font-mono">
@@ -474,9 +473,9 @@ export default function DashboardPage() {
                                     {Array.from({ length: 7 }).map((_, i) => (
                                         <div
                                             key={i}
-                                            className={`w-3 h-3 rounded-full ${i < complianceStreak % 7
-                                                ? 'bg-tier-slave'
-                                                : 'bg-bg-tertiary'
+                                            className={`w-3 h-3 border ${i < complianceStreak % 7
+                                                ? 'bg-tier-slave border-tier-slave'
+                                                : 'bg-zinc-800 border-zinc-700'
                                                 }`}
                                         />
                                     ))}
@@ -548,18 +547,18 @@ export default function DashboardPage() {
                             <div className="space-y-3 animate-card-in" style={{ animationDelay: '0.3s' }}>
                                 <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">Quick Access</h3>
                                 <div className="grid grid-cols-2 gap-2">
-                                    <Link href="/achievements" className="p-3 bg-bg-tertiary hover:bg-bg-hover rounded-[var(--radius-md)] border border-white/5 transition-colors flex items-center gap-2">
+                                    <Link href="/achievements" className="p-3 bg-zinc-900 hover:bg-zinc-800 rounded-[var(--radius-md)] border border-zinc-800 hover:border-zinc-700 transition-colors flex items-center gap-2">
                                         <Trophy size={16} className="text-tier-slave" />
                                         <span className="text-sm font-medium">Achievements</span>
                                     </Link>
-                                    <Link href="/regimens" className="p-3 bg-bg-tertiary hover:bg-bg-hover rounded-[var(--radius-md)] border border-white/5 transition-colors flex items-center gap-2">
+                                    <Link href="/regimens" className="p-3 bg-zinc-900 hover:bg-zinc-800 rounded-[var(--radius-md)] border border-zinc-800 hover:border-zinc-700 transition-colors flex items-center gap-2">
                                         <Dumbbell size={16} className="text-[var(--accent)]" />
                                         <span className="text-sm font-medium">Regimens</span>
                                     </Link>
                                     {session && (
                                         <button
                                             onClick={() => setShowMoodModal(true)}
-                                            className="p-3 bg-bg-tertiary hover:bg-bg-hover rounded-[var(--radius-md)] border border-white/5 transition-colors flex items-center gap-2"
+                                            className="p-3 bg-zinc-900 hover:bg-zinc-800 rounded-[var(--radius-md)] border border-zinc-800 hover:border-zinc-700 transition-colors flex items-center gap-2"
                                         >
                                             <Zap size={16} className="text-[var(--accent)]" />
                                             <span className="text-sm font-medium">Check In</span>
@@ -568,7 +567,7 @@ export default function DashboardPage() {
                                     {session && (
                                         <button
                                             onClick={() => setShowWheelModal(true)}
-                                            className="p-3 bg-bg-tertiary hover:bg-bg-hover rounded-[var(--radius-md)] border border-white/5 transition-colors flex items-center gap-2"
+                                            className="p-3 bg-zinc-900 hover:bg-zinc-800 rounded-[var(--radius-md)] border border-zinc-800 hover:border-zinc-700 transition-colors flex items-center gap-2"
                                         >
                                             <AlertTriangle size={16} className="text-red-500" />
                                             <span className="text-sm font-medium">Punishment</span>

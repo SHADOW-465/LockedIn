@@ -161,21 +161,19 @@ export default function OnboardingPage() {
 
     return (
         <div className="min-h-screen flex flex-col bg-bg-primary relative overflow-hidden">
-            {/* Ambient glow */}
-            <div className="absolute top-1/3 left-0 w-[500px] h-[500px] bg-red-primary/5 rounded-full blur-[150px] pointer-events-none" />
-            <div className="absolute bottom-1/3 right-0 w-[500px] h-[500px] bg-purple-primary/5 rounded-full blur-[150px] pointer-events-none" />
+            {/* Ambient glow removed */}
 
             {/* Top Bar */}
-            <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/5">
+            <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-zinc-800">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-bg-secondary border border-white/10 flex items-center justify-center">
-                        <Lock size={14} className="text-red-primary" />
+                    <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                        <Lock size={14} className="text-white" />
                     </div>
                     <span className="font-mono font-bold text-sm tracking-wide">
-                        Locked<span className="text-red-primary">In</span>
+                        Locked<span className="text-white">In</span>
                     </span>
                 </div>
-                <span className="text-text-tertiary text-xs font-mono">
+                <span className="text-white/30 text-xs font-mono">
                     {step} / 11
                 </span>
             </header>
@@ -190,18 +188,18 @@ export default function OnboardingPage() {
                             style={{
                                 background:
                                     i < step
-                                        ? 'var(--color-red-primary)'
+                                        ? 'var(--accent)'
                                         : i === step - 1
-                                            ? 'var(--color-purple-primary)'
-                                            : 'var(--color-bg-tertiary)',
+                                            ? 'var(--accent)'
+                                            : '#27272a', /* zinc-800 */
                                 opacity: i < step ? 1 : 0.4,
                             }}
                         />
                     ))}
                 </div>
                 <div className="flex justify-between mt-1">
-                    <span className="text-[10px] text-text-tertiary">{STEP_LABELS[step - 1]}</span>
-                    <span className="text-[10px] text-text-tertiary">{Math.round((step / 11) * 100)}%</span>
+                    <span className="text-[10px] text-white/30">{STEP_LABELS[step - 1]}</span>
+                    <span className="text-[10px] text-white/30">{Math.round((step / 11) * 100)}%</span>
                 </div>
             </div>
 
@@ -224,11 +222,11 @@ export default function OnboardingPage() {
             )}
 
             {/* Bottom Navigation */}
-            <footer className="relative z-10 px-6 py-4 border-t border-white/5 flex items-center justify-between">
+            <footer className="relative z-10 px-6 py-4 border-t border-zinc-800 flex items-center justify-between">
                 <button
                     onClick={handlePrev}
                     disabled={isFirst}
-                    className="flex items-center gap-2 px-5 py-3 rounded-[var(--radius-pill)] bg-bg-secondary text-text-secondary font-medium text-sm border border-white/5 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-bg-tertiary transition-colors cursor-pointer"
+                    className="flex items-center gap-2 px-5 py-3 rounded-[var(--radius-pill)] bg-zinc-900 text-white/60 font-medium text-sm border border-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-zinc-800 transition-colors cursor-pointer"
                 >
                     <ChevronLeft size={16} />
                     Back
@@ -238,10 +236,8 @@ export default function OnboardingPage() {
                     onClick={handleNext}
                     disabled={!canProceed || saving}
                     className={`flex items-center gap-2 px-6 py-3 rounded-[var(--radius-pill)] font-semibold text-sm uppercase tracking-wide transition-all duration-200 cursor-pointer ${canProceed && !saving
-                        ? isLast
-                            ? 'bg-red-primary text-white glow-red hover:bg-red-hover hover:shadow-raised-hover'
-                            : 'bg-purple-primary text-white glow-purple hover:bg-purple-hover hover:shadow-raised-hover'
-                        : 'bg-bg-tertiary text-text-disabled cursor-not-allowed'
+                        ? 'bg-zinc-800 border border-zinc-700 text-white hover:bg-zinc-700 hover:border-zinc-600'
+                        : 'bg-zinc-900 border border-zinc-800 text-white/30 cursor-not-allowed'
                         }`}
                 >
                     {saving ? (

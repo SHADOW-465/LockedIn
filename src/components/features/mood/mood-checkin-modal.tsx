@@ -64,11 +64,11 @@ export function MoodCheckinModal({ userId, sessionId, onClose, onSubmit }: Props
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="bg-bg-secondary border border-border-subtle rounded-2xl w-full max-w-md space-y-5 p-5 relative">
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-4 pb-24 sm:pb-4">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md space-y-5 p-5 relative">
         <button
           onClick={handleSkip}
-          className="absolute top-4 right-4 text-text-tertiary hover:text-text-secondary transition-colors"
+          className="absolute top-4 right-4 text-white/30 hover:text-white/60 transition-colors"
           aria-label="Skip check-in"
         >
           <X className="w-4 h-4" />
@@ -76,14 +76,14 @@ export function MoodCheckinModal({ userId, sessionId, onClose, onSubmit }: Props
 
         <div>
           <h2 className="text-lg font-bold">Mood Check-in</h2>
-          <p className="text-xs text-text-tertiary mt-0.5">How are you feeling right now?</p>
+          <p className="text-xs text-white/40 mt-0.5">How are you feeling right now?</p>
         </div>
 
         {/* Submission depth */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-text-secondary font-medium">Submission Depth</span>
-            <span className="text-purple-primary font-mono font-bold">{submissionDepth}/10</span>
+            <span className="text-white/80 font-medium">Submission Depth</span>
+            <span className="text-[var(--accent)] font-mono font-bold">{submissionDepth}/10</span>
           </div>
           <input
             type="range"
@@ -91,9 +91,9 @@ export function MoodCheckinModal({ userId, sessionId, onClose, onSubmit }: Props
             max={10}
             value={submissionDepth}
             onChange={(e) => setSubmissionDepth(Number(e.target.value))}
-            className="w-full accent-purple-primary"
+            className="w-full accent-[var(--accent)]"
           />
-          <div className="flex justify-between text-[10px] text-text-tertiary">
+          <div className="flex justify-between text-[10px] text-white/40">
             <span>Resistant</span>
             <span>Deeply submissive</span>
           </div>
@@ -102,8 +102,8 @@ export function MoodCheckinModal({ userId, sessionId, onClose, onSubmit }: Props
         {/* Frustration level */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-text-secondary font-medium">Frustration Level</span>
-            <span className="text-red-primary font-mono font-bold">{frustrationLevel}/10</span>
+            <span className="text-white/80 font-medium">Frustration Level</span>
+            <span className="text-red-500 font-mono font-bold">{frustrationLevel}/10</span>
           </div>
           <input
             type="range"
@@ -113,7 +113,7 @@ export function MoodCheckinModal({ userId, sessionId, onClose, onSubmit }: Props
             onChange={(e) => setFrustrationLevel(Number(e.target.value))}
             className="w-full accent-red-500"
           />
-          <div className="flex justify-between text-[10px] text-text-tertiary">
+          <div className="flex justify-between text-[10px] text-white/40">
             <span>Calm</span>
             <span>Desperate</span>
           </div>
@@ -121,16 +121,16 @@ export function MoodCheckinModal({ userId, sessionId, onClose, onSubmit }: Props
 
         {/* Headspace tags */}
         <div className="space-y-2">
-          <p className="text-sm font-medium text-text-secondary">Headspace</p>
+          <p className="text-sm font-medium text-white/80">Headspace</p>
           <div className="flex flex-wrap gap-2">
             {HEADSPACE_TAGS.map((tag) => (
               <button
                 key={tag}
                 onClick={() => toggleTag(tag)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
                   selectedTags.includes(tag)
-                    ? 'bg-purple-primary text-white'
-                    : 'bg-bg-tertiary text-text-tertiary hover:text-text-secondary'
+                    ? 'bg-[var(--accent)] text-black border-[var(--accent)]'
+                    : 'bg-zinc-800/50 text-white/50 border-zinc-700/50 hover:text-white/80 hover:bg-zinc-800'
                 }`}
               >
                 {tag}
@@ -146,7 +146,7 @@ export function MoodCheckinModal({ userId, sessionId, onClose, onSubmit }: Props
           placeholder="Optional notes (max 280 chars)"
           maxLength={280}
           rows={2}
-          className="w-full bg-bg-tertiary border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:border-purple-primary/50"
+          className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 resize-none focus:outline-none focus:border-[var(--accent)]/50 focus:ring-1 focus:ring-[var(--accent)]/50 transition-all"
         />
 
         {error && <p className="text-red-primary text-xs">{error}</p>}
