@@ -37,18 +37,20 @@ export function TopBar() {
     const username = profile?.username ?? profile?.email?.split('@')[0] ?? 'User'
 
     return (
-        <header className="sticky top-0 z-40 glass-strong px-4 py-3">
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <header className="sticky top-0 z-40 bg-black border-b border-[#141414] px-4 h-16 flex items-center">
+            <div className="max-w-7xl mx-auto flex items-center justify-between w-full">
                 {/* Logo */}
-                <div className="flex items-center gap-2">
-                    <Image src="/LockedIn-logo.png" alt="LockedIn Logo" width={24} height={24} className="animate-lock-glow rounded-full" />
-                    <h1 className="text-xl font-bold font-mono tracking-tight">
-                        Locked<span className="text-red-primary">In</span>
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-[var(--color-accent)] flex items-center justify-center">
+                        <Image src="/LockedIn-logo.png" alt="LockedIn Logo" width={20} height={20} className="invert" />
+                    </div>
+                    <h1 className="text-xl font-bold font-mono tracking-tighter uppercase leading-none">
+                        Locked<span className="text-[var(--color-accent)]">In</span>
                     </h1>
                 </div>
 
                 {/* Desktop Nav */}
-                <nav className="hidden lg:flex items-center gap-1">
+                <nav className="hidden lg:flex items-center h-16">
                     {navItems.map((item) => {
                         const Icon = item.icon
                         const isActive = pathname === item.href
@@ -57,13 +59,13 @@ export function TopBar() {
                                 key={item.href}
                                 href={item.href}
                                 className={cn(
-                                    'flex items-center gap-2 px-4 py-2 rounded-[var(--radius-pill)] text-sm font-medium transition-all duration-200 cursor-pointer',
+                                    'flex items-center gap-2 px-6 h-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all cursor-pointer border-x border-transparent',
                                     isActive
-                                        ? 'bg-bg-tertiary text-purple-primary glow-purple'
-                                        : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary'
+                                        ? 'bg-white text-black border-x-[#141414]'
+                                        : 'text-[var(--color-text-secondary)] hover:text-white hover:bg-[#0a0a0a]'
                                 )}
                             >
-                                <Icon size={16} />
+                                <Icon size={14} />
                                 <span>{item.label}</span>
                             </Link>
                         )
@@ -71,14 +73,19 @@ export function TopBar() {
                 </nav>
 
                 {/* Right side */}
-                <div className="flex items-center gap-3">
-                    <UsageMeter />
-                    <NotificationBell />
-                    <Badge variant={getTierBadge(tier)}>
-                        {tier.toUpperCase()}
-                    </Badge>
-                    <div className="w-9 h-9 rounded-full bg-purple-primary/20 flex items-center justify-center text-sm font-semibold text-purple-primary border border-purple-primary/30">
-                        {username.charAt(0).toUpperCase()}
+                <div className="flex items-center gap-4">
+                    <div className="hidden sm:flex items-center gap-4 border-l border-[#141414] pl-4 h-8">
+                        <UsageMeter />
+                        <NotificationBell />
+                    </div>
+                    
+                    <div className="flex items-center gap-3 border-l border-[#141414] pl-4 h-8">
+                        <Badge variant={getTierBadge(tier)}>
+                            {tier.toUpperCase()}
+                        </Badge>
+                        <div className="w-8 h-8 bg-white text-black flex items-center justify-center text-[10px] font-bold font-mono border border-black group cursor-pointer hover:bg-[var(--color-accent)] transition-colors">
+                            {username.charAt(0).toUpperCase()}
+                        </div>
                     </div>
                 </div>
             </div>

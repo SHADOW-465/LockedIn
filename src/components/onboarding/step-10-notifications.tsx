@@ -43,73 +43,69 @@ export default function NotificationsStep({ onValid }: StepProps) {
     }, [onValid])
 
     return (
-        <div className="space-y-6 max-w-md mx-auto">
-            <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold font-mono">Notification Control</h2>
-                <p className="text-white/80 text-sm">
-                    How often should your AI Master contact you?
+        <div className="space-y-10">
+            <div className="text-left space-y-4 border-l-4 border-white pl-6">
+                <h2 className="text-4xl font-display font-bold tracking-tighter uppercase italic line-through decoration-[var(--color-accent)] decoration-2">Signal Frequency</h2>
+                <p className="text-[var(--color-text-secondary)] font-mono text-xs uppercase tracking-widest opacity-60">
+                    DEFINE THE PERSISTENCE OF SYSTEM-TO-SUB COMMUNICATION. AT LEAST 01 SIGNAL CHANNEL MUST REMAIN OPEN.
                 </p>
             </div>
 
-            {/* Frequency Selection */}
-            <div className="space-y-2">
-                {FREQ_OPTIONS.map((opt) => {
-                    const isSelected = notificationFrequency === opt.value
+            {/* Frequency Selection Grid */}
+            <div className="space-y-4">
+                <label className="text-[10px] font-mono font-bold text-white uppercase tracking-[0.3em]">SIGNAL_VOLUME_CALIBRATION</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {FREQ_OPTIONS.map((opt) => {
+                        const isSelected = notificationFrequency === opt.value
 
-                    return (
-                        <button
-                            key={opt.value}
-                            onClick={() => setNotificationFrequency(opt.value)}
-                            className={`w-full text-left p-4 rounded-[var(--radius-lg)] border transition-all duration-200 cursor-pointer ${isSelected
-                                    ? 'border-zinc-700 bg-zinc-900'
-                                    : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-800'
-                                }`}
-                            style={isSelected ? { boxShadow: `0 0 15px ${opt.color}30` } : {}}
-                        >
-                            <div className="flex items-center gap-3">
-                                <Bell size={16} style={{ color: isSelected ? opt.color : 'var(--color-text-disabled)' }} />
-                                <div>
-                                    <span className="font-semibold text-sm" style={isSelected ? { color: opt.color } : {}}>
+                        return (
+                            <button
+                                key={opt.value}
+                                onClick={() => setNotificationFrequency(opt.value)}
+                                className={`p-6 border transition-all duration-150 text-left relative cursor-pointer group ${isSelected
+                                        ? 'bg-black border-[var(--color-accent)]'
+                                        : 'bg-[#050505] border-[#141414] hover:border-[#333]'
+                                    }`}
+                            >
+                                <div className="space-y-2">
+                                    <span className={`block text-lg font-display font-bold tracking-tight uppercase ${isSelected ? 'text-white' : 'text-[#444]'}`}>
                                         {opt.label}
                                     </span>
-                                    <p className="text-white/30 text-xs mt-0.5">{opt.desc}</p>
+                                    <p className={`text-[10px] font-mono leading-relaxed uppercase tracking-widest transition-opacity ${isSelected ? 'text-[var(--color-text-secondary)]' : 'text-[#222]'}`}>
+                                        {opt.desc.toUpperCase()}
+                                    </p>
                                 </div>
-                            </div>
-                        </button>
-                    )
-                })}
+                                {isSelected && (
+                                    <div className="absolute top-0 right-0 w-2 h-2 bg-[var(--color-accent)]" />
+                                )}
+                            </button>
+                        )
+                    })}
+                </div>
             </div>
 
-            {/* Standby Mode */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-[var(--radius-lg)] p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                    <Moon size={14} className="text-white" />
-                    <span className="text-xs font-semibold text-white/80 uppercase tracking-wider">
-                        Standby Mode (2AM — 5AM)
-                    </span>
+            {/* Standby Mode / Sleep Surveillance */}
+            <div className={`border p-8 space-y-6 transition-colors ${standbyConsent ? 'bg-black border-white' : 'bg-black border-[#141414]'}`}>
+                <div className="flex items-center justify-between border-b border-[#141414] pb-4">
+                    <span className={`text-xs font-display font-bold uppercase tracking-[0.2em] italic ${standbyConsent ? 'text-white' : 'text-[#444]'}`}>Circadian_Override_Protocol</span>
+                    <div className={`px-2 py-0.5 text-[9px] font-mono font-bold ${standbyConsent ? 'bg-white text-black' : 'bg-[#141414] text-[#333]'}`}>
+                        {standbyConsent ? 'ACTIVE' : 'INACTIVE'}
+                    </div>
                 </div>
-                <p className="text-white/30 text-xs leading-relaxed">
-                    Enable surprise check-ins between 2AM and 5AM. The AI Master may wake you
-                    with tasks, demands, or compliance checks during sleeping hours.
+                
+                <p className={`text-[10px] font-mono leading-relaxed uppercase tracking-widest ${standbyConsent ? 'text-[var(--color-text-secondary)]' : 'text-[#222]'}`}>
+                    ALLOW SYSTEM CHECK-INS DURING [02:00] — [05:00] WINDOW. RANDOMIZED COMPLIANCE DRILLS MAY BE INITIATED WITHOUT PRIOR ADVISORY.
                 </p>
+
                 <button
                     onClick={() => setStandbyConsent(!standbyConsent)}
-                    className={`w-full py-2.5 rounded-[var(--radius-md)] text-xs font-medium transition-all cursor-pointer border ${standbyConsent
-                            ? 'bg-zinc-800/15 border-zinc-700 text-white'
-                            : 'bg-black border-zinc-800 text-white/30 hover:border-zinc-800'
+                    className={`w-full py-5 border text-xs font-mono font-bold uppercase tracking-[0.3em] transition-all cursor-pointer ${standbyConsent
+                            ? 'bg-white border-white text-black hover:bg-black hover:text-white'
+                            : 'bg-black border-[#141414] text-[#333] hover:border-white hover:text-white'
                         }`}
                 >
-                    {standbyConsent ? '✓ Standby Mode Enabled' : 'Enable Standby Mode'}
+                    {standbyConsent ? 'DISABLE_SURVEILLANCE' : 'AUTHORIZE_SURVEILLANCE'}
                 </button>
-
-                {standbyConsent && (
-                    <div className="flex items-start gap-2 text-xs">
-                        <AlertTriangle size={12} className="text-white flex-shrink-0 mt-0.5" />
-                        <span className="text-white/30">
-                            You may receive notifications at any hour. Disable in Settings anytime.
-                        </span>
-                    </div>
-                )}
             </div>
         </div>
     )

@@ -29,106 +29,74 @@ export default function FinalReviewStep({ onValid }: StepProps) {
 
     const lockDays = Math.round(state.initialLockGoalHours / 24)
 
+    const DATA_POINTS = [
+        { label: 'SUBJECT_TIER', value: state.tier || 'NOT_DEFINED' },
+        { label: 'NEURAL_PERSONA', value: state.aiPersonality || 'NOT_DEFINED' },
+        { label: 'FETISH_CLASSIFICATION', value: state.fetishProfile.join(', ').toUpperCase() || 'NONE' },
+        { label: 'CONDITIONING_PROTOCOLS', value: state.selectedRegimens.map((r) => `${r.name.toUpperCase()}${r.isPrimary ? '_[PRI]' : ''}`).join(', ') || 'NONE' },
+        { label: 'TEMPORAL_CONSTRAINT', value: `${lockDays} DAY${lockDays !== 1 ? 'S' : ''}`.toUpperCase() },
+        { label: 'SAFETY_LIMITS', value: `${state.hardLimits.length} HARD_LIMITS`.toUpperCase() },
+        { label: 'SIGNAL_FREQUENCY', value: state.notificationFrequency.toUpperCase() },
+    ]
+
     return (
-        <div className="space-y-5 max-w-md mx-auto">
-            <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold font-mono text-white text-">
-                    Final Review
-                </h2>
-                <p className="text-white/80 text-sm">
-                    Confirm your configuration. Once you lock in, the AI Master takes control.
+        <div className="space-y-10">
+            <div className="text-left space-y-4 border-l-4 border-white pl-6">
+                <h2 className="text-4xl font-display font-bold tracking-tighter uppercase italic line-through decoration-white decoration-2">Integration Manifest</h2>
+                <p className="text-[var(--color-text-secondary)] font-mono text-xs uppercase tracking-widest opacity-60">
+                    VERIFY SYSTEM PARAMETERS. ONCE INTEGRATED, THE CONTROLLING ENTITY ASSUMES ABSOLUTE MANAGEMENT OF THE SUBJECT.
                 </p>
             </div>
 
-            {/* Summary Cards */}
-            <div className="space-y-2">
-                {/* Tier */}
-                <div className="flex items-center gap-3 p-3 rounded-[var(--radius-lg)] bg-zinc-900/50 border border-zinc-800">
-                    <Shield size={16} className="text-white flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                        <span className="text-[10px] text-white/30 uppercase tracking-wider">Tier</span>
-                        <p className="text-sm font-semibold">{state.tier || '—'}</p>
-                    </div>
-                </div>
-
-                {/* Persona */}
-                <div className="flex items-center gap-3 p-3 rounded-[var(--radius-lg)] bg-zinc-900/50 border border-zinc-800">
-                    <Brain size={16} className="text-white flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                        <span className="text-[10px] text-white/30 uppercase tracking-wider">AI Persona</span>
-                        <p className="text-sm font-semibold">{state.aiPersonality || '—'}</p>
-                    </div>
-                </div>
-
-                {/* Fetishes */}
-                <div className="flex items-start gap-3 p-3 rounded-[var(--radius-lg)] bg-zinc-900/50 border border-zinc-800">
-                    <Heart size={16} className="text-white flex-shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                        <span className="text-[10px] text-white/30 uppercase tracking-wider">
-                            Fetishes ({state.fetishProfile.length})
+            {/* Data Points Grid */}
+            <div className="space-y-px bg-[#141414] border border-[#141414]">
+                {DATA_POINTS.map((point) => (
+                    <div key={point.label} className="flex flex-col sm:flex-row sm:items-center bg-black p-4 gap-2 sm:gap-6">
+                        <span className="text-[9px] font-mono font-bold text-[#444] uppercase tracking-widest sm:w-48 flex-shrink-0">
+                            {point.label}
                         </span>
-                        <p className="text-xs text-white/80 mt-0.5 leading-relaxed">
-                            {state.fetishProfile.join(', ') || '—'}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Regimens */}
-                <div className="flex items-start gap-3 p-3 rounded-[var(--radius-lg)] bg-zinc-900/50 border border-zinc-800">
-                    <Star size={16} className="text-white flex-shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                        <span className="text-[10px] text-white/30 uppercase tracking-wider">
-                            Regimens ({state.selectedRegimens.length})
+                        <span className="text-xs font-mono font-bold text-white uppercase tracking-wider break-words">
+                            {point.value}
                         </span>
-                        <p className="text-xs text-white/80 mt-0.5">
-                            {state.selectedRegimens.map((r) => `${r.name}${r.isPrimary ? ' ★' : ''}`).join(', ') || '—'}
-                        </p>
                     </div>
+                ))}
+                
+                <div className="flex flex-col sm:flex-row sm:items-center bg-black p-4 gap-2 sm:gap-6">
+                    <span className="text-[9px] font-mono font-bold text-[var(--color-accent)] uppercase tracking-widest sm:w-48 flex-shrink-0">
+                        EMERGENCY_OVERRIDE
+                    </span>
+                    <span className="text-xs font-display font-bold text-[var(--color-accent)] uppercase tracking-[0.4em]">
+                        {state.safeword}
+                    </span>
                 </div>
+            </div>
 
-                {/* Lock Duration */}
-                <div className="flex items-center gap-3 p-3 rounded-[var(--radius-lg)] bg-zinc-900/50 border border-zinc-800">
-                    <Clock size={16} className="text-white flex-shrink-0" />
-                    <div className="flex-1">
-                        <span className="text-[10px] text-white/30 uppercase tracking-wider">Lock Duration</span>
-                        <p className="text-sm font-semibold font-mono">{lockDays} day{lockDays !== 1 ? 's' : ''}</p>
-                    </div>
+            {/* Final Warning Block */}
+            <div className="bg-black border-2 border-[var(--color-accent)] p-8 space-y-6">
+                <div className="flex items-center gap-4 border-b border-[var(--color-accent)]/30 pb-4">
+                    <div className="w-4 h-4 bg-[var(--color-accent)] animate-pulse" />
+                    <span className="text-sm font-display font-bold text-white uppercase tracking-[0.2em] italic">POINT_OF_NO_RETURN</span>
                 </div>
+                
+                <p className="text-[11px] font-mono leading-relaxed text-[#888] uppercase tracking-widest">
+                    SUBMISSION OF THIS MANIFEST GRANTS FULL OPERATIONAL CONTROL TO THE SYSTEM. THE LOCKED STATE CANNOT BE TERMINATED UNTIL TEMPORAL OR TASK-BASED REQUIREMENTS ARE SATISFIED.
+                </p>
 
-                {/* Limits */}
-                <div className="flex items-center gap-3 p-3 rounded-[var(--radius-lg)] bg-zinc-900/50 border border-zinc-800">
-                    <Lock size={16} className="text-white flex-shrink-0" />
-                    <div className="flex-1">
-                        <span className="text-[10px] text-white/30 uppercase tracking-wider">Safety</span>
-                        <p className="text-xs text-white/80">
-                            {state.hardLimits.length} hard limit{state.hardLimits.length !== 1 ? 's' : ''} •
-                            Safeword: <span className="font-mono text-white">{state.safeword}</span>
-                        </p>
-                    </div>
-                </div>
-
-                {/* Notifications */}
-                <div className="flex items-center gap-3 p-3 rounded-[var(--radius-lg)] bg-zinc-900/50 border border-zinc-800">
-                    <Bell size={16} className="text-white flex-shrink-0" />
-                    <div className="flex-1">
-                        <span className="text-[10px] text-white/30 uppercase tracking-wider">Notifications</span>
-                        <p className="text-xs text-white/80 capitalize">
-                            {state.notificationFrequency} frequency
-                            {state.standbyConsent ? ' • Standby Mode ON' : ''}
-                        </p>
+                <div className="pt-2">
+                    <div className="flex items-center gap-3">
+                        <div className="w-1.5 h-1.5 bg-[var(--color-accent)]" />
+                        <span className="text-[9px] font-mono font-bold text-white uppercase tracking-[0.2em]">LIABILITY_WAIVER: ACKNOWLEDGED</span>
                     </div>
                 </div>
             </div>
 
-            {/* Final Warning */}
-            <div className="bg-zinc-800/5 border border-zinc-700 rounded-[var(--radius-lg)] p-4 space-y-2">
-                <div className="flex items-center gap-2 text-white">
-                    <AlertTriangle size={16} />
-                    <span className="text-xs font-semibold uppercase tracking-wider">Point of No Return</span>
+            <div className="flex items-center justify-between border-t border-[#141414] pt-8">
+                <div className="flex items-center gap-4">
+                    <div className="w-2 h-2 bg-white" />
+                    <span className="text-[9px] font-mono font-bold tracking-widest uppercase text-white opacity-40">MANIFEST_ID: {Math.random().toString(16).slice(2, 10).toUpperCase()}</span>
                 </div>
-                <p className="text-white/80 text-xs leading-relaxed">
-                    Pressing <span className="text-white font-bold">&ldquo;Lock In&rdquo;</span> activates your AI Master.
-                    Your lock timer begins immediately. Emergency Release is always available in Settings.
+                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-white">
+                    READY_FOR_SEQUENCING
                 </p>
             </div>
         </div>

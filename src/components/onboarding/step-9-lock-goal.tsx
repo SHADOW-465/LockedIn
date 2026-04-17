@@ -25,24 +25,18 @@ export default function LockGoalStep({ onValid }: StepProps) {
     }, [initialLockGoalHours, safeword, onValid])
 
     return (
-        <div className="space-y-6 max-w-md mx-auto">
-            <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold font-mono">Lock Goal & Safety</h2>
-                <p className="text-white/80 text-sm">
-                    Set your initial lock duration and emergency safeword.
+        <div className="space-y-10">
+            <div className="text-left space-y-4 border-l-4 border-white pl-6">
+                <h2 className="text-4xl font-display font-bold tracking-tighter uppercase italic line-through decoration-white decoration-2">Constraint Period</h2>
+                <p className="text-[var(--color-text-secondary)] font-mono text-xs uppercase tracking-widest opacity-60">
+                    SET THE PRIMARY DURATION OF TEMPORAL ISOLATION. DISCRETIONARY OVERRIDE REMAINS WITH THE CONTROLLING ENTITY.
                 </p>
             </div>
 
-            {/* Lock Duration */}
-            <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                    <Clock size={14} className="text-white" />
-                    <span className="text-xs font-semibold text-white/80 uppercase tracking-wider">
-                        Lock Duration
-                    </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
+            {/* Lock Duration Grid */}
+            <div className="space-y-4">
+                <label className="text-[10px] font-mono font-bold text-white uppercase tracking-[0.3em]">DURATION_PRESETS_IN_HOURS</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {LOCK_PRESETS.map((preset) => {
                         const isSelected = initialLockGoalHours === preset.hours
 
@@ -50,45 +44,54 @@ export default function LockGoalStep({ onValid }: StepProps) {
                             <button
                                 key={preset.hours}
                                 onClick={() => setInitialLockGoalHours(preset.hours)}
-                                className={`p-3 rounded-[var(--radius-lg)] border text-center transition-all cursor-pointer ${isSelected
-                                        ? 'border-zinc-700 bg-zinc-800/10 '
-                                        : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-800'
+                                className={`p-6 border transition-all duration-150 text-center relative cursor-pointer ${isSelected
+                                        ? 'bg-black border-[var(--color-accent)]'
+                                        : 'bg-[#050505] border-[#141414] hover:border-[#333]'
                                     }`}
                             >
-                                <span className={`block text-sm font-bold font-mono ${isSelected ? 'text-white' : ''}`}>
-                                    {preset.label}
+                                <span className={`block text-xl font-display font-bold tracking-tighter ${isSelected ? 'text-[var(--color-accent)]' : 'text-[#444]'}`}>
+                                    {preset.label.toUpperCase()}
                                 </span>
-                                <span className="block text-[10px] text-white/30 mt-0.5">{preset.desc}</span>
+                                <span className={`block text-[9px] font-mono uppercase tracking-widest mt-1 ${isSelected ? 'text-white' : 'text-[#222]'}`}>
+                                    {preset.desc.toUpperCase()}
+                                </span>
+                                {isSelected && (
+                                    <div className="absolute top-0 right-0 w-2 h-2 bg-[var(--color-accent)]" />
+                                )}
                             </button>
                         )
                     })}
                 </div>
-
-                <p className="text-center text-xs text-white/30">
-                    AI may adjust this based on your performance.
-                </p>
             </div>
 
-            {/* Safeword */}
-            <div className="space-y-3 bg-teal-primary/5 border border-teal-primary/20 rounded-[var(--radius-lg)] p-4">
-                <div className="flex items-center gap-2">
-                    <Lock size={14} className="text-white" />
-                    <span className="text-xs font-semibold text-white uppercase tracking-wider">
-                        Safeword
-                    </span>
+            {/* Safeword Emergency Override */}
+            <div className="bg-black border border-[var(--color-accent)] p-8 space-y-6">
+                <div className="flex items-center justify-between border-b border-[var(--color-accent)]/30 pb-4">
+                    <span className="text-xs font-display font-bold text-[var(--color-accent)] uppercase tracking-[0.2em] italic">EMERGENCY_OVERRIDE_PROTOCOL</span>
+                    <div className="px-2 py-0.5 bg-[var(--color-accent)] text-black text-[9px] font-mono font-bold">CRITICAL</div>
                 </div>
-                <p className="text-white/80 text-xs">
-                    Typing this word in chat instantly activates <span className="text-white font-semibold">Care Mode</span>,
-                    pausing all tasks and punishment. Choose something you won&apos;t type accidentally.
+                
+                <p className="text-[10px] font-mono leading-relaxed text-[#666] uppercase tracking-widest">
+                    ENTRY OF THIS UNIQUE STRING WILL ACTIVATE <span className="text-white font-bold">[CARE_MODE]</span>. SYSTEM INTERVENTIONS AND CONDITIONING CYCLES WILL BE SUSPENDED. SELECT A STRING WITH ZERO ACCIDENTAL TRIGGER PROBABILITY.
                 </p>
-                <input
-                    type="text"
-                    value={safeword}
-                    onChange={(e) => setSafeword(e.target.value.toUpperCase())}
-                    className="w-full px-4 py-2.5 rounded-[var(--radius-md)] bg-black border border-teal-primary/20 text-sm text-white font-mono uppercase tracking-wider text-center focus:outline-none focus:border-zinc-700/40"
-                    placeholder="MERCY"
-                    maxLength={20}
-                />
+
+                <div className="space-y-3">
+                    <label className="text-[9px] font-mono font-bold text-[#444] uppercase tracking-widest">ASSIGN_SAFEWORD_STRING:</label>
+                    <input
+                        type="text"
+                        value={safeword}
+                        onChange={(e) => setSafeword(e.target.value.toUpperCase())}
+                        className="w-full bg-[#050505] border border-[var(--color-accent)]/50 px-6 py-5 text-lg font-display font-bold text-white uppercase tracking-[0.4em] text-center focus:outline-none focus:border-[var(--color-accent)] transition-all placeholder:text-[#111]"
+                        placeholder="REQUIRED"
+                        maxLength={20}
+                    />
+                </div>
+            </div>
+
+            <div className="flex items-center gap-6 border-t border-[#141414] pt-8">
+                <div className="flex-1 bg-[#141414] h-px" />
+                <span className="text-[9px] font-mono font-bold tracking-widest uppercase text-white opacity-40 italic">AUTHORIZATION_PENDING_ON_SUBMISSION</span>
+                <div className="flex-1 bg-[#141414] h-px" />
             </div>
         </div>
     )

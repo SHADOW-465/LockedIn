@@ -16,84 +16,83 @@ export default function WelcomeStep({ onValid }: StepProps) {
     }, [ageConfirmed, termsAccepted, onValid])
 
     return (
-        <div className="space-y-8 max-w-md mx-auto">
-            {/* Title */}
-            <div className="text-center space-y-3">
-                <h2 className="text-3xl font-bold font-mono">
-                    Welcome to <span className="text-white text-">LockedIn</span>
+        <div className="space-y-12 h-full flex flex-col justify-center">
+            {/* Title / Intro */}
+            <div className="space-y-6 text-left border-l-4 border-[var(--color-accent)] pl-6">
+                <h2 className="text-6xl font-display font-bold tracking-tighter uppercase leading-none italic">
+                    WELCOME <br />
+                    <span className="text-[var(--color-accent)] not-italic">TO THE SYSTEM</span>
                 </h2>
-                <p className="text-white/80 text-sm leading-relaxed">
-                    You&apos;re about to submit yourself to an AI-driven chastity and conditioning program.
-                    This process is <span className="text-white font-semibold">irreversible</span> once
-                    locked in &mdash; though emergency release is always available.
+                <p className="text-[var(--color-text-secondary)] font-mono text-sm leading-relaxed uppercase tracking-wider opacity-60 max-w-sm">
+                    YOU ARE ENTERING AN AI-DRIVEN CONDITIONING PROTOCOL. <br />
+                    CONSENT IS PARAMEDICAL. <br />
+                    SUBMISSION IS THE ONLY VARIABLE.
                 </p>
             </div>
 
             {/* Warning Card */}
-            <div className="bg-zinc-800/5 border border-zinc-700 rounded-[var(--radius-lg)] p-5 space-y-3">
-                <div className="flex items-center gap-2 text-white">
-                    <AlertTriangle size={18} />
-                    <span className="font-semibold text-sm uppercase tracking-wide">Content Warning</span>
+            <div className="bg-[#0A0A0A] border border-[#141414] p-6 space-y-4">
+                <div className="flex items-center gap-3 text-[var(--color-accent)]">
+                    <div className="w-1.5 h-6 bg-[var(--color-accent)]" />
+                    <span className="font-display font-bold text-sm uppercase tracking-[0.3em]">WARNING: CONTENT_PROTOCOL_18</span>
                 </div>
-                <p className="text-white/80 text-xs leading-relaxed">
-                    This platform contains explicit adult content including BDSM, chastity,
-                    humiliation, and psychological conditioning elements. All activities are
-                    consensual and feature robust safety controls.
+                <p className="text-[var(--color-text-secondary)] font-mono text-[11px] leading-loose uppercase tracking-widest">
+                    THIS DOMAIN CONTAINS HIGH-FIDELITY ADULT MATERIAL. BDSM, CHASTITY, AND PSYCHOLOGICAL REPROGRAMMING ELEMENTS ARE ACTIVE. ALL TRAPPING PROTOCOLS ARE SIMULATED YET PERSISTENT.
                 </p>
             </div>
 
-            {/* Checkboxes */}
-            <div className="space-y-4">
-                <label className="flex items-start gap-3 cursor-pointer group">
+            {/* Checkboxes (Industrial Style) */}
+            <div className="space-y-6">
+                <label className="flex items-start gap-4 cursor-pointer group">
                     <div
-                        className={`w-5 h-5 rounded-[var(--radius-sm)] border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition-all ${ageConfirmed
-                                ? 'bg-zinc-800 border-red-primary'
-                                : 'border-text-tertiary group-hover:border-text-secondary'
+                        className={`w-6 h-6 border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition-all ${ageConfirmed
+                                ? 'bg-[var(--color-accent)] border-[var(--color-accent)]'
+                                : 'bg-black border-[#222] group-hover:border-[var(--color-accent)]'
                             }`}
                         onClick={() => setAgeConfirmed(!ageConfirmed)}
                     >
-                        {ageConfirmed && (
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        )}
+                        {ageConfirmed && <div className="w-3 h-3 bg-black" />}
                     </div>
-                    <span className="text-white/80 text-sm leading-relaxed" onClick={() => setAgeConfirmed(!ageConfirmed)}>
-                        I confirm that I am <span className="text-white font-semibold">18 years or older</span> and
-                        legally able to access adult content in my jurisdiction.
-                    </span>
+                    <div className="space-y-1" onClick={() => setAgeConfirmed(!ageConfirmed)}>
+                        <span className="text-white font-display font-bold text-xs uppercase tracking-widest group-hover:text-[var(--color-accent)] transition-colors">
+                            ADULT_STATUS_VERIFICATION
+                        </span>
+                        <p className="text-[var(--color-text-muted)] font-mono text-[10px] uppercase opacity-50">
+                            I AM 18+ AND GRANT ABSOLUTE CONSENT.
+                        </p>
+                    </div>
                 </label>
 
-                <label className="flex items-start gap-3 cursor-pointer group">
+                <label className="flex items-start gap-4 cursor-pointer group">
                     <div
-                        className={`w-5 h-5 rounded-[var(--radius-sm)] border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition-all ${termsAccepted
-                                ? 'bg-zinc-800 border-red-primary'
-                                : 'border-text-tertiary group-hover:border-text-secondary'
+                        className={`w-6 h-6 border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition-all ${termsAccepted
+                                ? 'bg-[var(--color-accent)] border-[var(--color-accent)]'
+                                : 'bg-black border-[#222] group-hover:border-[var(--color-accent)]'
                             }`}
                         onClick={() => setTermsAccepted(!termsAccepted)}
                     >
-                        {termsAccepted && (
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        )}
+                        {termsAccepted && <div className="w-3 h-3 bg-black" />}
                     </div>
-                    <span className="text-white/80 text-sm leading-relaxed" onClick={() => setTermsAccepted(!termsAccepted)}>
-                        I understand and accept that this platform uses <span className="text-white font-semibold">AI-driven psychological conditioning</span>,
-                        and I consent to participate.
-                    </span>
+                    <div className="space-y-1" onClick={() => setTermsAccepted(!termsAccepted)}>
+                        <span className="text-white font-display font-bold text-xs uppercase tracking-widest group-hover:text-[var(--color-accent)] transition-colors">
+                            PROTOCOL_CONSENT_ACK
+                        </span>
+                        <p className="text-[var(--color-text-muted)] font-mono text-[10px] uppercase opacity-50">
+                            I ACCEPT PSYCHOLOGICAL CONDITIONING TERMS.
+                        </p>
+                    </div>
                 </label>
             </div>
 
-            {/* Safety Assurance */}
-            <div className="bg-teal-primary/5 border border-teal-primary/20 rounded-[var(--radius-lg)] p-4 flex items-start gap-3">
-                <Shield size={18} className="text-white flex-shrink-0 mt-0.5" />
-                <p className="text-white/80 text-xs leading-relaxed">
-                    <span className="text-white font-semibold">Your safety matters.</span> Emergency Release is
-                    always accessible. Your safeword instantly activates Care Mode. Hard limits are
-                    strictly enforced and cannot be overridden by the AI.
+            {/* Safety Assurance (Footer Note) */}
+            <div className="border-t border-[#141414] pt-6 flex items-start gap-4">
+                <Shield size={20} className="text-[var(--color-text-muted)] flex-shrink-0 opacity-40" />
+                <p className="text-[10px] font-mono text-[var(--color-text-muted)] uppercase tracking-widest leading-loose">
+                    FAIL-SAFE: SAFEWORD [MERCY] REMAINS ACTIVE. EMERGENCY RELEASE IS AVAILABLE 24/7. HARD LIMITS ARE SYSTEM-ENFORCED AND NON-NEGOTIABLE.
                 </p>
             </div>
         </div>
+    )
+}
     )
 }

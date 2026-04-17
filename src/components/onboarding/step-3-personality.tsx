@@ -41,15 +41,15 @@ export default function PersonalityStep({ onValid }: StepProps) {
     }, [aiPersonality, onValid])
 
     return (
-        <div className="space-y-6 max-w-md mx-auto">
-            <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold font-mono">Choose Your AI Master</h2>
-                <p className="text-white/80 text-sm">
-                    Select the persona that will control your experience. You can change this later.
+        <div className="space-y-10">
+            <div className="text-left space-y-4 border-l-4 border-white pl-6">
+                <h2 className="text-4xl font-display font-bold tracking-tighter uppercase italic">Persona Assignment</h2>
+                <p className="text-[var(--color-text-secondary)] font-mono text-xs uppercase tracking-widest opacity-60">
+                    SELECT THE CONTROLLING ENTITY. THIS CHOICE IS SYSTEM-PERSISTENT.
                 </p>
             </div>
 
-            <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                 {PERSONAS.map((p) => {
                     const isSelected = aiPersonality === p
 
@@ -57,25 +57,37 @@ export default function PersonalityStep({ onValid }: StepProps) {
                         <button
                             key={p}
                             onClick={() => setPersonality(p)}
-                            className={`w-full text-left p-4 rounded-[var(--radius-lg)] border transition-all duration-200 cursor-pointer ${isSelected
-                                    ? 'border-zinc-700 bg-zinc-900 '
-                                    : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-800'
+                            className={`w-full text-left p-6 border transition-all duration-150 cursor-pointer relative group ${isSelected
+                                    ? 'bg-black border-[var(--color-accent)]'
+                                    : 'bg-[#050505] border-[#141414] hover:border-[#222]'
                                 }`}
                         >
-                            <div className="flex items-center justify-between mb-1">
-                                <span className={`font-semibold text-sm ${isSelected ? 'text-white' : ''}`}>
-                                    {p}
-                                </span>
-                                {isSelected && (
-                                    <span className="text-[10px] font-mono bg-zinc-800/20 text-white px-2 py-0.5 rounded-full">
-                                        SELECTED
+                            {isSelected && (
+                                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[var(--color-accent)]" />
+                            )}
+
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <span className={`font-display font-bold text-lg uppercase tracking-tight ${isSelected ? 'text-white' : 'text-[#444]'}`}>
+                                        {p}
                                     </span>
-                                )}
+                                    {isSelected && (
+                                        <div className="text-[9px] font-mono font-bold bg-[var(--color-accent)] text-black px-2 py-0.5 uppercase tracking-widest">
+                                            ACTIVE_LINK
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                <p className={`text-[11px] font-mono leading-relaxed uppercase tracking-widest ${isSelected ? 'text-[var(--color-text-secondary)]' : 'text-[#222]'}`}>
+                                    {PERSONA_DESCRIPTIONS[p].toUpperCase()}
+                                </p>
+
+                                <div className={`p-3 bg-black border ${isSelected ? 'border-[var(--color-accent)]/30' : 'border-[#141414]'}`}>
+                                    <p className={`text-[10px] font-mono italic tracking-widest ${isSelected ? 'text-white' : 'text-[#222]'}`}>
+                                        &gt; TRANSMISSION_SAMPLE: {PERSONA_SAMPLES[p].toUpperCase()}
+                                    </p>
+                                </div>
                             </div>
-                            <p className="text-white/30 text-xs mb-2">{PERSONA_DESCRIPTIONS[p]}</p>
-                            <p className="text-white/80 text-xs italic border-l-2 border-zinc-700 pl-3">
-                                {PERSONA_SAMPLES[p]}
-                            </p>
                         </button>
                     )
                 })}

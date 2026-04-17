@@ -49,25 +49,25 @@ export default function PhysicalStep({ onValid }: StepProps) {
     const sizeBucket = calcSizeBucket(erectLength)
 
     return (
-        <div className="space-y-6 max-w-md mx-auto">
-            <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold font-mono">Physical Details</h2>
-                <p className="text-white/80 text-sm">
-                    Optional but enables personalized SPH content, size-based tasks, and more accurate AI.
+        <div className="space-y-10">
+            <div className="text-left space-y-4 border-l-4 border-white pl-6">
+                <h2 className="text-4xl font-display font-bold tracking-tighter uppercase italic">Biometric Upload</h2>
+                <p className="text-[var(--color-text-secondary)] font-mono text-xs uppercase tracking-widest opacity-60">
+                    VOLUNTARY DATA SUBMISSION. PHYSICAL PARAMETERS OPTIMIZE SYSTEM TRAINING MODELS AND SPH SUB-ROUTINES.
                 </p>
             </div>
 
             {/* Body Type */}
-            <div className="space-y-2">
-                <label className="text-xs font-semibold text-white/80 uppercase tracking-wider">Body Type</label>
-                <div className="flex flex-wrap gap-2">
+            <div className="space-y-4">
+                <label className="text-[10px] font-mono font-bold text-white uppercase tracking-[0.3em]">01_MORPHOLOGY_TYPE</label>
+                <div className="grid grid-cols-3 gap-2">
                     {['Slim', 'Average', 'Athletic', 'Muscular', 'Thick', 'Heavy'].map((bt) => (
                         <button
                             key={bt}
                             onClick={() => setBodyType(bt)}
-                            className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-all cursor-pointer border ${bodyType === bt
-                                    ? 'bg-zinc-800/15 border-zinc-700 text-white'
-                                    : 'bg-zinc-800/50 border-zinc-800 text-white/30 hover:border-zinc-800'
+                            className={`py-3 border text-[10px] font-mono font-bold uppercase tracking-widest transition-all cursor-pointer ${bodyType === bt
+                                    ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-black'
+                                    : 'bg-[#050505] border-[#141414] text-[#333] hover:border-[#333]'
                                 }`}
                         >
                             {bt}
@@ -77,16 +77,16 @@ export default function PhysicalStep({ onValid }: StepProps) {
             </div>
 
             {/* Orientation */}
-            <div className="space-y-2">
-                <label className="text-xs font-semibold text-white/80 uppercase tracking-wider">Orientation</label>
-                <div className="flex flex-wrap gap-2">
+            <div className="space-y-4">
+                <label className="text-[10px] font-mono font-bold text-white uppercase tracking-[0.3em]">02_ALIGNMENT_INDEX</label>
+                <div className="grid grid-cols-3 gap-2">
                     {['Straight', 'Bi-Curious', 'Bisexual', 'Gay', 'Other'].map((o) => (
                         <button
                             key={o}
                             onClick={() => setOrientation(o)}
-                            className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium transition-all cursor-pointer border ${orientation === o
-                                    ? 'bg-zinc-800/15 border-zinc-700 text-white'
-                                    : 'bg-zinc-800/50 border-zinc-800 text-white/30 hover:border-zinc-800'
+                            className={`py-3 border text-[10px] font-mono font-bold uppercase tracking-widest transition-all cursor-pointer ${orientation === o
+                                    ? 'bg-white border-white text-black'
+                                    : 'bg-[#050505] border-[#141414] text-[#333] hover:border-[#333]'
                                 }`}
                         >
                             {o}
@@ -95,18 +95,16 @@ export default function PhysicalStep({ onValid }: StepProps) {
                 </div>
             </div>
 
-            {/* Penis Measurements */}
-            <div className="space-y-3 bg-zinc-900/50 rounded-[var(--radius-lg)] border border-zinc-800 p-4">
-                <div className="flex items-center gap-2 mb-1">
-                    <Ruler size={14} className="text-white" />
-                    <span className="text-xs font-semibold text-white/80 uppercase tracking-wider">
-                        Measurements <span className="text-white/20">(Optional)</span>
-                    </span>
+            {/* Measurements */}
+            <div className="space-y-6 bg-black border border-[#141414] p-6">
+                <div className="flex items-center justify-between border-b border-[#141414] pb-4 mb-2">
+                    <span className="text-[10px] font-mono font-bold text-white uppercase tracking-[0.3em]">03_MEASUREMENTS</span>
+                    <span className="text-[9px] font-mono text-[#222] uppercase font-bold">[OPTIONAL_INPUT]</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                        <label className="text-[10px] text-white/30">Erect Length (inches)</label>
+                <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                        <label className="text-[9px] font-mono font-bold text-[#444] uppercase tracking-widest">LENGTH_IN</label>
                         <input
                             type="number"
                             min={0}
@@ -114,12 +112,12 @@ export default function PhysicalStep({ onValid }: StepProps) {
                             step={0.25}
                             value={erectLength || ''}
                             onChange={(e) => setErectLength(parseFloat(e.target.value) || 0)}
-                            className="w-full px-3 py-2 rounded-[var(--radius-md)] bg-black border border-zinc-800 text-sm text-white focus:outline-none focus:border-zinc-700"
-                            placeholder="0"
+                            className="w-full bg-[#050505] border border-[#141414] px-4 py-4 text-sm font-mono text-white focus:outline-none focus:border-white transition-colors"
+                            placeholder="0.00"
                         />
                     </div>
-                    <div className="space-y-1">
-                        <label className="text-[10px] text-white/30">Erect Girth (inches)</label>
+                    <div className="space-y-3">
+                        <label className="text-[9px] font-mono font-bold text-[#444] uppercase tracking-widest">GIRTH_IN</label>
                         <input
                             type="number"
                             min={0}
@@ -127,21 +125,21 @@ export default function PhysicalStep({ onValid }: StepProps) {
                             step={0.25}
                             value={erectGirth || ''}
                             onChange={(e) => setErectGirth(parseFloat(e.target.value) || 0)}
-                            className="w-full px-3 py-2 rounded-[var(--radius-md)] bg-black border border-zinc-800 text-sm text-white focus:outline-none focus:border-zinc-700"
-                            placeholder="0"
+                            className="w-full bg-[#050505] border border-[#141414] px-4 py-4 text-sm font-mono text-white focus:outline-none focus:border-white transition-colors"
+                            placeholder="0.00"
                         />
                     </div>
                 </div>
 
-                {/* Grower/Shower */}
-                <div className="flex gap-2">
+                {/* Grower/Shower Toggle */}
+                <div className="flex bg-[#141414] p-1 gap-1 mt-4">
                     {(['grower', 'shower'] as const).map((g) => (
                         <button
                             key={g}
                             onClick={() => setGrower(g)}
-                            className={`flex-1 py-2 rounded-[var(--radius-md)] text-xs font-medium capitalize transition-all cursor-pointer border ${grower === g
-                                    ? 'bg-zinc-800/15 border-zinc-700 text-white'
-                                    : 'bg-black border-zinc-800 text-white/30 hover:border-zinc-800'
+                            className={`flex-1 py-3 text-[9px] font-mono font-bold uppercase tracking-[0.2em] transition-all cursor-pointer ${grower === g
+                                    ? 'bg-black text-white'
+                                    : 'text-[#333] hover:text-[#555]'
                                 }`}
                         >
                             {g}
@@ -149,17 +147,18 @@ export default function PhysicalStep({ onValid }: StepProps) {
                     ))}
                 </div>
 
-                {/* Size Bucket Display */}
+                {/* Classification Display */}
                 {sizeBucket && erectLength > 0 && (
-                    <div className="text-center py-2">
-                        <span className="text-[10px] text-white/30 uppercase tracking-wider">Classification: </span>
-                        <span className={`text-sm font-bold font-mono ${sizeBucket === 'Micro' || sizeBucket === 'Small' ? 'text-white' : 'text-white'
-                            }`}>
+                    <div className="mt-8 pt-6 border-t border-[#141414] flex items-center justify-between">
+                        <span className="text-[9px] font-mono font-bold text-[#444] uppercase tracking-widest">SYSTEM_CLASSIFICATION:</span>
+                        <div className="px-3 py-1 bg-white text-black text-[10px] font-mono font-bold uppercase tracking-tighter">
                             {sizeBucket}
-                        </span>
+                        </div>
                     </div>
                 )}
             </div>
         </div>
+    )
+}
     )
 }

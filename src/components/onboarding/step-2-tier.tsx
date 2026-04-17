@@ -54,15 +54,15 @@ export default function TierStep({ onValid }: StepProps) {
     }, [tier, onValid])
 
     return (
-        <div className="space-y-6 max-w-md mx-auto">
-            <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold font-mono">Choose Your Tier</h2>
-                <p className="text-white/80 text-sm">
-                    This determines the intensity of your training. You can change this later.
+        <div className="space-y-10">
+            <div className="text-left space-y-4 border-l-4 border-white pl-6">
+                <h2 className="text-4xl font-display font-bold tracking-tighter uppercase italic">Intensity Selection</h2>
+                <p className="text-[var(--color-text-secondary)] font-mono text-xs uppercase tracking-widest opacity-60">
+                    DEFINE THE DEPTH OF SYSTEM INTERVENTION. THIS PARAMETER INFLUENCES ALL FUTURE CONDITIONING CYCLES.
                 </p>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
                 {TIERS.map((t) => {
                     const config = TIER_CONFIG[t]
                     const Icon = config.icon
@@ -72,32 +72,33 @@ export default function TierStep({ onValid }: StepProps) {
                         <button
                             key={t}
                             onClick={() => setTier(t)}
-                            className={`w-full text-left p-4 rounded-[var(--radius-lg)] border transition-all duration-200 cursor-pointer ${isSelected
-                                    ? 'border-zinc-700 bg-zinc-900'
-                                    : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-800'
+                            className={`w-full text-left p-6 border transition-all duration-150 cursor-pointer relative group ${isSelected
+                                    ? 'bg-black border-[var(--color-accent)]'
+                                    : 'bg-[#050505] border-[#141414] hover:border-[#333]'
                                 }`}
-                            style={isSelected ? { boxShadow: config.glow } : {}}
                         >
-                            <div className="flex items-start gap-3">
+                            {isSelected && (
+                                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[var(--color-accent)]" />
+                            )}
+
+                            <div className="flex items-start gap-6">
                                 <div
-                                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                                    style={{ background: `${config.color}20`, border: `1px solid ${config.color}40` }}
+                                    className={`w-12 h-12 flex items-center justify-center flex-shrink-0 border ${isSelected ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10' : 'border-[#141414] bg-black'}`}
                                 >
-                                    <Icon size={18} style={{ color: config.color }} />
+                                    <Icon size={20} className={isSelected ? 'text-[var(--color-accent)]' : 'text-[#333]'} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center justify-between">
-                                        <span className="font-semibold text-sm" style={isSelected ? { color: config.color } : {}}>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className={`font-display font-bold text-lg uppercase tracking-tight ${isSelected ? 'text-white' : 'text-[#444]'}`}>
                                             {t}
                                         </span>
-                                        <span
-                                            className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full"
-                                            style={{ background: `${config.color}15`, color: config.color }}
-                                        >
-                                            {config.intensity}
-                                        </span>
+                                        <div className={`px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-[0.2em] border ${isSelected ? 'border-[var(--color-accent)] text-[var(--color-accent)]' : 'border-[#141414] text-[#333]'}`}>
+                                            INTENSITY: {config.intensity.toUpperCase()}
+                                        </div>
                                     </div>
-                                    <p className="text-white/30 text-xs mt-1 leading-relaxed">{config.desc}</p>
+                                    <p className={`text-[11px] font-mono leading-relaxed uppercase tracking-widest transition-opacity ${isSelected ? 'text-[var(--color-text-secondary)]' : 'text-[#222]'}`}>
+                                        {config.desc.toUpperCase()}
+                                    </p>
                                 </div>
                             </div>
                         </button>

@@ -28,7 +28,7 @@ export function TimerCard({ endTime, startTime, totalDurationMinutes, tier, stat
 
     useEffect(() => {
         if (isComplete) {
-            setTimeRemaining('00d 00h 00m 00s')
+            setTimeRemaining('00D 00H 00M 00S')
             setProgress(100)
             return
         }
@@ -38,7 +38,7 @@ export function TimerCard({ endTime, startTime, totalDurationMinutes, tier, stat
             const diff = endTime.getTime() - now.getTime()
 
             if (diff <= 0) {
-                setTimeRemaining('00d 00h 00m 00s')
+                setTimeRemaining('00D 00H 00M 00S')
                 setProgress(100)
                 return
             }
@@ -49,7 +49,7 @@ export function TimerCard({ endTime, startTime, totalDurationMinutes, tier, stat
             const seconds = Math.floor((diff % (1000 * 60)) / 1000)
 
             setTimeRemaining(
-                `${String(days).padStart(2, '0')}d ${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`
+                `${String(days).padStart(2, '0')}D ${String(hours).padStart(2, '0')}H ${String(minutes).padStart(2, '0')}M ${String(seconds).padStart(2, '0')}S`
             )
 
             const totalMs = totalDurationMinutes * 60 * 1000
@@ -82,11 +82,13 @@ export function TimerCard({ endTime, startTime, totalDurationMinutes, tier, stat
 
     if (status === 'completing') {
         return (
-            <Card variant="hero" className="relative overflow-hidden text-center py-8">
-                <div className="space-y-3">
-                    <AlertTriangle size={40} className="mx-auto text-yellow-500 animate-pulse" />
-                    <h2 className="text-2xl font-bold font-mono">Session Ending...</h2>
-                    <p className="text-text-secondary text-sm">Archiving your session data. Please wait.</p>
+            <Card variant="hero" className="flex flex-col items-center justify-center py-16 border-l-4 border-l-[var(--color-accent)]">
+                <div className="space-y-6 text-center">
+                    <AlertTriangle size={48} className="mx-auto text-[var(--color-accent)] animate-pulse" />
+                    <div>
+                        <h2 className="text-3xl font-bold font-mono uppercase tracking-tighter mb-2">DE-SYNC_IN_PROGRESS</h2>
+                        <p className="text-[var(--color-text-secondary)] font-mono text-xs uppercase tracking-widest">ARCHIVING SESSION MANIFEST. REMAIN CONNECTED.</p>
+                    </div>
                 </div>
             </Card>
         )
@@ -94,15 +96,17 @@ export function TimerCard({ endTime, startTime, totalDurationMinutes, tier, stat
 
     if (status === 'completed' || status === 'emergency') {
         return (
-            <Card variant="hero" className="relative overflow-hidden text-center py-8">
-                <div className="space-y-3">
-                    <CheckCircle size={40} className="mx-auto text-teal-primary" />
-                    <h2 className="text-2xl font-bold font-mono">
-                        {status === 'emergency' ? 'Emergency Release' : 'Session Complete'}
-                    </h2>
-                    <p className="text-text-secondary text-sm">
-                        {status === 'emergency' ? 'You have been released.' : 'Your session has ended. Summary available below.'}
-                    </p>
+            <Card variant="hero" className="flex flex-col items-center justify-center py-16 border-l-4 border-l-white">
+                <div className="space-y-6 text-center">
+                    <CheckCircle size={48} className="mx-auto text-white" />
+                    <div>
+                        <h2 className="text-3xl font-bold font-mono uppercase tracking-tighter mb-2">
+                            {status === 'emergency' ? 'OVERRIDE_SUCCESS' : 'CHRONO_COMPLETION'}
+                        </h2>
+                        <p className="text-[var(--color-text-secondary)] font-mono text-xs uppercase tracking-widest">
+                            {status === 'emergency' ? 'SUBJECT_RELEASE_AUTHORIZED.' : 'SESSION_ENDED. DATA_INTEGRITY_VERIFIED.'}
+                        </p>
+                    </div>
                 </div>
             </Card>
         )
@@ -111,125 +115,115 @@ export function TimerCard({ endTime, startTime, totalDurationMinutes, tier, stat
     return (
         <Card
             variant="hero"
-            className={`relative overflow-hidden border border-zinc-800 ${punishmentActive ? 'animate-timer-pulse' : ''}`}
+            className={`relative p-0 border border-[#141414] overflow-hidden ${punishmentActive ? 'animate-timer-pulse' : ''}`}
         >
-            <div className="absolute inset-0 bg-zinc-900 pointer-events-none" />
-
-            {/* Progress bar at bottom */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800 z-10">
-                <div
-                    className="h-full bg-[var(--accent)] transition-all duration-1000"
-                    style={{ width: `${progress}%` }}
-                />
+            {/* Header Strip */}
+            <div className="bg-[#0a0a0a] border-b border-[#141414] px-6 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-[var(--color-accent)] animate-pulse" />
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-[0.3em]">CHRONO_LOCK_ACTIVE</span>
+                </div>
+                <Badge variant={tierVariant}>{tier.toUpperCase()}</Badge>
             </div>
 
-            <div className="relative z-10">
-                <div className="flex items-start justify-between mb-6">
-                    <Badge variant="locked">LOCKED IN</Badge>
-                    <Badge variant={tierVariant}>{tier.toUpperCase()}</Badge>
-                </div>
-
-                <div className="text-center py-4">
-                    <div className="text-5xl md:text-6xl font-mono font-bold mb-4 text-white tracking-wider">
-                        {timeRemaining || '—'}
+            <div className="p-8 md:p-12">
+                <div className="text-center">
+                    <div className="text-5xl md:text-7xl lg:text-8xl font-mono font-bold text-white tracking-widest mb-6">
+                        {timeRemaining || '??D ??H ??M ??S'}
                     </div>
-                    <p className="text-white/30 text-sm uppercase tracking-widest font-bold">Time Remaining Until Release</p>
+                    <div className="w-full h-2 bg-[#0a0a0a] border border-[#141414] mb-4">
+                        <div
+                            className="h-full bg-white transition-all duration-1000"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] font-mono font-bold text-[#444] uppercase tracking-widest">
+                        <span>INIT_SEQUENCE</span>
+                        <span>{progress.toFixed(1)}%_COMPLETE</span>
+                        <span>RELEASE_THRESHOLD</span>
+                    </div>
                 </div>
 
                 {punishmentActive && (
-                    <div className="mt-4 text-center">
-                        <Badge variant="locked" className="animate-pulse">
-                            ⚠ PUNISHMENT MODE ACTIVE
-                        </Badge>
+                    <div className="mt-8 bg-[var(--color-accent)]/10 border border-[var(--color-accent)] p-3 text-center">
+                        <span className="text-[var(--color-accent)] text-xs font-mono font-bold uppercase tracking-[0.2em] animate-pulse">
+                            ⚠ PUNISHMENT_PROTOCOL_ACTIVE
+                        </span>
                     </div>
                 )}
 
-                {status === 'extending' && (
-                    <div className="mt-4 text-center">
-                        <Badge className="animate-pulse bg-yellow-600 text-white">
-                            ⏱ SESSION EXTENDED
-                        </Badge>
-                    </div>
-                )}
-
-                {/* Add Time Button & Picker */}
+                {/* Add Time UI */}
                 {onAddTime && status === 'active' && (
-                    <div className="mt-5">
+                    <div className="mt-10 border-t border-[#141414] pt-8">
                         {!showAddTime ? (
                             <div className="text-center">
                                 <button
                                     onClick={() => setShowAddTime(true)}
-                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[var(--radius-pill)] bg-zinc-800 border border-zinc-700 text-white text-sm font-semibold hover:bg-zinc-700 hover:border-zinc-600 transition-all duration-200 cursor-pointer"
+                                    className="px-6 py-2 border border-[#141414] text-[var(--color-text-secondary)] text-[10px] font-mono font-bold uppercase tracking-widest hover:bg-white hover:text-black hover:border-white transition-all cursor-pointer"
                                 >
-                                    <Plus size={14} />
-                                    Add Time
+                                    [ ADD_SESSION_TIME ]
                                 </button>
                             </div>
                         ) : (
-                            <div className="bg-zinc-900 border border-zinc-800 rounded-[var(--radius-lg)] p-4 space-y-3 backdrop-blur-sm shadow-xl">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-semibold text-white">Increase Lock Duration</span>
+                            <div className="bg-[#050505] border border-[#141414] p-6 space-y-6 animate-in fade-in slide-in-from-top-4">
+                                <div className="flex items-center justify-between border-b border-[#141414] pb-2">
+                                    <span className="text-[10px] font-mono font-bold text-white uppercase tracking-widest">DURATION_EXTENSION_CONFIG</span>
                                     <button
                                         onClick={() => setShowAddTime(false)}
-                                        className="text-white/30 hover:text-white transition-colors cursor-pointer"
+                                        className="text-[#444] hover:text-[var(--color-accent)] transition-colors cursor-pointer"
                                     >
                                         <X size={16} />
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div className="space-y-1">
-                                        <label className="text-xs text-white/30">Days</label>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[9px] font-mono font-bold text-[#444] uppercase tracking-widest">DAYS</label>
                                         <input
                                             type="number"
                                             min={0}
                                             max={30}
                                             value={addDays}
                                             onChange={e => setAddDays(Math.max(0, parseInt(e.target.value) || 0))}
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-[var(--radius-md)] p-2 text-center text-white text-sm focus:border-zinc-600 focus:outline-none transition-colors"
+                                            className="w-full bg-black border border-[#141414] p-3 text-center text-white font-mono text-sm focus:border-white outline-none transition-colors"
                                         />
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs text-white/30">Hours</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[9px] font-mono font-bold text-[#444] uppercase tracking-widest">HOURS</label>
                                         <input
                                             type="number"
                                             min={0}
                                             max={23}
                                             value={addHours}
                                             onChange={e => setAddHours(Math.max(0, Math.min(23, parseInt(e.target.value) || 0)))}
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-[var(--radius-md)] p-2 text-center text-white text-sm focus:border-zinc-600 focus:outline-none transition-colors"
+                                            className="w-full bg-black border border-[#141414] p-3 text-center text-white font-mono text-sm focus:border-white outline-none transition-colors"
                                         />
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs text-white/30">Minutes</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[9px] font-mono font-bold text-[#444] uppercase tracking-widest">MINS</label>
                                         <input
                                             type="number"
                                             min={0}
                                             max={59}
                                             value={addMinutes}
                                             onChange={e => setAddMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-[var(--radius-md)] p-2 text-center text-white text-sm focus:border-zinc-600 focus:outline-none transition-colors"
+                                            className="w-full bg-black border border-[#141414] p-3 text-center text-white font-mono text-sm focus:border-white outline-none transition-colors"
                                         />
                                     </div>
                                 </div>
-                                {(addDays * 24 * 60 + addHours * 60 + addMinutes) > 0 && (
-                                    <p className="text-xs text-center text-white/30">
-                                        Adding {addDays > 0 ? `${addDays}d ` : ''}{addHours > 0 ? `${addHours}h ` : ''}{addMinutes > 0 ? `${addMinutes}m` : ''}
-                                    </p>
-                                )}
                                 <button
                                     onClick={handleAddTime}
                                     disabled={isAdding || (addDays * 24 * 60 + addHours * 60 + addMinutes) <= 0}
-                                    className="w-full py-2.5 rounded-[var(--radius-pill)] bg-zinc-800 border border-zinc-700 text-white font-bold text-sm uppercase tracking-wide hover:bg-zinc-700 hover:border-zinc-600 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                                    className="w-full py-4 bg-white text-black font-mono font-bold text-xs uppercase tracking-[0.2em] hover:bg-[var(--color-accent)] hover:text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-3"
                                 >
                                     {isAdding ? (
                                         <>
                                             <Loader2 size={14} className="animate-spin" />
-                                            Extending...
+                                            SYSTEM_UPDATIVE...
                                         </>
                                     ) : (
                                         <>
                                             <Plus size={14} />
-                                            Confirm Add Time
+                                            AUTHORIZE_EXTENSION
                                         </>
                                     )}
                                 </button>

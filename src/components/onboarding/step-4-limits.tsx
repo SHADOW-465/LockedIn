@@ -142,63 +142,79 @@ export default function LimitsStep({ onValid }: StepProps) {
     const hasCustomLimits = customHardLimits.length > 0 || customSoftLimits.length > 0
 
     return (
-        <div className="space-y-5 max-w-lg mx-auto">
+        <div className="space-y-8">
             {/* Header */}
-            <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold font-mono">Set Your Limits</h2>
-                <p className="text-white/80 text-sm leading-relaxed">
-                    <span className="text-white font-semibold">Hard limits</span> are NEVER crossed.{' '}
-                    <span className="text-white font-semibold">Soft limits</span> may be gently pushed.
-                    <br />
-                    <span className="text-white/20 text-xs">Click <strong>Hard</strong> or <strong>Soft</strong> for each item. At least 1 hard limit required.</span>
+            <div className="text-left space-y-4 border-l-4 border-white pl-6">
+                <h2 className="text-4xl font-display font-bold tracking-tighter uppercase italic line-through decoration-[var(--color-accent)] decoration-4">Safety Protocols</h2>
+                <p className="text-[var(--color-text-secondary)] font-mono text-xs uppercase tracking-widest opacity-60">
+                    DEFINE BOUNDARIES. HARD_LIMITS [RED] ARE IMPERMEABLE. SOFT_LIMITS [WHITE] MAY BE NEGOTIATED BY THE SYSTEM.
                 </p>
             </div>
 
-            {/* Search */}
-            <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" />
-                <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search limits..."
-                    className="w-full pl-8 pr-4 py-2.5 rounded-[var(--radius-lg)] bg-zinc-900 border border-zinc-800 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-zinc-700 transition-colors"
-                />
+            {/* Search + Custom Input Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative">
+                    <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#333]" />
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="SEARCH_PROTOCOL..."
+                        className="w-full pl-12 pr-4 py-4 bg-black border border-[#141414] text-xs font-mono uppercase tracking-widest text-white placeholder:text-[#222] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
+                    />
+                </div>
+                <div className="flex bg-black border border-[#141414] focus-within:border-white transition-colors">
+                    <input
+                        type="text"
+                        value={customLimit}
+                        onChange={(e) => setCustomLimit(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && addCustom()}
+                        placeholder="ADD_CUSTOM_ENTRY..."
+                        className="flex-1 bg-transparent px-4 py-4 text-xs font-mono uppercase tracking-widest text-white placeholder:text-[#222] focus:outline-none"
+                    />
+                    <button
+                        onClick={addCustom}
+                        disabled={!customLimit.trim()}
+                        className="px-6 bg-[#141414] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-white hover:text-black disabled:opacity-30 disabled:hover:bg-[#141414] transition-all cursor-pointer"
+                    >
+                        INJECT
+                    </button>
+                </div>
             </div>
 
             {/* Categories List */}
-            <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
+            <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
                 {filteredCategories.map((cat) => {
                     const isExpanded = expandedCategories.has(cat.category)
                     const catHardCount = cat.items.filter((i) => hardLimits.includes(i)).length
                     const catSoftCount = cat.items.filter((i) => softLimits.includes(i)).length
 
                     return (
-                        <div key={cat.category} className="rounded-[var(--radius-lg)] border border-zinc-800 overflow-hidden bg-zinc-900/40">
+                        <div key={cat.category} className="border border-[#141414] bg-[#050505]">
                             {/* Category Header */}
                             <button
                                 onClick={() => toggleCategory(cat.category)}
-                                className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-bg-hover/40 transition-colors cursor-pointer"
+                                className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-white/[0.02] transition-colors cursor-pointer group"
                             >
-                                <span className="text-sm font-semibold text-white">{cat.category}</span>
-                                <div className="flex items-center gap-2">
-                                    {catHardCount > 0 && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800/15 text-white font-medium">
-                                            {catHardCount} hard
-                                        </span>
+                                <span className={`text-xs font-display font-bold uppercase tracking-[0.2em] ${isExpanded ? 'text-white' : 'text-[#444]'}`}>
+                                    {cat.category}
+                                </span>
+                                <div className="flex items-center gap-4">
+                                    {(catHardCount > 0 || catSoftCount > 0) && (
+                                        <div className="flex gap-2">
+                                            {catHardCount > 0 && <span className="text-[9px] font-mono p-1 bg-[var(--color-accent)] text-black font-bold uppercase tracking-tighter">H:{catHardCount}</span>}
+                                            {catSoftCount > 0 && <span className="text-[9px] font-mono p-1 bg-white text-black font-bold uppercase tracking-tighter">S:{catSoftCount}</span>}
+                                        </div>
                                     )}
-                                    {catSoftCount > 0 && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800/15 text-white font-medium">
-                                            {catSoftCount} soft
-                                        </span>
-                                    )}
-                                    <span className="text-white/20 text-xs">{isExpanded ? '▲' : '▼'}</span>
+                                    <span className="text-[#222] text-[10px] font-mono uppercase tracking-widest group-hover:text-white">
+                                        [{isExpanded ? '-' : '+'}]
+                                    </span>
                                 </div>
                             </button>
 
                             {/* Items List */}
                             {isExpanded && (
-                                <div className="border-t border-zinc-800">
+                                <div className="border-t border-[#141414] divide-y divide-[#141414]">
                                     {cat.items.map((limit) => {
                                         const isHard = hardLimits.includes(limit)
                                         const isSoft = softLimits.includes(limit)
@@ -206,42 +222,30 @@ export default function LimitsStep({ onValid }: StepProps) {
                                         return (
                                             <div
                                                 key={limit}
-                                                className={`flex items-center justify-between px-4 py-2 border-b border-white/[0.03] last:border-b-0 transition-colors ${isHard
-                                                        ? 'bg-zinc-800/[0.04]'
-                                                        : isSoft
-                                                            ? 'bg-zinc-800/[0.04]'
-                                                            : ''
-                                                    }`}
+                                                className={`flex items-center justify-between px-6 py-3 transition-colors ${isHard ? 'bg-[var(--color-accent)]/[0.03]' : isSoft ? 'bg-white/[0.02]' : ''}`}
                                             >
-                                                {/* Label */}
-                                                <span className={`text-xs font-medium ${isHard
-                                                        ? 'text-white'
-                                                        : isSoft
-                                                            ? 'text-white'
-                                                            : 'text-white/80'
-                                                    }`}>
+                                                <span className={`text-[10px] font-mono uppercase tracking-[0.15em] transition-colors ${isHard || isSoft ? 'text-white' : 'text-[#333]'}`}>
                                                     {limit}
                                                 </span>
 
-                                                {/* Buttons */}
-                                                <div className="flex items-center gap-1.5">
+                                                <div className="flex gap-1">
                                                     <button
                                                         onClick={() => isHard ? clearLimit(limit) : setAsHard(limit)}
-                                                        className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer ${isHard
-                                                                ? 'bg-zinc-800 text-white shadow-sm shadow-red-primary/25'
-                                                                : 'bg-zinc-800/60 text-white/20 hover:bg-zinc-800/20 hover:text-white'
+                                                        className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest border transition-all cursor-pointer ${isHard
+                                                                ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-black'
+                                                                : 'bg-black border-[#141414] text-[#222] hover:border-[#444] hover:text-[#444]'
                                                             }`}
                                                     >
-                                                        Hard
+                                                        HARD
                                                     </button>
                                                     <button
                                                         onClick={() => isSoft ? clearLimit(limit) : setAsSoft(limit)}
-                                                        className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer ${isSoft
-                                                                ? 'bg-zinc-800 text-white shadow-sm shadow-purple-primary/25'
-                                                                : 'bg-zinc-800/60 text-white/20 hover:bg-zinc-800/20 hover:text-white'
+                                                        className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest border transition-all cursor-pointer ${isSoft
+                                                                ? 'bg-white border-white text-black'
+                                                                : 'bg-black border-[#141414] text-[#222] hover:border-[#444] hover:text-[#444]'
                                                             }`}
                                                     >
-                                                        Soft
+                                                        SOFT
                                                     </button>
                                                 </div>
                                             </div>
@@ -255,49 +259,36 @@ export default function LimitsStep({ onValid }: StepProps) {
 
                 {/* Custom Limits Section */}
                 {hasCustomLimits && (
-                    <div className="rounded-[var(--radius-lg)] border border-zinc-800 overflow-hidden bg-zinc-900/40">
-                        <div className="px-4 py-2.5">
-                            <span className="text-sm font-semibold text-white">Custom Limits</span>
+                    <div className="border border-[#141414] bg-[#050505]">
+                        <div className="px-6 py-4 border-b border-[#141414]">
+                            <span className="text-xs font-display font-bold uppercase tracking-[0.2em] text-white">USER_DEFINED_PROTOCOLS</span>
                         </div>
-                        <div className="border-t border-zinc-800">
+                        <div className="divide-y divide-[#141414]">
                             {[...customHardLimits, ...customSoftLimits].map((limit) => {
                                 const isHard = hardLimits.includes(limit)
                                 const isSoft = softLimits.includes(limit)
 
                                 return (
-                                    <div
-                                        key={limit}
-                                        className={`flex items-center justify-between px-4 py-2 border-b border-white/[0.03] last:border-b-0 transition-colors ${isHard ? 'bg-zinc-800/[0.04]' : 'bg-zinc-800/[0.04]'
-                                            }`}
-                                    >
-                                        <span className={`text-xs font-medium ${isHard ? 'text-white' : 'text-white'
-                                            }`}>
-                                            {limit}
-                                        </span>
-                                        <div className="flex items-center gap-1.5">
+                                    <div key={limit} className="flex items-center justify-between px-6 py-3 bg-black/50">
+                                        <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-white italic opacity-80">{limit}</span>
+                                        <div className="flex gap-1 items-center">
                                             <button
                                                 onClick={() => isHard ? clearLimit(limit) : setAsHard(limit)}
-                                                className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer ${isHard
-                                                        ? 'bg-zinc-800 text-white shadow-sm shadow-red-primary/25'
-                                                        : 'bg-zinc-800/60 text-white/20 hover:bg-zinc-800/20 hover:text-white'
-                                                    }`}
+                                                className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest border transition-all cursor-pointer ${isHard ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-black' : 'bg-black border-[#141414] text-[#222]'}`}
                                             >
-                                                Hard
+                                                HARD
                                             </button>
                                             <button
                                                 onClick={() => isSoft ? clearLimit(limit) : setAsSoft(limit)}
-                                                className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer ${isSoft
-                                                        ? 'bg-zinc-800 text-white shadow-sm shadow-purple-primary/25'
-                                                        : 'bg-zinc-800/60 text-white/20 hover:bg-zinc-800/20 hover:text-white'
-                                                    }`}
+                                                className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest border transition-all cursor-pointer ${isSoft ? 'bg-white border-white text-black' : 'bg-black border-[#141414] text-[#222]'}`}
                                             >
-                                                Soft
+                                                SOFT
                                             </button>
                                             <button
                                                 onClick={() => clearLimit(limit)}
-                                                className="p-1 rounded-md text-white/20 hover:text-white hover:bg-zinc-800/10 transition-colors cursor-pointer"
+                                                className="ml-2 text-[#333] hover:text-[var(--color-accent)] transition-colors cursor-pointer"
                                             >
-                                                <X size={12} />
+                                                <X size={14} />
                                             </button>
                                         </div>
                                     </div>
@@ -308,49 +299,25 @@ export default function LimitsStep({ onValid }: StepProps) {
                 )}
             </div>
 
-            {/* Custom Limit Input */}
-            <div className="flex gap-2">
-                <div className="relative flex-1">
-                    <Plus size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" />
-                    <input
-                        type="text"
-                        value={customLimit}
-                        onChange={(e) => setCustomLimit(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && addCustom()}
-                        placeholder="Add a custom limit..."
-                        className="w-full pl-8 pr-4 py-2.5 rounded-[var(--radius-lg)] bg-zinc-900 border border-zinc-800 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-zinc-700 transition-colors"
-                    />
+            {/* Global Summary Bar */}
+            <div className="border-t border-[#141414] pt-8 grid grid-cols-2 gap-px bg-[#141414]">
+                <div className="bg-black p-4 flex flex-col items-center justify-center gap-1">
+                    <span className="text-[32px] font-display font-bold tracking-tighter leading-none text-[var(--color-accent)]">{hardLimits.length}</span>
+                    <span className="text-[9px] font-mono font-bold tracking-[0.3em] uppercase opacity-40">HARD_LIMITS_ACTIVE</span>
                 </div>
-                <button
-                    onClick={addCustom}
-                    disabled={!customLimit.trim()}
-                    className="px-4 py-2.5 rounded-[var(--radius-lg)] bg-zinc-800 text-white/80 text-sm hover:bg-bg-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                    Add
-                </button>
+                <div className="bg-black p-4 flex flex-col items-center justify-center gap-1">
+                    <span className="text-[32px] font-display font-bold tracking-tighter leading-none text-white">{softLimits.length}</span>
+                    <span className="text-[9px] font-mono font-bold tracking-[0.3em] uppercase opacity-40">SOFT_LIMITS_LOGGED</span>
+                </div>
             </div>
-
-            {/* Summary */}
-            {(hardLimits.length > 0 || softLimits.length > 0) && (
-                <div className="flex items-center gap-4 justify-center text-xs">
-                    {hardLimits.length > 0 && (
-                        <div className="flex items-center gap-1.5">
-                            <ShieldOff size={13} className="text-white" />
-                            <span className="text-white/80">
-                                <span className="text-white font-semibold">{hardLimits.length}</span> hard
-                            </span>
-                        </div>
-                    )}
-                    {softLimits.length > 0 && (
-                        <div className="flex items-center gap-1.5">
-                            <ShieldCheck size={13} className="text-white" />
-                            <span className="text-white/80">
-                                <span className="text-white font-semibold">{softLimits.length}</span> soft
-                            </span>
-                        </div>
-                    )}
-                </div>
-            )}
+            
+            <div className={`p-4 border ${hardLimits.length >= 1 ? 'border-white/10 bg-white/5' : 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'} transition-colors`}>
+                <p className={`text-[10px] font-mono font-bold uppercase tracking-widest text-center ${hardLimits.length >= 1 ? 'text-[#444]' : 'text-[var(--color-accent)]'}`}>
+                    {hardLimits.length >= 1 ? 'ADEQUATE PROTECTION_PROTOCOL_ACTIVE' : 'SYSTEM_WARNING: AT LEAST 01 HARD_LIMIT REQUIRED FOR STABILITY'}
+                </p>
+            </div>
         </div>
+    )
+}
     )
 }

@@ -34,10 +34,10 @@ export function BottomNav() {
             {showMore && (
                 <>
                     <div
-                        className="fixed inset-0 z-40"
+                        className="fixed inset-0 z-40 bg-black/80"
                         onClick={() => setShowMore(false)}
                     />
-                    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-zinc-900 border border-zinc-800 rounded-2xl p-2 flex gap-1 shadow-xl">
+                    <div className="fixed bottom-24 left-4 right-4 z-50 bg-black border border-[#141414] p-1 flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 duration-200">
                         {moreItems.map((item) => {
                             const Icon = item.icon
                             const isActive = pathname.startsWith(item.href)
@@ -46,14 +46,14 @@ export function BottomNav() {
                                     key={item.href}
                                     href={item.href}
                                     className={cn(
-                                        'flex flex-col items-center gap-1 px-4 py-2.5 rounded-lg transition-all duration-200 min-w-[72px]',
+                                        'flex items-center gap-4 px-6 py-4 transition-all duration-150 border-b border-[#141414] last:border-0 cursor-pointer',
                                         isActive
-                                            ? 'text-[var(--accent)] bg-zinc-800'
-                                            : 'text-white/40 hover:text-white/70 hover:bg-zinc-800/50'
+                                            ? 'text-black bg-white'
+                                            : 'text-[#666] hover:text-white hover:bg-[#0a0a0a]'
                                     )}
                                 >
-                                    <Icon size={20} />
-                                    <span className="text-xs font-medium">{item.label}</span>
+                                    <Icon size={18} />
+                                    <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em]">{item.label}</span>
                                 </Link>
                             )
                         })}
@@ -61,7 +61,7 @@ export function BottomNav() {
                 </>
             )}
 
-            <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center h-20 px-4 bg-zinc-950/95 backdrop-blur-xl border-t border-zinc-800 lg:hidden safe-area-bottom">
+            <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-20 bg-black border-t border-[#141414] lg:hidden safe-area-bottom">
                 {mainItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname === item.href
@@ -70,14 +70,14 @@ export function BottomNav() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                'flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer',
+                                'flex-1 flex flex-col items-center justify-center gap-1.5 transition-all duration-150 cursor-pointer border-r border-[#141414] last:border-r-0',
                                 isActive
-                                    ? 'text-[var(--accent)] bg-zinc-800'
-                                    : 'text-white/40 hover:text-white/70 hover:bg-zinc-800/50'
+                                    ? 'text-black bg-white'
+                                    : 'text-[#444] hover:text-white hover:bg-[#0a0a0a]'
                             )}
                         >
-                            <Icon size={20} />
-                            <span className="text-xs font-medium">{item.label}</span>
+                            <Icon size={18} />
+                            <span className="text-[8px] font-mono font-bold uppercase tracking-widest">{item.label}</span>
                         </Link>
                     )
                 })}
@@ -86,14 +86,14 @@ export function BottomNav() {
                 <button
                     onClick={() => setShowMore((v) => !v)}
                     className={cn(
-                        'flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer',
+                        'flex-1 flex flex-col items-center justify-center gap-1.5 transition-all duration-150 cursor-pointer',
                         showMore || moreActive
-                            ? 'text-[var(--accent)] bg-zinc-800'
-                            : 'text-white/40 hover:text-white/70 hover:bg-zinc-800/50'
+                            ? 'text-black bg-white'
+                            : 'text-[#444] hover:text-white hover:bg-[#0a0a0a]'
                     )}
                 >
-                    {showMore ? <X size={20} /> : <MoreHorizontal size={20} />}
-                    <span className="text-xs font-medium">More</span>
+                    {showMore ? <X size={18} /> : <MoreHorizontal size={18} />}
+                    <span className="text-[8px] font-mono font-bold uppercase tracking-widest">More</span>
                 </button>
             </nav>
         </>

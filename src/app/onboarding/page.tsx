@@ -78,7 +78,7 @@ export default function OnboardingPage() {
                             continue
                         }
                         setSaving(false)
-                        setSaveError(`Save timed out after ${MAX_RETRIES} attempts. Check your connection and try again.`)
+                        setSaveError(`FATAL_ERROR: Connection timed out. Retry protocol initiated.`)
                         return
                     }
 
@@ -91,7 +91,7 @@ export default function OnboardingPage() {
                     if (attempt >= MAX_RETRIES) {
                         setSaving(false)
                         const msg = err instanceof Error ? err.message : 'Unknown error'
-                        setSaveError(`Save failed: ${msg}. Please try again.`)
+                        setSaveError(`SYSTEM_FAILURE: ${msg.toUpperCase()}`)
                         return
                     }
                     // Brief pause before retry
@@ -160,92 +160,98 @@ export default function OnboardingPage() {
     }, [step])
 
     return (
-        <div className="min-h-screen flex flex-col bg-bg-primary relative overflow-hidden">
-            {/* Ambient glow removed */}
-
-            {/* Top Bar */}
-            <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-zinc-800">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                        <Lock size={14} className="text-white" />
-                    </div>
-                    <span className="font-mono font-bold text-sm tracking-wide">
-                        Locked<span className="text-white">In</span>
-                    </span>
-                </div>
-                <span className="text-white/30 text-xs font-mono">
-                    {step} / 11
-                </span>
-            </header>
-
-            {/* Progress Bar */}
-            <div className="relative z-10 px-6 pt-4 pb-2">
-                <div className="flex gap-1">
-                    {Array.from({ length: 11 }).map((_, i) => (
-                        <div
-                            key={i}
-                            className="h-1 flex-1 rounded-full transition-all duration-500"
-                            style={{
-                                background:
-                                    i < step
-                                        ? 'var(--accent)'
-                                        : i === step - 1
-                                            ? 'var(--accent)'
-                                            : '#27272a', /* zinc-800 */
-                                opacity: i < step ? 1 : 0.4,
-                            }}
-                        />
-                    ))}
-                </div>
-                <div className="flex justify-between mt-1">
-                    <span className="text-[10px] text-white/30">{STEP_LABELS[step - 1]}</span>
-                    <span className="text-[10px] text-white/30">{Math.round((step / 11) * 100)}%</span>
-                </div>
+        <div className="min-h-screen flex flex-col bg-black relative overflow-hidden text-white">
+            {/* Scanlines / CRT Effect */}
+            <div className="absolute inset-0 pointer-events-none opacity-[0.03] z-50 overflow-hidden">
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
             </div>
 
-            {/* Step Content */}
-            <main className="relative z-10 flex-1 overflow-y-auto px-6 py-6">
+            {/* Top Bar */}
+            <header className="relative z-10 flex items-center justify-between px-6 py-5 border-b border-[#141414] bg-black/80 backdrop-blur-md">
+                <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-[var(--color-accent)] flex items-center justify-center">
+                        <Lock size={18} className="text-black" />
+                    </div>
+                    <div>
+                        <span className="font-display font-bold text-xl tracking-tighter uppercase">
+                            Locked<span className="text-[var(--color-accent)]">In</span>
+                        </span>
+                        <div className="text-[9px] font-mono font-bold tracking-[0.3em] text-[var(--color-text-muted)] uppercase mt-0.5">
+                            Processing Phase [ {step.toString().padStart(2, '0')} / 11 ]
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-pulse" />
+                    <span className="text-[10px] font-mono font-bold tracking-widest text-[var(--color-accent)] uppercase">Live Uplink</span>
+                </div>
+            </header>
+
+            {/* Progress Grid (Clinical Segmented Blocks) */}
+            <div className="relative z-10 grid grid-cols-11 gap-1 px-6 pt-6 pb-2">
+                {Array.from({ length: 11 }).map((_, i) => (
+                    <div
+                        key={i}
+                        className={`h-2 transition-all duration-300 ${i < step ? 'bg-[var(--color-accent)]' : 'bg-[#141414]'}`}
+                    />
+                ))}
+            </div>
+            <div className="relative z-10 px-6 flex justify-between">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">
+                    {STEP_LABELS[step - 1]}
+                </span>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+                    {Math.round((step / 11) * 100)}% Complete
+                </span>
+            </div>
+
+            {/* Step Content Shell */}
+            <main className="relative z-10 flex-1 overflow-y-auto px-6 py-8">
                 <div
                     key={animKey}
-                    className={`transition-all duration-300 ${direction === 'next' ? 'animate-slide-in-right' : 'animate-slide-in-left'
-                        }`}
+                    className={`h-full transition-all duration-300 ${direction === 'next' ? 'animate-[fadeIn_0.3s_ease-out]' : 'animate-[fadeIn_0.3s_ease-out]'}`}
                 >
-                    <StepComponent onValid={setCanProceed} />
+                    <div className="max-w-xl mx-auto h-full">
+                        <StepComponent onValid={setCanProceed} />
+                    </div>
                 </div>
             </main>
 
             {/* Save Error Banner */}
             {saveError && (
-                <div className="relative z-10 mx-6 mb-2 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-mono text-center">
-                    {saveError}
+                <div className="relative z-10 mx-6 mb-4 px-6 py-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)] text-[var(--color-accent)] text-xs font-mono font-bold tracking-widest uppercase">
+                    [!] {saveError}
                 </div>
             )}
 
             {/* Bottom Navigation */}
-            <footer className="relative z-10 px-6 py-4 border-t border-zinc-800 flex items-center justify-between">
+            <footer className="relative z-10 px-6 py-6 border-t border-[#141414] bg-black/80 backdrop-blur-md flex items-center justify-between">
                 <button
                     onClick={handlePrev}
                     disabled={isFirst}
-                    className="flex items-center gap-2 px-5 py-3 rounded-[var(--radius-pill)] bg-zinc-900 text-white/60 font-medium text-sm border border-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-zinc-800 transition-colors cursor-pointer"
+                    className="flex items-center gap-3 px-8 py-4 bg-transparent text-[var(--color-text-secondary)] font-display font-bold text-xs uppercase tracking-[0.2em] border border-[#141414] disabled:opacity-20 disabled:cursor-not-allowed hover:bg-white/5 transition-colors cursor-pointer"
                 >
                     <ChevronLeft size={16} />
-                    Back
+                    Retract
                 </button>
 
                 <button
                     onClick={handleNext}
                     disabled={!canProceed || saving}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-[var(--radius-pill)] font-semibold text-sm uppercase tracking-wide transition-all duration-200 cursor-pointer ${canProceed && !saving
-                        ? 'bg-zinc-800 border border-zinc-700 text-white hover:bg-zinc-700 hover:border-zinc-600'
-                        : 'bg-zinc-900 border border-zinc-800 text-white/30 cursor-not-allowed'
+                    className={`flex items-center gap-3 px-10 py-4 font-display font-bold text-sm uppercase tracking-[0.2em] transition-all duration-200 cursor-pointer ${canProceed && !saving
+                        ? 'bg-[var(--color-accent)] text-black hover:scale-[0.98]'
+                        : 'bg-[#141414] text-[#333] cursor-not-allowed'
                         }`}
                 >
                     {saving ? (
-                        <><Loader2 size={16} className="animate-spin" /> Saving...</>
-                    ) : isLast ? 'Lock In' : 'Continue'}
-                    {!isLast && !saving && <ChevronRight size={16} />}
+                        <><Loader2 size={18} className="animate-spin" /> Finalizing...</>
+                    ) : isLast ? 'Commit' : 'Next Protocol'}
+                    {!isLast && !saving && <ChevronRight size={18} />}
                 </button>
             </footer>
         </div>
+    )
+}
+
     )
 }

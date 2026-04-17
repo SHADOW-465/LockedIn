@@ -34,25 +34,25 @@ export function UsageMeter() {
 
     const pct = Math.min(100, Math.round((usage.month.total / usage.limit) * 100))
     const barColor =
-        pct < 50 ? 'bg-teal-primary' : pct < 80 ? 'bg-yellow-500' : 'bg-red-primary'
+        pct < 50 ? 'bg-white' : pct < 80 ? 'bg-white/40' : 'bg-[var(--color-accent)]'
 
     return (
         <div
-            className="hidden lg:flex flex-col gap-0.5 min-w-[110px]"
+            className="hidden lg:flex flex-col gap-1 min-w-[120px] p-2 border border-[#141414] bg-black"
             title={`${usage.month.total.toLocaleString()} / ${usage.limit.toLocaleString()} tokens this month`}
         >
-            <div className="flex justify-between items-center text-[10px] text-text-tertiary font-mono">
-                <span>Tokens</span>
-                <span>{pct}%</span>
+            <div className="flex justify-between items-center text-[8px] text-[var(--color-text-secondary)] font-mono font-bold uppercase tracking-widest">
+                <span>SIGNAL_LOAD</span>
+                <span className={pct > 80 ? 'text-[var(--color-accent)]' : ''}>{pct}%</span>
             </div>
-            <div className="w-full h-1.5 bg-bg-tertiary rounded-full overflow-hidden">
+            <div className="w-full h-1 bg-[#141414] overflow-hidden">
                 <div
-                    className={`h-full ${barColor} rounded-full transition-all duration-500`}
+                    className={`h-full ${barColor} transition-all duration-500`}
                     style={{ width: `${pct}%` }}
                 />
             </div>
-            <div className="text-[9px] text-text-tertiary font-mono text-right">
-                {usage.month.total.toLocaleString()} / {(usage.limit / 1000).toFixed(0)}k
+            <div className="text-[7px] text-[#444] font-mono font-bold text-right uppercase tracking-tighter">
+                VOL: {usage.month.total.toLocaleString()} / {(usage.limit / 1000).toFixed(0)}K
             </div>
         </div>
     )

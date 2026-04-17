@@ -1,51 +1,50 @@
-@import "tailwindcss";
-
-/* ==========================================
-   LOCKEDIN DESIGN SYSTEM — Tailwind v4
-   Pure Black System with Accent Vars
-   ========================================== */
-
 @theme inline {
-  /* New base tokens */
+  /* ==========================================
+     CLINICAL BRUTALISM TOKENS
+     ========================================== */
+
+  /* Pure Monochrome Base */
   --color-bg-primary:   #000000;
-  --color-bg-secondary: #18181b;
-  --color-bg-tertiary:  #27272a;
-  --color-bg-hover:     #3f3f46;
+  --color-bg-secondary: #0a0a0a;
+  --color-bg-tertiary:  #141414;
+  --color-bg-hover:     #1f1f1f;
 
-  /* Text hierarchy */
+  /* Stark Text Hierarchy */
   --color-text-primary:   #ffffff;
-  --color-text-secondary: rgba(255,255,255,0.85);
-  --color-text-muted:     rgba(255,255,255,0.50);
-  --color-text-subtle:    rgba(255,255,255,0.30);
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted:     #525252;
+  --color-text-subtle:    #27272a;
 
-  /* Care Mode teal (fixed, never themed) */
-  --color-care: #14b8a6;
+  /* Punishing Red Accent */
+  --color-accent:       #ff1f1f;
+  --color-accent-dark:  #990000;
+  --color-accent-dim:   rgba(255, 31, 31, 0.1);
 
-  /* Tier colors (unchanged) */
-  --color-tier-newbie:      #4CAF50;
-  --color-tier-slave:       #FF9800;
-  --color-tier-hardcore:    #F44336;
-  --color-tier-extreme:     #9C27B0;
+  /* Tier Colors (Brutalized) */
+  --color-tier-newbie:      #ffffff;
+  --color-tier-slave:       #a1a1aa;
+  --color-tier-hardcore:    #525252;
+  --color-tier-extreme:     #ff1f1f;
   --color-tier-destruction: #000000;
 
-  /* Typography */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  /* Typography: Industrial & Clinical */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
-  /* Border Radius */
-  --radius-pill: 9999px;
-  --radius-lg:   16px;
-  --radius-md:   12px;
-  --radius-sm:   8px;
+  /* Zero Radius Policy: NO ROUNDED CORNERS */
+  --radius-pill: 0px;
+  --radius-lg:   0px;
+  --radius-md:   0px;
+  --radius-sm:   0px;
 }
 
 @layer base {
   :root {
-    /* Theme accent — default Crimson, overridden by ThemeProvider at runtime */
-    --accent:      #ef4444;
-    --accent-dark: #7f1d1d;
-    --accent-dim:  rgba(239, 68, 68, 0.15);
-    --accent-glow: rgba(239, 68, 68, 0.30);
+    --accent:      #ff1f1f;
+    --accent-dark: #990000;
+    --accent-dim:  rgba(255, 31, 31, 0.1);
+    --accent-glow: rgba(255, 31, 31, 0.2);
   }
 }
 

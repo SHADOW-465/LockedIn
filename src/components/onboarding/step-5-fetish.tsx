@@ -24,16 +24,15 @@ export default function FetishStep({ onValid }: StepProps) {
     }
 
     return (
-        <div className="space-y-6 max-w-md mx-auto">
-            <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold font-mono">Fetish & Kink Profile</h2>
-                <p className="text-white/80 text-sm">
-                    Select the genres that interest you. Tasks and content will be tailored accordingly.
-                    Select at least <span className="text-white font-semibold">1</span>.
+        <div className="space-y-10">
+            <div className="text-left space-y-4 border-l-4 border-white pl-6">
+                <h2 className="text-4xl font-display font-bold tracking-tighter uppercase italic line-through decoration-white decoration-2">Preference Matrix</h2>
+                <p className="text-[var(--color-text-secondary)] font-mono text-xs uppercase tracking-widest opacity-60">
+                    CLASSIFY CORE INTERESTS. DATA WILL BE USED TO TAILOR PSYCHOLOGICAL INTERVENTIONS. SELECT AT LEAST 01 CATEGORY.
                 </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 max-h-[50vh] overflow-y-auto pr-1">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[55vh] overflow-y-auto pr-2 custom-scrollbar">
                 {FETISH_GENRES.map((genre) => {
                     const isSelected = fetishProfile.includes(genre)
 
@@ -41,17 +40,24 @@ export default function FetishStep({ onValid }: StepProps) {
                         <button
                             key={genre}
                             onClick={() => toggleFetish(genre)}
-                            className={`p-3 rounded-[var(--radius-lg)] border text-left transition-all duration-200 cursor-pointer ${isSelected
-                                    ? 'border-zinc-700 bg-zinc-800/10'
-                                    : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-800'
+                            className={`p-4 border transition-all duration-150 text-left relative group cursor-pointer ${isSelected
+                                    ? 'bg-black border-[var(--color-accent)]'
+                                    : 'bg-[#050505] border-[#141414] hover:border-[#333]'
                                 }`}
                         >
-                            <div className="flex items-center gap-2">
-                                <Heart
-                                    size={14}
-                                    className={isSelected ? 'text-white fill-red-primary' : 'text-white/20'}
-                                />
-                                <span className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-white/80'}`}>
+                            {isSelected && (
+                                <div className="absolute right-0 top-0 w-2 h-2 bg-[var(--color-accent)]" />
+                            )}
+                            
+                            <div className="flex flex-col gap-3">
+                                <div className={`w-6 h-6 border flex items-center justify-center ${isSelected ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10' : 'border-[#141414]'}`}>
+                                    {isSelected ? (
+                                        <div className="w-2 h-2 bg-[var(--color-accent)]" />
+                                    ) : (
+                                        <div className="w-1 h-1 bg-[#222]" />
+                                    )}
+                                </div>
+                                <span className={`text-[10px] font-mono font-bold uppercase tracking-widest leading-tight ${isSelected ? 'text-white' : 'text-[#333]'}`}>
                                     {genre}
                                 </span>
                             </div>
@@ -60,11 +66,13 @@ export default function FetishStep({ onValid }: StepProps) {
                 })}
             </div>
 
-            {fetishProfile.length > 0 && (
-                <p className="text-center text-xs text-white/30">
-                    <span className="text-white font-semibold">{fetishProfile.length}</span> genre{fetishProfile.length !== 1 ? 's' : ''} selected
+            <div className="flex items-center gap-6 border-t border-[#141414] pt-8">
+                <div className="flex-1 bg-[#141414] h-1" />
+                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-white">
+                    {fetishProfile.length < 10 && '0'}{fetishProfile.length} CATEGORIES_LOGGED
                 </p>
-            )}
+                <div className="flex-1 bg-[#141414] h-1" />
+            </div>
         </div>
     )
 }
