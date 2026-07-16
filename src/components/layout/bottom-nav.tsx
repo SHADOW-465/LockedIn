@@ -9,16 +9,24 @@ import { Icon } from '@/components/ui/icon'
 /**
  * Mobile bottom pill — Stitch home Navigation Shell.
  * Floating frosted capsule, lime active disc. Hidden at xl.
+ *
+ * Position: one clear inset from the physical bottom — do not stack
+ * both marginBottom and paddingBottom with the same safe-area value
+ * (that double-counts the home indicator and mis-sizes clearance).
  */
 export function BottomNav() {
   const pathname = usePathname()
 
   return (
     <nav
-      className="fixed bottom-6 left-4 right-4 z-50 mx-auto flex max-w-md items-center justify-around rounded-full border border-white/10 bg-surface-container/70 px-2 py-2 shadow-2xl shadow-primary-fixed-dim/10 backdrop-blur-2xl xl:hidden"
+      className={cn(
+        'fixed left-4 right-4 z-50 mx-auto flex max-w-md items-center justify-around',
+        'rounded-full border border-white/10 bg-surface-container/70 px-2 py-2',
+        'shadow-2xl shadow-primary-fixed-dim/10 backdrop-blur-2xl',
+        'xl:hidden',
+      )}
       style={{
-        paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))',
-        marginBottom: 'env(safe-area-inset-bottom, 0px)',
+        bottom: 'max(1.25rem, env(safe-area-inset-bottom, 0px))',
       }}
       aria-label="Primary"
     >

@@ -27,9 +27,12 @@ const PREFETCH_PATHS = Array.from(
  *
  * Scroll model (critical for wheel/trackpad):
  * - Outer frame is a FIXED viewport height (`h-dvh overflow-hidden`)
- * - Main canvas is the ONLY page scrollport (`h-full min-h-0 overflow-y-auto`)
- * - Never use `min-h-screen` + `overflow-y-auto` together — the box grows with
- *   content, never overflows, and wheel events get trapped with nowhere to go.
+ * - Main canvas is the ONLY page scrollport (`overflow-y-auto`)
+ * - Content must grow with its children (no flex-1 min-h-0 wrapper that
+ *   pins height) or long pages clip under the fixed bottom nav with no
+ *   way to scroll past them.
+ * - Mobile bottom inset is padding on the scrollport so the last pixels
+ *   clear the floating pill + home-indicator safe area.
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -77,27 +80,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           id="app-scroll-main"
           className={cn(
             /* Single page scrollport — wheel/trackpad target for all dashboard routes */
-            'custom-scrollbar flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden',
-            /* mobile: top bar clearance; bottom room via spacer below */
-            'pt-[4.5rem] xl:pt-0',
+            'custom-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden',
+            /*
+              Mobile chrome clearance:
+              - top: fixed MobileTopBar (~4.5rem)
+              - bottom: floating pill (~bottom-6 + bar ~3.5–4rem + safe area)
+                Use generous inset so last CTAs clear the nav on tall phones.
+            */
+            'pt-[4.5rem] pb-[calc(8.5rem+env(safe-area-inset-bottom,0px))]',
+            'xl:pt-0 xl:pb-0',
           )}
         >
-          {/* flex-1 min-h-0 lets full-height pages (chat) fill the viewport */}
-          <div className="flex min-h-0 w-full flex-1 flex-col">{children}</div>
-
           {/*
-            Mobile-only scroll spacer so the last content clears the fixed
-            floating pill (bottom-6 + bar height + home-indicator safe area).
-            A real block in the scroll flow is more reliable than padding on a
-            flex-1 child, which browsers often collapse.
+            min-h-full: short pages (chat) can still fill the viewport.
+            NO flex-1 / min-h-0 here — those pin the box height and prevent
+            long page content from expanding scrollHeight, which is why items
+            sat under the bottom nav with no scroll room.
           */}
-          <div
-            className="w-full shrink-0 xl:hidden"
-            style={{
-              height: 'calc(7.25rem + env(safe-area-inset-bottom, 0px))',
-            }}
-            aria-hidden
-          />
+          <div className="flex min-h-full w-full flex-col">{children}</div>
         </main>
 
         {showRightRail && <RightRail />}
