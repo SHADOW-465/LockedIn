@@ -261,8 +261,14 @@ export default function RitualPage() {
               {narration ? (
                 <p className="mt-3 text-sm italic leading-relaxed text-on-surface">{narration}</p>
               ) : (
-                <p className="mt-3 text-sm text-on-surface-variant">Ritual saved.</p>
+                <p className="mt-3 text-sm text-on-surface-variant">Ritual saved to your memoir.</p>
               )}
+              <Link
+                href="/memoir"
+                className="mt-4 inline-flex text-xs font-bold text-primary-fixed"
+              >
+                Open memoir →
+              </Link>
             </div>
           )}
         </section>

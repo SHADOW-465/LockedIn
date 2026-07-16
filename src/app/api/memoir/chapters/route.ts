@@ -27,13 +27,36 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Failed to fetch memoir chapters' }, { status: 500 })
         }
 
-        // Sort pages inside each chapter by date descending
-        const formattedChapters = (chapters || []).map((chapter: any) => {
+        // Also surface orphan pages (saved before chapter wiring was fixed)
+        const { data: orphanPages } = await supabase
+            .from('memoir_pages')
+            .select('*')
+            .eq('user_id', userId)
+            .is('chapter_id', null)
+            .order('page_date', { ascending: false })
+
+        const formattedChapters = (chapters || []).map((chapter: {
+            pages?: Array<{ page_date: string }>
+            [key: string]: unknown
+        }) => {
             if (chapter.pages) {
-                chapter.pages.sort((a: any, b: any) => new Date(b.page_date).getTime() - new Date(a.page_date).getTime())
+                chapter.pages.sort(
+                    (a, b) => new Date(b.page_date).getTime() - new Date(a.page_date).getTime(),
+                )
             }
             return chapter
         })
+
+        if (orphanPages && orphanPages.length > 0) {
+            formattedChapters.push({
+                id: 'orphan-pages',
+                user_id: userId,
+                title: 'Unfiled Pages',
+                start_date: orphanPages[orphanPages.length - 1]?.page_date ?? null,
+                pages: orphanPages,
+                _orphan: true,
+            })
+        }
 
         return NextResponse.json({ chapters: formattedChapters }, { status: 200 })
     } catch (err) {

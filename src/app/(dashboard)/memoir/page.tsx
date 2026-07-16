@@ -117,8 +117,8 @@ export default function MemoirPage() {
         <div className="glass-card rounded-3xl p-8">
           <Icon name="menu_book" className="mb-3 text-3xl text-on-surface-variant opacity-40" />
           <p className="text-sm text-on-surface-variant">
-            No chapters yet. Start a session and complete a morning or evening ritual to open
-            Chapter I.
+            No chapters yet. Complete a morning or evening ritual — pages appear here even
+            without an active lock session.
           </p>
           <Link
             href="/ritual"

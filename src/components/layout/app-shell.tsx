@@ -78,12 +78,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className={cn(
             /* Single page scrollport — wheel/trackpad target for all dashboard routes */
             'custom-scrollbar flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden',
-            /* mobile: top bar + bottom pill clearance */
-            'pt-[4.5rem] pb-28 xl:pt-0 xl:pb-0',
+            /* mobile: top bar clearance; bottom room via spacer below */
+            'pt-[4.5rem] xl:pt-0',
           )}
         >
           {/* flex-1 min-h-0 lets full-height pages (chat) fill the viewport */}
           <div className="flex min-h-0 w-full flex-1 flex-col">{children}</div>
+
+          {/*
+            Mobile-only scroll spacer so the last content clears the fixed
+            floating pill (bottom-6 + bar height + home-indicator safe area).
+            A real block in the scroll flow is more reliable than padding on a
+            flex-1 child, which browsers often collapse.
+          */}
+          <div
+            className="w-full shrink-0 xl:hidden"
+            style={{
+              height: 'calc(7.25rem + env(safe-area-inset-bottom, 0px))',
+            }}
+            aria-hidden
+          />
         </main>
 
         {showRightRail && <RightRail />}

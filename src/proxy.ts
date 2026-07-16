@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import type { User } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -63,10 +64,28 @@ export async function proxy(request: NextRequest) {
         },
     )
 
-    // Validate JWT server-side — cannot be forged by client
+    // Validate JWT server-side. If getUser() fails transiently but cookies still
+    // hold a session, allow through — do not hard-redirect to /login.
+    // That hard redirect was a major cause of random "logged out" during navigation.
+    let user: User | null = null
     const {
-        data: { user },
+        data: { user: verifiedUser },
+        error: getUserError,
     } = await supabase.auth.getUser()
+    user = verifiedUser ?? null
+
+    if (!user) {
+        const {
+            data: { session: cookieSession },
+        } = await supabase.auth.getSession()
+        if (cookieSession?.user) {
+            console.warn(
+                '[proxy] getUser empty but session cookie present — allowing through',
+                getUserError?.message ?? '',
+            )
+            user = cookieSession.user
+        }
+    }
 
     if (!user) {
         // Unauthenticated on root → show landing page

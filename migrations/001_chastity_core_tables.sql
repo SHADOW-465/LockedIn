@@ -79,7 +79,8 @@ CREATE INDEX IF NOT EXISTS idx_behavior_logs_user_date ON public.behavior_logs(u
 CREATE INDEX IF NOT EXISTS idx_behavior_logs_session ON public.behavior_logs(session_id);
 CREATE INDEX IF NOT EXISTS idx_behavior_logs_type ON public.behavior_logs(user_id, type);
 CREATE INDEX IF NOT EXISTS idx_proof_schedules_user_date ON public.proof_schedules(user_id, scheduled_at);
-CREATE INDEX IF NOT EXISTS idx_memoir_pages_user_date ON public.memoir_pages(user_id, page_date);
+-- Unique: one memoir page per user per calendar day (required for upsert onConflict)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_memoir_pages_user_date ON public.memoir_pages(user_id, page_date);
 CREATE INDEX IF NOT EXISTS idx_memoir_pages_chapter ON public.memoir_pages(chapter_id);
 
 -- ── Row Level Security ──────────────────────────────────────────
