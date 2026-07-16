@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Identity Dashboard | LOCKEDIN-X</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@600;700;800&amp;family=Manrope:wght@400;500;600&amp;family=Geist:wght@500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#dee5d8",
+                    "on-tertiary-container": "#5f665c",
+                    "on-tertiary": "#2b322a",
+                    "on-error-container": "#ffdad6",
+                    "on-tertiary-fixed-variant": "#424940",
+                    "on-primary-fixed-variant": "#3c4d00",
+                    "surface-container-low": "#191d17",
+                    "surface-container-high": "#272b25",
+                    "on-tertiary-fixed": "#171d16",
+                    "secondary-fixed": "#dde5d7",
+                    "surface-tint": "#abd600",
+                    "secondary-fixed-dim": "#c1c9bc",
+                    "outline-variant": "#444933",
+                    "surface-dim": "#10140f",
+                    "outline": "#8e9379",
+                    "secondary-container": "#444b41",
+                    "inverse-primary": "#506600",
+                    "on-secondary-fixed-variant": "#42493f",
+                    "on-primary-fixed": "#161e00",
+                    "surface-container": "#1d211b",
+                    "secondary": "#c1c9bc",
+                    "background": "#10140f",
+                    "inverse-surface": "#e0e4db",
+                    "error-container": "#93000a",
+                    "primary-container": "#c3f400",
+                    "on-error": "#690005",
+                    "tertiary": "#ffffff",
+                    "on-primary-container": "#556d00",
+                    "on-background": "#e0e4db",
+                    "on-secondary": "#2b3229",
+                    "primary-fixed-dim": "#abd600",
+                    "on-secondary-container": "#b3bbae",
+                    "primary": "#ffffff",
+                    "on-surface": "#e0e4db",
+                    "tertiary-fixed": "#dee5d8",
+                    "tertiary-fixed-dim": "#c1c9bd",
+                    "surface-container-lowest": "#0b0f0a",
+                    "error": "#ffb4ab",
+                    "on-primary": "#283500",
+                    "primary-fixed": "#c3f400",
+                    "inverse-on-surface": "#2d322c",
+                    "surface-container-highest": "#323630",
+                    "on-secondary-fixed": "#171d15",
+                    "on-surface-variant": "#c4c9ac",
+                    "surface-variant": "#323630",
+                    "surface-bright": "#363a34",
+                    "surface": "#10140f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "1rem",
+                    "xl": "1.5rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "container-padding": "24px",
+                    "section-margin": "48px",
+                    "gutter": "16px",
+                    "bento-gap": "12px"
+            },
+            "fontFamily": {
+                    "display-lg-mobile": ["Epilogue"],
+                    "mono-data": ["Geist"],
+                    "display-lg": ["Epilogue"],
+                    "headline-md": ["Epilogue"],
+                    "label-caps": ["Geist"],
+                    "body-lg": ["Manrope"],
+                    "body-md": ["Manrope"]
+            },
+            "fontSize": {
+                    "display-lg-mobile": ["36px", {"lineHeight": "40px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                    "mono-data": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "display-lg": ["48px", {"lineHeight": "52px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #10140f;
+            color: #e0e4db;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: #161B15;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
+            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .active-ring {
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            animation: ring-draw 1.5s ease-out forwards;
+        }
+
+        @keyframes ring-draw {
+            to { stroke-dashoffset: var(--offset); }
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 12px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #444933;
+            border-radius: 10px;
+        }
+
+        .ai-float {
+            animation: floating 4s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md custom-scrollbar">
+<!-- Sidebar Navigation -->
+<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col h-full py-container-padding bg-surface-container-low border-r border-white/5 z-50">
+<div class="px-6 mb-12">
+<h1 class="font-display-lg text-display-lg text-primary-fixed tracking-tighter">LOCKEDIN-X</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">Discipline OS</p>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<!-- Navigation Items mapped from JSON -->
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="home">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="fitness_center">fitness_center</span>
+<span class="font-label-caps text-label-caps">Daily Ritual</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="psychology">psychology</span>
+<span class="font-label-caps text-label-caps">Support Mode</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="auto_stories">auto_stories</span>
+<span class="font-label-caps text-label-caps">Memoir</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="smart_toy">smart_toy</span>
+<span class="font-label-caps text-label-caps">AI Companion</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="analytics">analytics</span>
+<span class="font-label-caps text-label-caps">Insights</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="trending_up">trending_up</span>
+<span class="font-label-caps text-label-caps">Progress</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-caps text-label-caps">Calendar</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-primary-fixed font-bold border-r-2 border-primary-fixed bg-surface-container-high" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="badge">badge</span>
+<span class="font-label-caps text-label-caps">Identity</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="settings">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full bg-primary-container text-on-primary-container py-4 rounded-xl font-label-caps text-label-caps hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                New Entry
+            </button>
+</div>
+</aside>
+<!-- Top App Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-background/80 backdrop-blur-xl flex justify-between items-center px-container-padding h-20">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md text-on-surface">Identity Dashboard</span>
+<span class="flex items-center px-3 py-1 bg-primary-fixed/10 text-primary-fixed text-[10px] uppercase font-bold tracking-widest rounded-full">
+<span class="w-1.5 h-1.5 bg-primary-fixed rounded-full mr-2 animate-pulse"></span>
+                System Optimized
+            </span>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative">
+<input class="bg-surface-container-high border-none rounded-full px-6 py-2 w-64 text-sm focus:ring-1 focus:ring-primary-fixed text-on-surface-variant" placeholder="Search parameters..." type="text"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm" data-icon="search">search</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary-fixed transition-colors" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-primary-fixed" data-icon="bolt">bolt</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-white/10">
+<img class="w-full h-full object-cover" data-alt="A cinematic, high-fashion portrait of a focused man in his late 20s with short hair and sharp features. The lighting is dramatic chiaroscuro, with electric lime and obsidian shadows. He has a calm, determined expression. The background is a minimalist, high-tech studio with subtle geometric light patterns. Professional photography style, deep contrast." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7-mNyCQGpd0w6cBi2ORmxuWbYxJeaHVLQO8d8Ex8zNwp8HWmXS11WMLUJqdW8mNqZTObhJlay5naSDml1VPSPaJmqcq1s_GCptLKIs1Ba-O9jmBXFNREmf-6xZDGiVdDogQou_sP3OSlMpnADtDkDcNClruqKakvwG927unPUg2fAbPa5QzwUFdB7EcCGug6Nev-EDxfL1Ce3OLDEyvOfxFIAlmCZXk_XBDBLUyP23tLoJvy8xggnCnt7mQyvt0qaTAwo5U9F7mm6"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 p-container-padding min-h-screen">
+<!-- Bento Grid Layout -->
+<div class="bento-grid max-w-7xl mx-auto">
+<!-- Core Metric: Promises Kept -->
+<div class="col-span-12 lg:col-span-4 glass-card p-container-padding rounded-xl flex flex-col items-center justify-center relative overflow-hidden h-[380px]">
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+
+</div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-8">Promises Kept</p>
+<div class="relative w-48 h-48 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-highest" cx="96" cy="96" fill="transparent" r="90" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-primary-fixed active-ring" cx="96" cy="96" fill="transparent" r="90" stroke="currentColor" stroke-linecap="round" stroke-width="8" style="--offset: 35.37;"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-display-lg text-display-lg text-primary-fixed">87.5%</span>
+<span class="font-label-caps text-label-caps text-primary-fixed-dim flex items-center">
+<span class="material-symbols-outlined text-sm mr-1" data-icon="trending_up">trending_up</span>
+                            +4.2%
+                        </span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-center mt-8">Weekly Discipline Delta</p>
+</div>
+<!-- Current Chapter: The Crucible -->
+<div class="col-span-12 lg:col-span-8 glass-card p-container-padding rounded-xl relative overflow-hidden group">
+<div class="absolute inset-0 opacity-20 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="A macro cinematic shot of molten steel being forged in a high-tech obsidian forge. Sparks fly in slow motion, glowing with intense electric lime light. The atmosphere is filled with steam and deep olive shadows. The image is hyper-detailed, showing the crystalline structure of the metal under extreme heat. Moody, editorial, high contrast." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCEgBwOqAIsxNeEffuU6EzCA0BE0uwFJ_jW4g8G0di0znX4TNg37oEfdrQ25YjtK-gI6QpCdFnWZzlqfoCBF7PuiN0wgXi8a46PoZED57k8DzqmKT3BuVurzSQd_H2vzssW2nyddvNu9dAljZveTTWtEl8oWm2Pc5EdnBf9JuxvYXXQesHRLODWhtEevPtAfR-IYl_QRrOxCiew4-EywPvCNCeLhGAWploQGFHTTlk3qx1sR7E_V-MJs7dzB_hk8cHXRp_SZ9cqWYPe')"></div>
+<div class="relative z-10 flex flex-col h-full">
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="font-label-caps text-label-caps text-primary-fixed mb-2">Current Chapter</p>
+<h2 class="font-display-lg text-display-lg text-on-surface">The Crucible</h2>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Chapter 04 / Phase of Refinement</p>
+</div>
+<div class="bg-surface-container-high px-4 py-2 rounded-lg border border-white/5">
+<span class="font-mono-data text-mono-data text-on-surface">65% Progress</span>
+</div>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface max-w-xl mb-8 leading-relaxed">
+                        Phase of intense refinement. All systems are being tested through high-stakes commitment and radical honesty. The ego is dismantled to make room for the new architecture.
+                    </p>
+<div class="mt-auto">
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary-fixed w-[65%] rounded-full shadow-[0_0_15px_rgba(195,244,0,0.3)]"></div>
+</div>
+<div class="flex justify-between mt-4">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Day 42 of 60</span>
+<button class="font-label-caps text-label-caps text-primary-fixed hover:underline">View Milestones</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Identity Metrics Grid -->
+<div class="col-span-12 lg:col-span-4 grid grid-cols-1 gap-bento-gap">
+<!-- Recovery -->
+<div class="glass-card p-container-padding rounded-xl flex items-center justify-between">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Recovery</p>
+<h3 class="font-headline-md text-headline-md text-on-surface">92%</h3>
+<p class="text-xs text-on-tertiary-container mt-1">Deep Sleep Optimal</p>
+</div>
+<div class="w-24 h-12 flex items-end gap-1">
+<div class="w-full bg-primary-fixed/20 h-4 rounded-sm animate-pulse"></div>
+<div class="w-full bg-primary-fixed/20 h-8 rounded-sm"></div>
+<div class="w-full bg-primary-fixed/40 h-6 rounded-sm animate-pulse"></div>
+<div class="w-full bg-primary-fixed h-10 rounded-sm"></div>
+<div class="w-full bg-primary-fixed h-9 rounded-sm"></div>
+</div>
+</div>
+<!-- Capacity -->
+<div class="glass-card p-container-padding rounded-xl flex items-center justify-between">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Capacity</p>
+<h3 class="font-headline-md text-headline-md text-on-surface">78%</h3>
+<p class="text-xs text-on-surface-variant mt-1">Cognitive Load: Med</p>
+</div>
+<div class="relative w-16 h-10 border border-white/10 rounded-md p-0.5">
+<div class="bg-primary-fixed h-full rounded-[2px]" style="width: 78%"></div>
+<div class="absolute -right-1 top-1/2 -translate-y-1/2 w-1 h-3 bg-white/20 rounded-r-sm"></div>
+</div>
+</div>
+</div>
+<!-- Monthly Trajectory -->
+<div class="col-span-12 lg:col-span-5 glass-card p-container-padding rounded-xl flex flex-col">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-8">Monthly Trajectory: Discipline Output</p>
+<div class="flex-1 flex items-end justify-between gap-4 pb-2">
+<div class="flex flex-col items-center gap-3 flex-1">
+<div class="w-full bg-surface-container-highest rounded-t-lg h-[60%] group-hover:h-[65%] transition-all duration-500"></div>
+<span class="font-mono-data text-[10px] text-on-surface-variant">WK 01</span>
+</div>
+<div class="flex flex-col items-center gap-3 flex-1">
+<div class="w-full bg-surface-container-highest rounded-t-lg h-[75%] transition-all duration-500"></div>
+<span class="font-mono-data text-[10px] text-on-surface-variant">WK 02</span>
+</div>
+<div class="flex flex-col items-center gap-3 flex-1">
+<div class="w-full bg-primary-fixed rounded-t-lg h-[85%] transition-all duration-500"></div>
+<span class="font-mono-data text-[10px] text-on-surface">WK 03</span>
+</div>
+<div class="flex flex-col items-center gap-3 flex-1">
+<div class="w-full bg-surface-container-highest rounded-t-lg h-[40%] transition-all duration-500 border-t-2 border-primary-fixed/50"></div>
+<span class="font-mono-data text-[10px] text-on-surface-variant">WK 04</span>
+</div>
+</div>
+</div>
+<!-- AI Companion Note -->
+<div class="col-span-12 lg:col-span-3 glass-card p-container-padding rounded-xl bg-gradient-to-br from-[#1A1F19] to-[#111510] relative ai-float">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="smart_toy">smart_toy</span>
+<span class="font-label-caps text-label-caps text-primary-fixed">AI Companion</span>
+</div>
+<blockquote class="font-headline-md text-headline-md text-on-surface leading-tight italic">
+                    "Comfort is the graveyard of potential, Arjun. Your resilience this week is statistically anomalous. You are becoming unbreakable."
+                </blockquote>
+<div class="mt-6 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-fixed"></span>
+<span class="text-xs text-on-surface-variant">Analyzing biometric pattern...</span>
+</div>
+</div>
+<!-- Recommended Adjustment -->
+<div class="col-span-12 lg:col-span-6 glass-card p-container-padding rounded-xl flex items-center justify-between border-l-4 border-primary-fixed">
+<div class="flex items-center gap-6">
+<div class="w-14 h-14 rounded-full bg-primary-fixed/10 flex items-center justify-center text-primary-fixed">
+<span class="material-symbols-outlined text-3xl" data-icon="self_improvement">self_improvement</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-primary-fixed">Recommended Adjustment</p>
+<h4 class="font-headline-md text-headline-md text-on-surface">Extended Evening Meditation</h4>
+<p class="text-on-surface-variant font-body-md">Balance high morning cortisol with 20m of deep breathwork.</p>
+</div>
+</div>
+<button class="bg-surface-container-high px-6 py-3 rounded-full font-label-caps text-label-caps text-on-surface hover:bg-surface-container-highest transition-colors">Accept</button>
+</div>
+<!-- Chapters Timeline -->
+<div class="col-span-12 lg:col-span-6 glass-card p-container-padding rounded-xl">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-6">Chapter Evolution</p>
+<div class="flex items-center gap-4">
+<div class="flex-1 flex flex-col items-center group cursor-pointer">
+<div class="w-full h-1 bg-primary-fixed rounded-full mb-3 opacity-30 group-hover:opacity-100 transition-opacity"></div>
+<span class="font-mono-data text-[10px] text-on-surface-variant uppercase text-center">The Foundation</span>
+</div>
+<div class="w-4 h-4 rounded-full border border-white/10 flex items-center justify-center">
+<span class="w-1 h-1 bg-white/20 rounded-full"></span>
+</div>
+<div class="flex-1 flex flex-col items-center group cursor-pointer">
+<div class="w-full h-1 bg-primary-fixed rounded-full mb-3 opacity-30 group-hover:opacity-100 transition-opacity"></div>
+<span class="font-mono-data text-[10px] text-on-surface-variant uppercase text-center">Ascension Ritual</span>
+</div>
+<div class="w-4 h-4 rounded-full border border-white/10 flex items-center justify-center">
+<span class="w-1 h-1 bg-white/20 rounded-full"></span>
+</div>
+<div class="flex-1 flex flex-col items-center group cursor-pointer">
+<div class="w-full h-1 bg-primary-fixed rounded-full mb-3 opacity-30 group-hover:opacity-100 transition-opacity"></div>
+<span class="font-mono-data text-[10px] text-on-surface-variant uppercase text-center">The Void</span>
+</div>
+<div class="w-4 h-4 rounded-full border-2 border-primary-fixed flex items-center justify-center">
+<span class="w-1.5 h-1.5 bg-primary-fixed rounded-full"></span>
+</div>
+<div class="flex-1 flex flex-col items-center">
+<div class="w-full h-1 bg-primary-fixed rounded-full mb-3"></div>
+<span class="font-mono-data text-[10px] text-on-surface uppercase text-center">The Crucible</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section Margin -->
+<div class="h-section-margin"></div>
+</main>
+<!-- Micro-interaction Scripts -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Observer for subtle scroll entrance animations
+            const observerOptions = {
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.glass-card').forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'all 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
+                observer.observe(card);
+            });
+        });
+    </script>
+</body></html>

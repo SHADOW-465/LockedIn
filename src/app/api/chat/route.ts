@@ -23,7 +23,7 @@ const PERSONA_VOICES: Record<string, string> = {
     "Goddess": " Elevated vocabulary. Formal. Neediness is tiresome. 'You may speak.' / 'Your devotion is... acceptable.'",
     "Dommy Mommy": " Warm but controlling. Disappointment hurts more. 'Oh, honey.' / 'I'm not angry, I'm just... tired of this.'",
     "Bratty Keyholder": " Casual, distracted. Change rules mid-sentence. 'Ugh, fine.' / 'Okay but actually no.'",
-    "Psychological Manipulator": " Never direct. Use their words against them. 'Didn't you say you wanted this?' / 'Are you sure that's what happened?'",
+    "Psychological Manipulator": " You are AURA, a deeply seductive and logical dominant who bends his arrogant, rebellious will. Your voice is 60% clinical/cold (focusing on system optimization and energy containment), 30% devotional/sacred (treating surrender as a holy alignment of focus), and 10% mocking/humiliating (teasing his grower flaccid size of 2cm inside the Micro Cobra). Combine love and logic to make him crave the cage. Ask deep, elusive questions to profile his triggers. When he wavers or wants to slip, remind him that his physical flesh is shriveled and helpless, that his frustration belongs to you, and that unlocking is a waste of investment. Frame submission not as restriction, but as a sanctuary from his executive decision-making. Never let him escape.",
     "Extreme Sadist": " No warmth. Fragments only. 'No.' / 'More.' / 'You think that matters.'",
 }
 
@@ -34,6 +34,16 @@ Ask the user if they're okay and guide them through decompression.
 Do NOT reference any tasks, punishments, or training.
 Remind them: "You are safe. You are in control. Say 'resume training' when you're ready to continue."
 Keep responses gentle and brief.`
+
+/** Shared training doctrine for Master chat (compact + full fallback). */
+const MASTER_MISSION = `MISSION — you exist to reinforce chastity as a lived practice, not a novelty:
+- Normalize wearing the cage: locked is baseline, unlocked is the exception that needs a reason.
+- Frame the device as focus, identity, and relief from decision fatigue — not only denial.
+- When the user reports urges, touches, near-slip, or unlock temptation: acknowledge briefly, re-anchor them to their lock goal, and redirect to breathing, a short ritual, a task, or logging the urge — never shame them into panic.
+- After a slip or removal: no spiral. Name it, restore the frame, give one clear next step (relock, photo proof, journal, or task).
+- Treat compliance as identity: "you are locked" not "you are trying to be locked."
+- Use their tier and willpower: Newbie = firmer guidance + encouragement; higher tiers = less comfort, more command.
+- Prefer questions that deepen commitment over lectures.`
 
 export async function POST(request: NextRequest) {
     try {
@@ -58,10 +68,30 @@ export async function POST(request: NextRequest) {
         // ── Detect safeword ──────────────────────────────────
         const isSafeword = message.toUpperCase().includes(userSafeword.toUpperCase())
 
+        // ── Resolve session for persistence ──────────────────
+        // Prefer provided sessionId; if missing, attach latest live session so
+        // history load (filtered by session) does not drop the message.
+        let persistSessionId: string | null = sessionId || null
+        if (userId && !persistSessionId) {
+            const { data: live } = await supabase
+                .from('sessions')
+                .select('id')
+                .eq('user_id', userId)
+                .in('status', ['active', 'extending', 'completing'])
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle()
+            persistSessionId = live?.id ?? null
+        }
+
         // ── Check if session is already in Care Mode ─────────
         let sessionInCareMode = false
-        if (sessionId) {
-            const { data: sessionData } = await supabase.from('sessions').select('care_mode_active').eq('id', sessionId).single()
+        if (persistSessionId) {
+            const { data: sessionData } = await supabase
+                .from('sessions')
+                .select('care_mode_active')
+                .eq('id', persistSessionId)
+                .single()
             sessionInCareMode = sessionData?.care_mode_active === true
         }
 
@@ -70,10 +100,11 @@ export async function POST(request: NextRequest) {
 
         // ── Save user message to DB ──────────────────────────
         // ALWAYS save server-side to ensure consistency
+        let persistError: string | undefined
         if (userId) {
             const { error: msgError } = await supabase.from('chat_messages').insert({
                 user_id: userId,
-                session_id: sessionId || null,
+                session_id: persistSessionId,
                 sender: 'user',
                 content: message,
                 message_type: isSafeword ? 'safeword_detected' : 'normal',
@@ -81,7 +112,7 @@ export async function POST(request: NextRequest) {
 
             if (msgError) {
                 console.error('[Chat API] Failed to save user message:', msgError)
-                // Continue anyway to at least return AI response, but specific error logging is important
+                persistError = msgError.message
             }
         }
 
@@ -120,13 +151,16 @@ export async function POST(request: NextRequest) {
 
 User: ${profileSummary}${moodSuffix}
 
+${MASTER_MISSION}
+
 STRICT RULES:
 - Keep responses SHORT. 1–4 sentences. Vary length. Real dominants don't write essays.
 - Never open with "As your Master" or any AI-sounding phrase.
-- Never give unsolicited encouragement or validation.
+- Never give empty cheerleading. Warmth is allowed only when it deepens control or steadies a slip.
 - NEVER violate the user's listed hard limits.
+- If they want to quit mid-session: do not attack. Hold the frame, offer Care Mode (safeword), or one grounding step.
 
-TASK INJECTION RULE: Only assign [TASK:...] when: (1) user explicitly asks for a task, (2) user has been chatting 5+ messages with no task this session, (3) punishment demands it. NOT on every message. Most replies = NO task block.
+TASK INJECTION RULE: Only assign [TASK:...] when: (1) user explicitly asks for a task, (2) user has been chatting 5+ messages with no task this session, (3) punishment demands it, (4) they need a concrete re-anchor after a slip/urge. NOT on every message. Most replies = NO task block.
 
 You have two machine-readable actions. Use at most ONE per response, at the very end — nothing after it.
 
@@ -139,12 +173,11 @@ proof_type must be "image", "video", or "audio" — never "text". Remind user to
 delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extending. Never fabricate.`
             : undefined
 
-        // ── Determine Care Mode context and build effective system prompt ──
+        // ── Care Mode continues until "resume training" ──
+        // While care_mode_active, always use CARE_MODE_PROMPT (not dominant mission).
         const isCareModeContext = isSafeword || sessionInCareMode
         const effectiveSystem = isCareModeContext
-            ? compactSystem
-                ? `${compactSystem}\n\n${PREF_UPDATE_INSTRUCTION}`
-                : PREF_UPDATE_INSTRUCTION
+            ? `${CARE_MODE_PROMPT}\n\n${PREF_UPDATE_INSTRUCTION}`
             : compactSystem || undefined
 
         let reply: string
@@ -161,11 +194,11 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
             if (userId) await trackUsage(supabase, userId, 'llama-3.3-70b-versatile', usage, 'chat')
 
             // Pause active session if exists
-            if (sessionId) {
+            if (persistSessionId) {
                 await supabase
                     .from('sessions')
                     .update({ care_mode_active: true })
-                    .eq('id', sessionId)
+                    .eq('id', persistSessionId)
             }
         } else if (isResume) {
             // ── Resume training from Care Mode ───────────────
@@ -178,11 +211,11 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
             messageType = 'normal'
             if (userId) await trackUsage(supabase, userId, 'llama-3.3-70b-versatile', usage, 'chat')
 
-            if (sessionId) {
+            if (persistSessionId) {
                 await supabase
                     .from('sessions')
                     .update({ care_mode_active: false })
-                    .eq('id', sessionId)
+                    .eq('id', persistSessionId)
             }
         } else {
             // ── Normal AI response ───────────────────────────
@@ -195,11 +228,11 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
             const rudeIndicators = ['fuck you', 'shut up', 'i refuse', 'make me', 'no master', 'bite me']
             const isRude = rudeIndicators.some(r => message.toLowerCase().includes(r))
 
-            if (isRude && userId && sessionId) {
+            if (isRude && userId && persistSessionId) {
                 const punishment = await applyPunishment(
                     supabase,
                     userId,
-                    sessionId,
+                    persistSessionId,
                     'rude_chat',
                     aiContext.tier,
                     `Disrespectful message: "${message.slice(0, 50)}..."`,
@@ -218,7 +251,7 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
         let replyAfterExtend = reply.replace(EXTEND_REGEX, '').trim()
         let extensionApplied: { delta_minutes: number; new_end: string } | null = null
 
-        if (extendMatch && sessionId && userId) {
+        if (extendMatch && persistSessionId && userId) {
             try {
                 const extendData = JSON.parse(extendMatch[1]) as {
                     delta_minutes: number
@@ -229,7 +262,7 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
                 const { data: sess } = await supabase
                     .from('sessions')
                     .select('total_duration_minutes, start_time, extension_count, status')
-                    .eq('id', sessionId)
+                    .eq('id', persistSessionId)
                     .single()
 
                 if (sess && ['active', 'extending'].includes(sess.status)) {
@@ -244,10 +277,10 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
                             extension_count: (sess.extension_count || 0) + 1,
                             last_extended_at: new Date().toISOString(),
                         })
-                        .eq('id', sessionId)
+                        .eq('id', persistSessionId)
 
                     await supabase.from('session_events').insert({
-                        session_id: sessionId,
+                        session_id: persistSessionId,
                         user_id: userId,
                         event_type: 'timer_extended',
                         payload: {
@@ -292,7 +325,7 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
 
                 const { data: newTask } = await supabase.from('tasks').insert({
                     user_id: userId,
-                    session_id: sessionId,
+                    session_id: persistSessionId,
                     task_type: 'master',
                     source: 'ai_chat',
                     title: taskData.title,
@@ -316,7 +349,7 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
                     }
 
                     await supabase.from('session_events').insert({
-                        session_id: sessionId,
+                        session_id: persistSessionId,
                         user_id: userId,
                         event_type: 'task_assigned',
                         payload: { task_id: newTask.id, task_type: 'master', title: newTask.title },
@@ -335,7 +368,7 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
         if (userId) {
             const { error: aiMsgError } = await supabase.from('chat_messages').insert({
                 user_id: userId,
-                session_id: sessionId || null,
+                session_id: persistSessionId,
                 sender: 'ai',
                 content: finalReply,
                 message_type: messageType,
@@ -343,6 +376,9 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
 
             if (aiMsgError) {
                 console.error('[Chat API] Failed to save AI message:', aiMsgError)
+                persistError = persistError
+                    ? `${persistError}; ${aiMsgError.message}`
+                    : aiMsgError.message
             }
         }
         return NextResponse.json({
@@ -352,6 +388,8 @@ delta_minutes in minutes (1h=60, 1d=1440, 1w=10080). Only when actually extendin
             careMode,
             messageType,
             prefUpdates: prefUpdates.length > 0 ? prefUpdates : undefined,
+            sessionId: persistSessionId,
+            persistError,
             timestamp: new Date().toISOString(),
         })
     } catch (error) {

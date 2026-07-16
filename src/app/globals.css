@@ -1,409 +1,191 @@
-@theme inline {
-  /* ==========================================
-     CLINICAL BRUTALISM TOKENS
-     ========================================== */
-
-  /* Pure Monochrome Base */
-  --color-bg-primary:   #000000;
-  --color-bg-secondary: #0a0a0a;
-  --color-bg-tertiary:  #141414;
-  --color-bg-hover:     #1f1f1f;
-
-  /* Stark Text Hierarchy */
-  --color-text-primary:   #ffffff;
-  --color-text-secondary: #a1a1aa;
-  --color-text-muted:     #525252;
-  --color-text-subtle:    #27272a;
-
-  /* Punishing Red Accent */
-  --color-accent:       #ff1f1f;
-  --color-accent-dark:  #990000;
-  --color-accent-dim:   rgba(255, 31, 31, 0.1);
-
-  /* Tier Colors (Brutalized) */
-  --color-tier-newbie:      #ffffff;
-  --color-tier-slave:       #a1a1aa;
-  --color-tier-hardcore:    #525252;
-  --color-tier-extreme:     #ff1f1f;
-  --color-tier-destruction: #000000;
-
-  /* Typography: Industrial & Clinical */
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-
-  /* Zero Radius Policy: NO ROUNDED CORNERS */
-  --radius-pill: 0px;
-  --radius-lg:   0px;
-  --radius-md:   0px;
-  --radius-sm:   0px;
-}
-
-@layer base {
-  :root {
-    --accent:      #ff1f1f;
-    --accent-dark: #990000;
-    --accent-dim:  rgba(255, 31, 31, 0.1);
-    --accent-glow: rgba(255, 31, 31, 0.2);
-  }
-}
+@import "tailwindcss";
+@import "./stitch-theme.css";
 
 /* ==========================================
-   BASE STYLES
+   LOCKEDIN — CLEAN SHELL (post frontend strip)
+   Source of truth: stitch-theme.css + DESIGN.md
+   No legacy neumorphic / industrial / zinc layers.
    ========================================== */
 
-@layer base {
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    background-color: #000000;
-    color: var(--color-text-primary);
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  ::selection {
-    background-color: var(--accent);
-    color: white;
-  }
-
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: var(--color-bg-primary);
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: var(--color-bg-tertiary);
-    border-radius: 3px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-bg-hover);
-  }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-/* ==========================================
-   MATTE UTILITY CLASSES
-   ========================================== */
-
-@layer utilities {
-  .matte-panel {
-    background-color: var(--color-bg-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-  }
-
-  .matte-panel-hover {
-    transition: all 0.2s ease;
-  }
-  .matte-panel-hover:hover {
-    border-color: rgba(255, 255, 255, 0.15);
-    background-color: var(--color-bg-tertiary);
-  }
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Firefox — dark thin scrollbar on all scrollports */
+  scrollbar-width: thin;
+  scrollbar-color: #3c423a transparent;
 }
 
-/* ==========================================
-   ANIMATIONS
-   ========================================== */
-
-@keyframes timer-pulse {
-  0%, 100% { border-color: rgba(239, 68, 68, 0.2); }
-  50%       { border-color: rgba(239, 68, 68, 0.6); background-color: rgba(239, 68, 68, 0.05); }
+html,
+body {
+  height: 100%;
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--color-background, #0d110c);
+  color: var(--color-on-surface, #e0e4db);
+  font-family: var(--font-manrope), "Manrope", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Prefer natural wheel scrolling on the primary scrollport */
+#app-scroll-main {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: auto;
+  touch-action: pan-y;
 }
 
-@keyframes slide-in-right {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+/* ── Global scrollbars (Stitch / dark olive OS) ──────────────
+   Default OS scrollbars read as white junk on dark UI.
+   Apply to every scrollable surface: html, body, nav, rails, lists.
+*/
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3c423a transparent;
 }
 
-@keyframes slide-in-left {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-@keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+*::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
+*::-webkit-scrollbar-thumb {
+  background: #323630;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
 }
 
-@keyframes lock-glow {
-  0%, 100% { border-color: rgba(239, 68, 68, 0.2); }
-  50%       { border-color: rgba(239, 68, 68, 0.8); }
+*::-webkit-scrollbar-thumb:hover {
+  background: #555a51;
+  background-clip: padding-box;
 }
 
-/* ==========================================
-   LOCK-IN §11.2 ANIMATION KEYFRAMES
-   ========================================== */
-
-/* "ed" letters slide in from behind the "k" */
-@keyframes lockin-ed-slide {
-  0% {
-    max-width: 0;
-    opacity: 0;
-    transform: translateX(-8px);
-  }
-
-  40% {
-    opacity: 0;
-  }
-
-  100% {
-    max-width: 1.5ch;
-    opacity: 1;
-    transform: translateX(0);
-  }
+*::-webkit-scrollbar-thumb:active {
+  background: #abd600;
+  background-clip: padding-box;
 }
 
-/* Lock shackle slides down from open to closed */
-@keyframes lock-shackle-close {
-  0% {
-    transform: translateY(-6px);
-    opacity: 0.6;
-  }
-
-  60% {
-    transform: translateY(1px);
-  }
-
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
-/* Sealed state — matte pulse */
-@keyframes lockin-pulse {
-  0%, 100% { border-color: rgba(255,255,255,0.1); background-color: transparent; }
-  50%       { border-color: var(--accent); background-color: var(--accent-dim); }
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
-/* Fade up + slight scale for completion text */
-@keyframes lockin-fade-text {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.97);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
-/* Shimmer stripe traveling across the button */
-@keyframes lockin-shimmer-sweep {
-  0% {
-    transform: translateX(-100%) skewX(-15deg);
-  }
-
-  100% {
-    transform: translateX(250%) skewX(-15deg);
-  }
+/* Icons use Lucide via <Icon /> — do not rely on Material Symbols CDN. */
+.material-symbols-outlined {
+  /* Legacy no-op: keep class harmless if any leftover markup exists */
+  display: none;
 }
 
-@keyframes scanline {
-  0% {
-    transform: translateY(-100%);
-  }
-
-  100% {
-    transform: translateY(100vh);
-  }
+/* Stitch surface primitives (from design HTML) */
+.bento-card {
+  background-color: #161b15;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+}
+.bento-card:hover {
+  transform: scale(1.01);
+  background-color: #1c221b;
 }
 
-@keyframes cardIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+.glass-panel {
+  background: rgba(42, 49, 40, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
-@keyframes bubbleIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* Stitch mobile glass cards */
+.glass-card {
+  background: rgba(22, 27, 21, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.inner-glow {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
 }
 
-@keyframes dotFadeIn {
-  from { opacity: 0; transform: scale(0.7); }
-  to   { opacity: 1; transform: scale(1); }
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.92; }
+  50% { transform: scale(1.02); opacity: 1; }
 }
-
-@keyframes drawRing {
-  from { stroke-dashoffset: 339; }
-  to   { stroke-dashoffset: var(--ring-offset, 84); }
+.animate-breathe {
+  animation: breathe 8s ease-in-out infinite;
 }
-
-@layer utilities {
-  .animate-fade-in {
-    animation: fade-in 0.3s ease-out forwards;
-  }
-
-  .animate-fade-in-up {
-    animation: fade-in-up 0.5s ease-out forwards;
-  }
-
-  .animate-slide-in-right {
-    animation: slide-in-right 0.4s ease-out forwards;
-  }
-
-  .animate-slide-in-left {
-    animation: slide-in-left 0.4s ease-out forwards;
-  }
-
-  .animate-scale-in {
-    animation: scale-in 0.3s ease-out forwards;
-  }
-
-  .animate-timer-pulse {
-    animation: timer-pulse 2s infinite;
-  }
-
-  .animate-lock-glow {
-    animation: lock-glow 2s ease-in-out infinite;
-  }
-
-  .animate-shimmer {
-    background: linear-gradient(90deg,
-        var(--color-bg-tertiary) 25%,
-        var(--color-bg-hover) 50%,
-        var(--color-bg-tertiary) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-
-  .animate-card-in {
-    animation: cardIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
-  }
-
-  .animate-bubble-in {
-    animation: bubbleIn 0.35s ease both;
-  }
-
-  .animate-dot-in {
-    animation: dotFadeIn 0.4s ease both;
-  }
-
-  .animate-draw-ring {
-    animation: drawRing 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  }
-
-  .accent-glow {
-    border-color: var(--accent);
-  }
-
-  .card-hover {
-    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
-  }
-
-  .card-hover:hover {
-    border-color: var(--color-bg-hover) !important;
-    background-color: var(--color-bg-tertiary);
-    transform: translateY(-1px);
-    box-shadow: none; /* Strip shadow completely on hover */
-  }
-}
-
-/* ==========================================
-   GLASS MORPHISM UTILITY
-   ========================================== */
-
-@layer utilities {
-  .glass {
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: none; /* No shadow */
-  }
-
-  .glass-strong {
-    background: rgba(0, 0, 0, 0.90);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: none; /* No shadow */
-  }
-}
-
-/* ==========================================
-   REDUCED MOTION
-   ========================================== */
-
 @media (prefers-reduced-motion: reduce) {
+  .animate-breathe { animation: none; }
+}
 
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+@keyframes support-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.35; }
+  50% { transform: scale(1.08); opacity: 0.7; }
+}
+.breathing-circle {
+  animation: support-breathe 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .breathing-circle { animation: none; opacity: 0.5; }
+}
+
+/* Optional denser rail variant (same tokens, slightly narrower) */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #3c423a transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #3c423a;
+  border-radius: 999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555a51;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+  background: #c3f400;
+}
+
+/* Verification vault viewfinder (Stitch) */
+.viewfinder-corner {
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  border: 2px solid #c3f400;
+  z-index: 2;
+  pointer-events: none;
+}
+.viewfinder-corner-tl { top: 24px; left: 24px; border-right: 0; border-bottom: 0; }
+.viewfinder-corner-tr { top: 24px; right: 24px; border-left: 0; border-bottom: 0; }
+.viewfinder-corner-bl { bottom: 24px; left: 24px; border-right: 0; border-top: 0; }
+.viewfinder-corner-br { bottom: 24px; right: 24px; border-left: 0; border-top: 0; }
+.camera-mesh {
+  background-image: radial-gradient(circle at 2px 2px, rgba(195, 244, 0, 0.08) 1px, transparent 0);
+  background-size: 40px 40px;
 }

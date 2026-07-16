@@ -39,7 +39,7 @@ describe('calcProfileStrength', () => {
     })
 
     it('awards 5pts for physical_details (non-null)', () => {
-        expect(calcProfileStrength({ physical_details: { body_type: 'slim' } })).toBe(5)
+        expect(calcProfileStrength({ physical_details: { bodyType: 'slim' } })).toBe(5)
     })
 
     it('awards 5pts for communication_style (non-null)', () => {
@@ -64,7 +64,7 @@ describe('calcProfileStrength', () => {
             preferred_regimens: ['Endurance'],
             psych_profile: 'structured',
             initial_lock_goal_hours: 168,
-            physical_details: { body_type: 'slim' },
+            physical_details: { bodyType: 'slim' },
             communication_style: { feedback_frequency: 'moderate' as const, tone_preference: 'balanced' as const, punishment_sensitivity: 'moderate' as const },
             availability: { active_hours: [{ start: '08:00', end: '22:00' }], timezone: 'UTC' },
         }

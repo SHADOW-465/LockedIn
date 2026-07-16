@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LOCKEDIN-X | Memoir Library</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700&amp;family=Manrope:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: #0D110C;
+            color: #e0e4db;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .book-card {
+            transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.2, 0, 0.2, 1);
+            perspective: 1000px;
+        }
+
+        .book-card:hover {
+            transform: translateY(-8px) rotateY(-5deg);
+            box-shadow: 20px 20px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(171, 214, 0, 0.05);
+        }
+
+        .book-spine {
+            width: 12px;
+            background: linear-gradient(to right, rgba(0,0,0,0.3), rgba(255,255,255,0.05), rgba(0,0,0,0.3));
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            border-radius: 2px 0 0 2px;
+        }
+
+        .inner-glow {
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-nav {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.02); opacity: 1; }
+        }
+
+        .breathe-effect {
+            animation: breathe 4s ease-in-out infinite;
+        }
+
+        .masonry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#323630",
+                        "background": "#10140f",
+                        "secondary-container": "#444b41",
+                        "surface-dim": "#10140f",
+                        "primary-fixed-dim": "#abd600",
+                        "inverse-on-surface": "#2d322c",
+                        "inverse-surface": "#e0e4db",
+                        "on-surface": "#e0e4db",
+                        "secondary-fixed": "#dde5d7",
+                        "tertiary-fixed": "#dee5d8",
+                        "on-error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#c1c9bc",
+                        "surface": "#10140f",
+                        "surface-container-low": "#191d17",
+                        "outline-variant": "#444933",
+                        "on-secondary-fixed-variant": "#42493f",
+                        "inverse-primary": "#506600",
+                        "on-tertiary-fixed-variant": "#424940",
+                        "on-tertiary-container": "#5f665c",
+                        "primary": "#ffffff",
+                        "surface-container-highest": "#323630",
+                        "surface-container-high": "#272b25",
+                        "on-primary-container": "#556d00",
+                        "outline": "#8e9379",
+                        "on-tertiary-fixed": "#171d16",
+                        "on-background": "#e0e4db",
+                        "secondary": "#c1c9bc",
+                        "on-tertiary": "#2b322a",
+                        "on-secondary-fixed": "#171d15",
+                        "surface-tint": "#abd600",
+                        "tertiary-container": "#dee5d8",
+                        "error": "#ffb4ab",
+                        "on-primary": "#283500",
+                        "tertiary-fixed-dim": "#c1c9bd",
+                        "surface-container": "#1d211b",
+                        "on-surface-variant": "#c4c9ac",
+                        "surface-bright": "#363a34",
+                        "surface-container-lowest": "#0b0f0a",
+                        "tertiary": "#ffffff",
+                        "on-primary-fixed": "#161e00",
+                        "on-error": "#690005",
+                        "primary-fixed": "#c3f400",
+                        "on-primary-fixed-variant": "#3c4d00",
+                        "on-secondary-container": "#b3bbae",
+                        "error-container": "#93000a",
+                        "on-secondary": "#2b3229",
+                        "primary-container": "#c3f400"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-margin": "48px",
+                        "gutter": "16px",
+                        "bento-gap": "12px",
+                        "base": "8px",
+                        "container-padding": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Epilogue"],
+                        "label-caps": ["Geist"],
+                        "body-lg": ["Manrope"],
+                        "display-lg": ["Epilogue"],
+                        "body-md": ["Manrope"],
+                        "mono-data": ["Geist"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "52px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400"}],
+                        "mono-data": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopAppBar -->
+<header class="bg-surface/80 backdrop-blur-xl border-b border-white/5 docked full-width top-0 z-40 fixed">
+<div class="flex justify-between items-center px-container-padding py-4 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-white/10">
+<img class="w-full h-full object-cover" data-alt="A sophisticated close-up portrait of Arjun, a high-achiever with sharp features and a look of calm determination. He is set against a dark, moody background with subtle atmospheric lighting that highlights the textures of his professional attire. The image uses a monochromatic palette with a slight hint of warm ivory, reflecting a luxurious and disciplined editorial aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAonKUezaRvIfoSusI93EBs3fway9mHexTQWiYXyCGCqz8K6jEJG0L_NMcUZRxjMH23UI0OsocX3oRjyG63R6ftCaZu6tD6p1VA9w77O2pwJumf9mdeN1iEBRocSWGiSO5nST9Q6x5gnDJKRO5QTa6NPfuZ2WlJgxxBtUuZKBtcd1KdOodUXs84HOcHYGexrye2p2SyQleuclyTVCl705F4M2XnFauIaQbppiGM8wJ0cuRN2tI1G7WcBbsLtbfZQO5E87ikJU0N2pE8"/>
+</div>
+<h1 class="text-headline-md font-headline-md font-bold tracking-tighter text-primary-fixed-dim">LOCKEDIN-X</h1>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-label-caps font-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">DASHBOARD</a>
+<a class="text-label-caps font-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">RITUALS</a>
+<a class="text-label-caps font-label-caps text-primary transition-colors" href="#">THE MEMOIR</a>
+<a class="text-label-caps font-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">INSIGHTS</a>
+</nav>
+<button class="text-primary hover:text-primary-fixed transition-colors">
+<span class="material-symbols-outlined">settings_suggest</span>
+</button>
+</div>
+</header>
+<main class="pt-32 pb-48 px-container-padding max-w-7xl mx-auto min-h-screen">
+<!-- Hero Section / Editorial Header -->
+<section class="mb-section-margin">
+<div class="max-w-2xl">
+<span class="text-label-caps font-label-caps text-primary-fixed-dim mb-2 block tracking-[0.2em]">COLLECTION VOL. 01</span>
+<h2 class="text-display-lg font-display-lg mb-6 leading-tight">The Memoir Library</h2>
+<p class="text-body-lg font-body-lg text-on-surface-variant leading-relaxed">
+                    A physical manifestation of your mental journey. Every chapter recorded, every lesson bound in digital leather. Open a volume to revisit the discipline of past versions of yourself.
+                </p>
+</div>
+</section>
+<!-- Search & Filter Bar -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+<div class="relative w-full md:w-96">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border border-white/5 rounded-full py-3 pl-12 pr-6 text-on-surface focus:outline-none focus:border-primary-fixed-dim/50 transition-all" placeholder="Search the archives..." type="text"/>
+</div>
+<div class="flex gap-4">
+<button class="px-6 py-2 rounded-full border border-white/5 bg-surface-container-high text-label-caps font-label-caps hover:bg-surface-variant transition-colors">LATEST</button>
+<button class="px-6 py-2 rounded-full border border-white/5 text-label-caps font-label-caps text-on-surface-variant hover:bg-surface-variant transition-colors">FAVORITES</button>
+</div>
+</div>
+<!-- Masonry Grid of Books -->
+<div class="masonry-grid">
+<!-- New Chapter Card -->
+<button class="book-card group relative h-[420px] rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center p-8 text-center hover:border-primary-fixed-dim/40 transition-all">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center mb-6 border border-white/5 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary-fixed-dim text-3xl">add</span>
+</div>
+<h3 class="text-headline-md font-headline-md mb-2">New Entry</h3>
+<p class="text-body-md font-body-md text-on-surface-variant">Record today's evolution into the permanent record.</p>
+</button>
+<!-- Book 1: The Dark Vessel -->
+<div class="book-card relative h-[420px] rounded-xl overflow-hidden cursor-pointer group shadow-2xl">
+<div class="book-spine z-20"></div>
+<div class="absolute inset-0 z-0 bg-[#161B15]">
+<img class="w-full h-full object-cover opacity-60" data-alt="A macro photograph of high-quality, dark charcoal leather texture with intricate grain details. The lighting is low and atmospheric, casting soft shadows that emphasize the tactile depth of the material. A minimalist gold-embossed geometric symbol is centered on the texture, reflecting a subtle glint. The overall aesthetic is one of extreme luxury, discipline, and archival quality, fitting for a prestigious memoir cover." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRu-HjY7aI3oUzPn27-53gDjrQs6vyl5JPfHNtHM4PXQTTgtXBs1YfO8IWR-No8pUS_BEKIvRVMJfonNn9glhdpMJG0aphmI2NUt-x0st3eMw1-4vo-WbS0dP74zwdX91VujdT8_5Bm7ijwgkrRh368uYLTsyThE4r0FvZxAP1UfGxJSrR34DKJKtEmAEV8-tlO-4mbivx-9odxlEEiHs9pwOWmeSRkhbbHjajjFV5gBriIXVpfSyFT1QuXe-hXFT9Y8UoOsahumiV"/>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10"></div>
+<div class="absolute inset-0 p-8 flex flex-col justify-end z-30">
+<span class="text-label-caps font-label-caps text-primary-fixed-dim mb-2">CHAPTER 42</span>
+<h3 class="text-headline-md font-headline-md text-primary leading-tight mb-4 group-hover:translate-x-2 transition-transform">The Silence of the Deep Work</h3>
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+<span class="text-mono-data font-mono-data">Oct 24, 2023</span>
+</div>
+</div>
+<div class="absolute top-4 right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-primary-fixed-dim">menu_book</span>
+</div>
+</div>
+<!-- Book 2: Ivory Reflection -->
+<div class="book-card relative h-[420px] rounded-xl overflow-hidden cursor-pointer group shadow-2xl">
+<div class="book-spine z-20"></div>
+<div class="absolute inset-0 z-0 bg-[#2A3128]">
+<img class="w-full h-full object-cover opacity-70" data-alt="An abstract, matte-finished surface in a soft moss green hue, featuring subtle organic ripples that suggest a calm, focused mental state. The lighting is diffuse and warm, creating a velvety appearance. A vertical strip of contrasting texture in dark graphite runs down the left side, mimicking the binding of a premium book. The style is modern, minimalist, and serene, emphasizing emotional depth and clarity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAREu9tep7MJMRpPhffvFR3u6nuhzuqDpQEOSLQqlFBfOrNhZH55-yQ_AUN0Rq9XV-Tf1TY_I7amTRXMkJFYFZODkBT5ZrdcQusIpwcER0Rl6Jxr5m9G_j4hK5qZY1e0jPv_npSnbUPrn92MQb-nYBZx1mMVYak48z0p6f_USQFuVUyQt7aeG2nQQcRUvxyaSY_OneHhTKLWbFsfd5g5wp4K3VVLgb7TEXwj-10s-UigRIlAwGMB0joi9k1dwFGgdjpauFm4ftBiMcg"/>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
+<div class="absolute inset-0 p-8 flex flex-col justify-end z-30">
+<span class="text-label-caps font-label-caps text-primary-fixed-dim mb-2">CHAPTER 41</span>
+<h3 class="text-headline-md font-headline-md text-primary leading-tight mb-4 group-hover:translate-x-2 transition-transform">Calibrated Ambition</h3>
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+<span class="text-mono-data font-mono-data">Oct 20, 2023</span>
+</div>
+</div>
+</div>
+<!-- Book 3: Crimson Momentum -->
+<div class="book-card relative h-[420px] rounded-xl overflow-hidden cursor-pointer group shadow-2xl">
+<div class="book-spine z-20"></div>
+<div class="absolute inset-0 z-0 bg-[#1A1F19]">
+<img class="w-full h-full object-cover opacity-50" data-alt="A stunning digital art piece of dark, polished marble with vibrant, thin veins of emerald light cutting through the surface. The scene is shot from a high angle, giving a sense of scale and permanence. The lighting is dramatic, with high contrast between the deep blacks and the glowing green lines. This visual represents a hard-earned milestone, feeling both ancient and futuristic in its execution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9OR7bgBcPQoSr4ybRIF1QL4VNMpoEGldnePtoQwJ6-HEL8rCFf0UUQvvVKCPtRRxXlb9gU-5CkHhIDiGcWclImP1vTdVAT9CgYL6V4J906kFPQLb_d2-MhrSOW4GOBoOFgujfzx5K0LQVxN2VWLqhhViQqe7O5lUFbdeG8Vss62NinQtOzCnTbKYrZAYnW5jSY9dcqQ_X_uL0DGlQ9_rF1QsWDvhFZfxoN1NjVozG3iO-oW6rub0P37cxuL3oyJGJBFq--MmJ4SHK"/>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent z-10"></div>
+<div class="absolute inset-0 p-8 flex flex-col justify-end z-30">
+<span class="text-label-caps font-label-caps text-primary-fixed-dim mb-2">CHAPTER 40</span>
+<h3 class="text-headline-md font-headline-md text-primary leading-tight mb-4 group-hover:translate-x-2 transition-transform">The Threshold of Habit</h3>
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+<span class="text-mono-data font-mono-data">Oct 15, 2023</span>
+</div>
+</div>
+</div>
+<!-- Book 4: Obsidian Focus -->
+<div class="book-card relative h-[420px] rounded-xl overflow-hidden cursor-pointer group shadow-2xl">
+<div class="book-spine z-20"></div>
+<div class="absolute inset-0 z-0 bg-[#0b0f0a]">
+<img class="w-full h-full object-cover opacity-60" data-alt="An ultra-minimalist book cover design featuring a matte black paper texture with a single, perfectly rendered drop of glowing lime liquid at the center. The drop creates a subtle ripple effect that is barely visible in the low light. The overall mood is hyper-focused and intense, utilizing a monochromatic dark palette with a single point of high-saturation color to draw the eye. It feels exclusive and intellectually stimulating." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJLQRBaIK-UUwBRnSEQLJWNa2joTjz7ikwXcupp17dYJQ1xUV4RIuX-G3BcbNTLiSpN2LvAwmpk7OdbWKqyVzdMHQcsJMqOrAw0Qbry4cGqk0obZuLy9tV4K6PUwoB5JExQUrPPM8NiBIaRgZKlfCHxHl9GcN42PEjSorptbe9PauOJ2kOM9TTkVKKQPpgH-UTrsu30pNHz2wZ55OVUQTO6E6HcNHmirxJz4CdVZ218h9xzAzEmJSiUL3X-pZ9xI5RLd6MOFVdG7ir"/>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent z-10"></div>
+<div class="absolute inset-0 p-8 flex flex-col justify-end z-30">
+<span class="text-label-caps font-label-caps text-primary-fixed-dim mb-2">CHAPTER 39</span>
+<h3 class="text-headline-md font-headline-md text-primary leading-tight mb-4 group-hover:translate-x-2 transition-transform">Cognitive Refactoring</h3>
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+<span class="text-mono-data font-mono-data">Oct 10, 2023</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Shelf Logic / Separation -->
+<div class="mt-section-margin pt-12 border-t border-white/5 flex flex-col items-center">
+<div class="w-24 h-1 bg-primary-fixed-dim/20 rounded-full mb-8"></div>
+<p class="text-label-caps font-label-caps text-on-surface-variant">END OF CURRENT VOLUME</p>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-8 left-0 right-0 mx-auto z-50 flex justify-around items-center px-4 py-2 max-w-md bg-surface-container/60 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-primary-fixed-dim/5 rounded-full">
+<a class="text-on-surface-variant p-3 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">home</span>
+</a>
+<a class="text-on-surface-variant p-3 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">rebase_edit</span>
+</a>
+<a class="text-on-surface-variant p-3 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">shield_with_heart</span>
+</a>
+<a class="bg-primary-fixed text-on-primary-fixed rounded-full p-3 shadow-[0_0_15px_rgba(171,214,0,0.3)] Active: scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+</a>
+<a class="text-on-surface-variant p-3 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+</a>
+</nav>
+<!-- Background Shader Ornament -->
+<div class="fixed top-0 right-0 w-1/2 h-full -z-10 opacity-30 pointer-events-none">
+
+</div>
+<script>
+        // Micro-interactions for the "bookshelf" feel
+        document.querySelectorAll('.book-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 20;
+                const rotateY = (centerX - x) / 20;
+                
+                card.style.transform = `perspective(1000px) translateY(-8px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) translateY(0) rotateX(0) rotateY(0)`;
+            });
+        });
+
+        // Simple scroll reveal for the grid
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.book-card').forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = `all 0.6s cubic-bezier(0.2, 0, 0.2, 1) ${index * 0.1}s`;
+            observer.observe(card);
+        });
+    </script>
+</body></html>

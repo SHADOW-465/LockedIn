@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LOCKEDIN-X | Memoir Library</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&amp;family=Manrope:wght@300;400;500;600&amp;family=Geist:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@100..900&amp;family=Geist:wght@100..900&amp;family=Manrope:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #10140f;
+            color: #e0e4db;
+            overflow-x: hidden;
+        }
+        .book-card {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+            perspective: 1000px;
+        }
+        .book-card:hover {
+            transform: translateY(-12px) rotateY(-5deg);
+        }
+        .book-spine {
+            box-shadow: inset 1px 0 0 rgba(255,255,255,0.1), -4px 0 8px rgba(0,0,0,0.4);
+        }
+        .glass-panel {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(42, 49, 40, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        @keyframes subtle-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .animate-float {
+            animation: subtle-float 4s ease-in-out infinite;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#323630",
+                        "surface-tint": "#abd600",
+                        "on-secondary": "#2b3229",
+                        "tertiary-fixed-dim": "#c1c9bd",
+                        "surface-container-highest": "#323630",
+                        "on-tertiary-fixed": "#171d16",
+                        "primary": "#ffffff",
+                        "background": "#10140f",
+                        "primary-container": "#c3f400",
+                        "on-primary-container": "#556d00",
+                        "on-tertiary": "#2b322a",
+                        "error": "#ffb4ab",
+                        "on-primary": "#283500",
+                        "surface-container-low": "#191d17",
+                        "primary-fixed-dim": "#abd600",
+                        "surface-container": "#1d211b",
+                        "on-secondary-container": "#b3bbae",
+                        "on-secondary-fixed-variant": "#42493f",
+                        "on-background": "#e0e4db",
+                        "surface-container-high": "#272b25",
+                        "on-error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#c1c9bc",
+                        "on-primary-fixed-variant": "#3c4d00",
+                        "secondary-fixed": "#dde5d7",
+                        "secondary-container": "#444b41",
+                        "error-container": "#93000a",
+                        "surface": "#10140f",
+                        "surface-dim": "#10140f",
+                        "tertiary": "#ffffff",
+                        "outline": "#8e9379",
+                        "inverse-surface": "#e0e4db",
+                        "on-error": "#690005",
+                        "on-tertiary-container": "#5f665c",
+                        "on-secondary-fixed": "#171d15",
+                        "on-primary-fixed": "#161e00",
+                        "inverse-primary": "#506600",
+                        "surface-bright": "#363a34",
+                        "tertiary-fixed": "#dee5d8",
+                        "tertiary-container": "#dee5d8",
+                        "inverse-on-surface": "#2d322c",
+                        "on-surface-variant": "#c4c9ac",
+                        "surface-container-lowest": "#0b0f0a",
+                        "secondary": "#c1c9bc",
+                        "on-tertiary-fixed-variant": "#424940",
+                        "outline-variant": "#444933",
+                        "primary-fixed": "#c3f400",
+                        "on-surface": "#e0e4db"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "bento-gap": "12px",
+                        "section-margin": "48px",
+                        "gutter": "16px",
+                        "base": "8px",
+                        "container-padding": "24px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Epilogue"],
+                        "body-md": ["Manrope"],
+                        "mono-data": ["Geist"],
+                        "headline-md": ["Epilogue"],
+                        "label-caps": ["Geist"],
+                        "body-lg": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "52px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400"}],
+                        "mono-data": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-body-md text-body-md antialiased overflow-hidden flex">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-screen z-50 flex flex-col w-64 bg-surface dark:bg-surface border-r border-white/5">
+<div class="px-8 py-10 flex flex-col">
+<div class="flex items-center gap-3 mb-1">
+<span class="material-symbols-outlined text-primary-fixed text-headline-md" style="font-variation-settings: 'FILL' 1;">fingerprint</span>
+<span class="font-headline-md text-headline-md font-bold tracking-tighter text-on-surface dark:text-on-surface">LOCKEDIN-X</span>
+</div>
+<span class="font-label-caps text-[10px] tracking-[0.2em] text-on-surface-variant opacity-60">DISCIPLINE. IDENTITY. FREEDOM.</span>
+</div>
+<nav class="flex-1 flex flex-col gap-1 px-4">
+<!-- Home -->
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 flex items-center gap-3 transition-colors duration-200 rounded-lg hover:bg-surface-variant" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</a>
+<!-- Daily Ritual -->
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 flex items-center gap-3 transition-colors duration-200 rounded-lg hover:bg-surface-variant" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-label-caps text-label-caps">Daily Ritual</span>
+</a>
+<!-- Support Mode -->
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 flex items-center gap-3 transition-colors duration-200 rounded-lg hover:bg-surface-variant" href="#">
+<span class="material-symbols-outlined">shield_with_heart</span>
+<span class="font-label-caps text-label-caps">Support Mode</span>
+</a>
+<!-- Memoir (ACTIVE) -->
+<a class="bg-secondary-container text-primary-fixed font-bold rounded-lg mx-2 px-3 py-2 border-l-4 border-primary-fixed flex items-center gap-3 transition-transform duration-200 ease-out active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">book</span>
+<span class="font-label-caps text-label-caps">Memoir</span>
+</a>
+<!-- AI Companion -->
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 flex items-center gap-3 transition-colors duration-200 rounded-lg hover:bg-surface-variant" href="#">
+<span class="material-symbols-outlined">psychology</span>
+<span class="font-label-caps text-label-caps">AI Companion</span>
+</a>
+<!-- Insights -->
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 flex items-center gap-3 transition-colors duration-200 rounded-lg hover:bg-surface-variant" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-label-caps text-label-caps">Insights &amp; Analytics</span>
+</a>
+<!-- Progress -->
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 flex items-center gap-3 transition-colors duration-200 rounded-lg hover:bg-surface-variant" href="#">
+<span class="material-symbols-outlined">trending_up</span>
+<span class="font-label-caps text-label-caps">Progress</span>
+</a>
+</nav>
+<div class="px-6 py-6 border-t border-white/5 space-y-4">
+<button class="w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98]">
+<span class="material-symbols-outlined">bolt</span>
+<span class="font-label-caps">Focus Mode</span>
+</button>
+<div class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-surface-variant transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant">account_circle</span>
+<span class="font-label-caps text-label-caps text-on-surface">Arjun</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 flex-1 h-screen overflow-y-auto bg-background relative flex flex-col">
+<!-- Top Navigation -->
+<header class="flex justify-between items-center w-full px-12 py-8 bg-transparent sticky top-0 z-40 backdrop-blur-sm">
+<div>
+<h1 class="font-headline-md text-headline-md text-on-surface font-bold tracking-tight">Memoir Library</h1>
+<p class="text-on-surface-variant font-body-md opacity-70">A legacy of discipline, page by page.</p>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="bg-surface-container-high border-none rounded-full pl-10 pr-6 py-2 text-on-surface placeholder:text-on-surface-variant/50 focus:ring-1 focus:ring-primary-fixed w-64 transition-all" placeholder="Search chronicles..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="hover:bg-surface-container-highest rounded-full p-2 text-on-surface transition-opacity duration-300">
+<span class="material-symbols-outlined">wb_sunny</span>
+</button>
+<button class="hover:bg-surface-container-highest rounded-full p-2 text-on-surface transition-opacity duration-300 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary-fixed rounded-full"></span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<div class="px-12 pb-24 transition-all duration-700" id="libraryView">
+<!-- Bento Grid Library -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-bento-gap">
+<!-- Book Item 1 (Active/Openable) -->
+<div class="group cursor-pointer" onclick="openChapter('The Foundation')">
+<div class="book-card aspect-[3/4] bg-surface-container-high rounded-xl relative overflow-hidden flex flex-col p-8 border border-white/5 shadow-2xl">
+<!-- Book Cover Background -->
+<div class="absolute inset-0 z-0 opacity-40 group-hover:opacity-60 transition-opacity">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-110" data-alt="A cinematic, low-angle photograph of a massive monolithic black stone block standing in a misty, dark volcanic landscape. Faint veins of glowing electric lime light pulse through the cracks in the stone. The mood is ancient, heavy, and mysterious, reflecting the concept of building a strong foundation." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAavg4oP3A2P9gfPYBR7C3HyERVk5Qc4XXhucQJRZn8M0gTOVtqnSPB1Um-prHRE44Kycti1nxq-D_lV0cVKYjsWtPF2AqJkzx7R3Qwhz_rxV1mdxuZfMUnpJQwykQAgmN0xCu72NtPGKOvPSWyIFIO4BWzTDqRZ63yESAXYvPrjJLqe_13GmAJS2Ubono2agpykGxHsMUGF-pcrHsK2tShHakNTNva-zpYkiVK0wXQRaiLgju2GZZj-L7hgeiBbqMcnYiizUUP2RPJ')"></div>
+</div>
+<!-- Book Spine Detail -->
+<div class="absolute left-0 top-0 bottom-0 w-2 bg-black/40 z-10 book-spine"></div>
+<div class="relative z-10 h-full flex flex-col justify-between">
+<div>
+<span class="font-label-caps text-primary-fixed mb-2 block">Volume I</span>
+<h3 class="font-display-lg text-2xl leading-tight group-hover:text-primary-fixed transition-colors">The Foundation</h3>
+</div>
+<div class="flex justify-between items-end">
+<div class="text-on-surface-variant font-mono-data text-xs uppercase tracking-widest">
+                                    Jan — Mar 2024
+                                </div>
+<div class="bg-primary-fixed text-on-primary-fixed p-2 rounded-lg">
+<span class="material-symbols-outlined text-sm">open_in_full</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 px-2">
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary-fixed w-[100%] rounded-full shadow-[0_0_8px_rgba(171,214,0,0.4)]"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-2 font-mono-data uppercase">Completed: 90 Days</p>
+</div>
+</div>
+<!-- Book Item 2 -->
+<div class="group cursor-not-allowed opacity-80">
+<div class="book-card aspect-[3/4] bg-surface-container-high rounded-xl relative overflow-hidden flex flex-col p-8 border border-white/5">
+<div class="absolute inset-0 z-0 opacity-30">
+<div class="w-full h-full bg-cover bg-center" data-alt="An abstract artistic representation of fluid motion and kinetic energy. Wisps of soft emerald and ivory smoke dancing against a deep charcoal background. The lighting is ethereal and soft, creating a sense of constant evolution and growth. Minimalist and elegant digital art style." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAQUBS0dSEuPMdt42pU1_ImMGRZl401pV8xLinRyZFE3474iMeOpbjtzlLq_1L8Kwk3vH1QslEWQHrXHJh3rAM8l-D-vY_LOrDCygvIWtLROLJVif6NII1gUHgrLk3J4qJKRbUDGxC3JXEoBM1VCIgCJZbb5wnKc3eA1-cgE9JsjShG9oE8dLr5Fd2c2HnPonn_LVO1jadHBDVKD1qW2fhhqrEHO9gcNXMdu2yiF5N3huRXXCV8E7D4z0WWmq-5s9jBTqWMhu41PVXG')"></div>
+</div>
+<div class="absolute left-0 top-0 bottom-0 w-2 bg-black/40 z-10 book-spine"></div>
+<div class="relative z-10 h-full flex flex-col justify-between">
+<div>
+<span class="font-label-caps text-on-surface-variant mb-2 block">Volume II</span>
+<h3 class="font-display-lg text-2xl leading-tight text-on-surface/50">Ascension Ritual</h3>
+</div>
+<div class="flex justify-between items-end">
+<div class="text-on-surface-variant font-mono-data text-xs uppercase tracking-widest">
+                                    Apr — Jun 2024
+                                </div>
+<div class="text-on-surface-variant p-2">
+<span class="material-symbols-outlined text-sm">lock</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 px-2">
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary-fixed w-[42%] rounded-full"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-2 font-mono-data uppercase">In Progress: 38 Days</p>
+</div>
+</div>
+<!-- Book Item 3 (New/Empty) -->
+<div class="border-2 border-dashed border-white/10 rounded-xl aspect-[3/4] flex flex-col items-center justify-center gap-4 hover:border-primary-fixed/50 transition-all group cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-on-surface group-hover:text-on-primary-container">add</span>
+</div>
+<span class="font-label-caps text-on-surface-variant group-hover:text-on-surface">Start New Volume</span>
+</div>
+<!-- Stats Bento Card -->
+<div class="col-span-1 md:col-span-1 lg:col-span-1 bg-surface-container rounded-xl p-8 flex flex-col justify-between border border-white/5 relative overflow-hidden">
+
+<div class="relative z-10">
+<span class="font-label-caps text-primary-fixed">Library Overview</span>
+<div class="mt-8 space-y-6">
+<div>
+<div class="flex justify-between mb-1">
+<span class="text-xs text-on-surface-variant uppercase">Total Words</span>
+<span class="text-xs font-mono-data text-primary-fixed">128,402</span>
+</div>
+<div class="h-0.5 w-full bg-white/5"></div>
+</div>
+<div>
+<div class="flex justify-between mb-1">
+<span class="text-xs text-on-surface-variant uppercase">Reflections</span>
+<span class="text-xs font-mono-data text-primary-fixed">214</span>
+</div>
+<div class="h-0.5 w-full bg-white/5"></div>
+</div>
+<div>
+<div class="flex justify-between mb-1">
+<span class="text-xs text-on-surface-variant uppercase">Longest Streak</span>
+<span class="text-xs font-mono-data text-primary-fixed">64 Days</span>
+</div>
+<div class="h-0.5 w-full bg-white/5"></div>
+</div>
+</div>
+</div>
+<div class="relative z-10 pt-6">
+<button class="text-primary-fixed flex items-center gap-2 group">
+<span class="font-label-caps">Analytics Dashboard</span>
+<span class="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Chapter Detail View (Hidden by default) -->
+<div class="hidden absolute inset-0 bg-background z-50 overflow-y-auto px-12 py-12" id="chapterView">
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors mb-12" onclick="closeChapter()">
+<span class="material-symbols-outlined">arrow_back</span>
+<span class="font-label-caps">Back to Library</span>
+</button>
+<div class="grid grid-cols-12 gap-8">
+<!-- Left Column: Chapter Info -->
+<div class="col-span-12 lg:col-span-5 space-y-8">
+<div class="glass-panel p-8 rounded-3xl relative overflow-hidden">
+<div class="absolute top-0 right-0 p-6 opacity-10">
+<span class="material-symbols-outlined text-8xl">auto_stories</span>
+</div>
+<span class="font-label-caps text-primary-fixed" id="chapterVolume">Volume I</span>
+<h2 class="font-display-lg text-display-lg mt-2 mb-4" id="chapterTitle">The Foundation</h2>
+<p class="text-on-surface-variant text-body-lg leading-relaxed">
+                            A record of the first 90 days of absolute discipline. This volume details the transition from chaos to a rigid structure, focusing on morning protocols and the initial psychological resistance to change.
+                        </p>
+<div class="grid grid-cols-2 gap-4 mt-8">
+<div class="bg-surface-container-high/50 p-4 rounded-xl border border-white/5">
+<span class="block text-[10px] text-on-surface-variant uppercase font-mono-data mb-1">Period</span>
+<span class="text-sm font-bold">Jan 01 - Mar 31</span>
+</div>
+<div class="bg-surface-container-high/50 p-4 rounded-xl border border-white/5">
+<span class="block text-[10px] text-on-surface-variant uppercase font-mono-data mb-1">Status</span>
+<span class="text-sm font-bold text-primary-fixed">Archived</span>
+</div>
+</div>
+</div>
+<!-- Milestones -->
+<div class="space-y-4">
+<h4 class="font-label-caps text-on-surface-variant opacity-60">Key Milestones</h4>
+<div class="space-y-3">
+<div class="flex items-center gap-4 bg-surface-container p-4 rounded-2xl border border-white/5 group hover:bg-surface-container-high transition-colors">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+</div>
+<div>
+<p class="text-sm font-bold">The 30-Day Threshold</p>
+<p class="text-[10px] text-on-surface-variant uppercase font-mono-data">Unlocked Feb 02, 2024</p>
+</div>
+</div>
+<div class="flex items-center gap-4 bg-surface-container p-4 rounded-2xl border border-white/5 group hover:bg-surface-container-high transition-colors">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-xl">self_improvement</span>
+</div>
+<div>
+<p class="text-sm font-bold">Deep Work Protocol Mastery</p>
+<p class="text-[10px] text-on-surface-variant uppercase font-mono-data">Unlocked Mar 12, 2024</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Memoir Preview -->
+<div class="col-span-12 lg:col-span-7">
+<div class="bg-[#f5f5f1] dark:bg-[#e0e4db] text-[#10140f] rounded-lg shadow-2xl p-12 min-h-[700px] relative transform rotate-1 flex flex-col border border-black/5">
+<!-- Paper Texture & Styling -->
+<div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png')"></div>
+<div class="flex justify-between items-baseline border-b-2 border-black/10 pb-4 mb-8">
+<span class="font-display-lg text-2xl font-bold italic tracking-tighter">Day 84</span>
+<span class="font-mono-data text-sm opacity-60 uppercase">March 25, 2024</span>
+</div>
+<div class="flex-1 space-y-8 overflow-hidden">
+<div class="flex gap-6 items-start">
+<span class="material-symbols-outlined text-primary-container bg-black rounded-full p-2 text-xl">format_quote</span>
+<h3 class="font-display-lg text-3xl leading-tight">"Discipline is not the absence of desire, but the mastery of it."</h3>
+</div>
+<div class="space-y-6 font-body-lg text-lg leading-relaxed opacity-80">
+<p>Today marks the transition. The physical urge to quit at 5:00 AM has vanished, replaced by a cold, efficient silence. I no longer negotiate with myself. The task is the reality.</p>
+<p>Reflected on the project milestones today. What seemed like an insurmountable mountain in January is now just the base camp. The clarity of thought achieved through this fast is something I never thought possible.</p>
+<p>Focusing on the evening wind-down routine tonight. Total disconnect from all digital noise at 19:30. Tomorrow's preparation is tonight's victory.</p>
+</div>
+<div class="grid grid-cols-2 gap-8 pt-8 border-t border-black/5">
+<div>
+<p class="text-[10px] uppercase font-mono-data opacity-40 mb-2">Metrics Today</p>
+<ul class="text-sm font-bold space-y-1">
+<li>• 6 Hours Deep Work</li>
+<li>• 14km High Intensity</li>
+<li>• 100% Protocol Adherence</li>
+</ul>
+</div>
+<div class="flex items-end justify-end italic opacity-20 font-display-lg text-2xl">
+                                    Arjun X.
+                                </div>
+</div>
+</div>
+<!-- Hover Controls -->
+<div class="absolute -right-4 top-1/2 -translate-y-1/2 flex flex-col gap-4">
+<button class="bg-black text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform active:scale-95">
+<span class="material-symbols-outlined">edit_note</span>
+</button>
+<button class="bg-white text-black p-4 rounded-full shadow-lg hover:scale-110 transition-transform active:scale-95">
+<span class="material-symbols-outlined">share</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="w-full flex justify-center items-center py-8 opacity-40 italic font-label-caps text-label-caps mt-auto">
+            You are not your urges. You are your decisions.
+        </footer>
+</main>
+<!-- FAB for quick reflection -->
+<div class="fixed bottom-12 right-12 z-50">
+<button class="bg-primary-fixed text-on-primary-fixed px-6 py-4 rounded-full font-bold shadow-[0_10px_30px_rgba(171,214,0,0.3)] hover:shadow-[0_15px_40px_rgba(171,214,0,0.5)] transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+<span class="font-label-caps">New Reflection</span>
+</button>
+</div>
+<script>
+        function openChapter(title) {
+            const library = document.getElementById('libraryView');
+            const chapter = document.getElementById('chapterView');
+            
+            library.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                library.classList.add('hidden');
+                chapter.classList.remove('hidden');
+                chapter.classList.add('animate-in', 'fade-in', 'zoom-in', 'duration-500');
+                document.getElementById('chapterTitle').textContent = title;
+            }, 300);
+        }
+
+        function closeChapter() {
+            const library = document.getElementById('libraryView');
+            const chapter = document.getElementById('chapterView');
+            
+            chapter.classList.add('opacity-0', 'scale-105');
+            setTimeout(() => {
+                chapter.classList.add('hidden');
+                chapter.classList.remove('opacity-0', 'scale-105');
+                library.classList.remove('hidden');
+                setTimeout(() => {
+                    library.classList.remove('opacity-0', 'scale-95');
+                }, 50);
+            }, 300);
+        }
+        
+        // Simple ambient cursor interaction for glass panels
+        document.addEventListener('mousemove', (e) => {
+            const glow = document.querySelectorAll('.glass-panel');
+            glow.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                el.style.setProperty('--mouse-x', `${x}px`);
+                el.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+    </script>
+</body></html>

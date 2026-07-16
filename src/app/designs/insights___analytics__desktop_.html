@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Insights &amp; Analytics | LOCKEDIN-X</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@600;700;800&amp;family=Manrope:wght@400;500;600&amp;family=Geist:wght@500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#444933",
+                        "surface-container": "#1d211b",
+                        "surface-container-high": "#272b25",
+                        "surface-dim": "#10140f",
+                        "outline": "#8e9379",
+                        "on-surface": "#e0e4db",
+                        "inverse-on-surface": "#2d322c",
+                        "on-primary-container": "#556d00",
+                        "error": "#ffb4ab",
+                        "surface-container-lowest": "#0b0f0a",
+                        "surface-bright": "#363a34",
+                        "primary": "#ffffff",
+                        "on-primary": "#283500",
+                        "surface-container-low": "#191d17",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed": "#dee5d8",
+                        "on-primary-fixed": "#161e00",
+                        "on-primary-fixed-variant": "#3c4d00",
+                        "tertiary-container": "#dee5d8",
+                        "tertiary-fixed-dim": "#c1c9bd",
+                        "primary-fixed-dim": "#abd600",
+                        "tertiary": "#ffffff",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "surface": "#10140f",
+                        "on-secondary-fixed-variant": "#42493f",
+                        "secondary-fixed": "#dde5d7",
+                        "on-tertiary-container": "#5f665c",
+                        "on-surface-variant": "#c4c9ac",
+                        "secondary": "#c1c9bc",
+                        "background": "#10140f",
+                        "on-tertiary-fixed": "#171d16",
+                        "primary-container": "#c3f400",
+                        "on-secondary-container": "#b3bbae",
+                        "on-secondary": "#2b3229",
+                        "on-background": "#e0e4db",
+                        "surface-variant": "#323630",
+                        "secondary-fixed-dim": "#c1c9bc",
+                        "surface-container-highest": "#323630",
+                        "primary-fixed": "#c3f400",
+                        "inverse-surface": "#e0e4db",
+                        "secondary-container": "#444b41",
+                        "on-tertiary-fixed-variant": "#424940",
+                        "on-secondary-fixed": "#171d15",
+                        "on-tertiary": "#2b322a",
+                        "surface-tint": "#abd600",
+                        "inverse-primary": "#506600"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-margin": "48px",
+                        "base": "8px",
+                        "container-padding": "24px",
+                        "gutter": "16px",
+                        "bento-gap": "12px"
+                    },
+                    "fontFamily": {
+                        "display-lg-mobile": ["Epilogue"],
+                        "mono-data": ["Geist"],
+                        "headline-md": ["Epilogue"],
+                        "display-lg": ["Epilogue"],
+                        "label-caps": ["Geist"],
+                        "body-md": ["Manrope"],
+                        "body-lg": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "display-lg-mobile": ["36px", {"lineHeight": "40px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                        "mono-data": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "52px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #10140f;
+            color: #e0e4db;
+            overflow-x: hidden;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 12px;
+        }
+
+        .glass-card {
+            background: #161B15;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .glass-card:hover {
+            transform: scale(1.01);
+            border-color: rgba(195, 244, 0, 0.2);
+        }
+
+        .lime-glow {
+            text-shadow: 0 0 20px rgba(195, 244, 0, 0.3);
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+
+        .animate-breathe {
+            animation: breathe 4s ease-in-out infinite;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #444933;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="custom-scrollbar">
+<!-- Sidebar Navigation -->
+<nav class="h-screen w-64 fixed left-0 top-0 border-r border-white/5 bg-surface-container-low flex flex-col py-base px-gutter z-50">
+<div class="mb-10 px-2">
+<span class="font-display-lg text-headline-md tracking-tighter text-primary-container uppercase">LOCKEDIN-X</span>
+<p class="font-body-md text-label-caps text-on-surface-variant opacity-60">Peak Identity OS</p>
+</div>
+<div class="flex-1 flex flex-col space-y-1">
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant font-medium hover:bg-surface-variant/30 hover:text-primary transition-all duration-300 rounded-lg group" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-body-md">Home</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant font-medium hover:bg-surface-variant/30 hover:text-primary transition-all duration-300 rounded-lg group" href="#">
+<span class="material-symbols-outlined">bolt</span>
+<span class="font-body-md">Daily Ritual</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant font-medium hover:bg-surface-variant/30 hover:text-primary transition-all duration-300 rounded-lg group" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="font-body-md">Support Mode</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant font-medium hover:bg-surface-variant/30 hover:text-primary transition-all duration-300 rounded-lg group" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-body-md">Memoir</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant font-medium hover:bg-surface-variant/30 hover:text-primary transition-all duration-300 rounded-lg group" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-body-md">AI Companion</span>
+</a>
+<!-- Active State: Insights -->
+<a class="flex items-center gap-4 px-4 py-3 text-primary-container font-bold border-l-4 border-primary-container bg-surface-container-high/50 transition-all duration-300 rounded-r-lg group" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-body-md">Insights</span>
+</a>
+</div>
+<div class="mt-auto border-t border-white/5 pt-4 space-y-1">
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant font-medium hover:bg-surface-variant/30 hover:text-primary transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant font-medium hover:bg-surface-variant/30 hover:text-primary transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md">Log Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen">
+<!-- Top App Bar -->
+<header class="flex justify-between items-center h-20 px-container-padding sticky top-0 bg-surface-dim/80 backdrop-blur-xl z-40">
+<div class="flex items-center gap-4">
+<h1 class="font-display-lg text-headline-md text-primary-container">Insights &amp; Analytics</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="bg-surface-container-low border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary-container w-64 text-on-surface" placeholder="Query patterns..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary-container transition-colors">notifications</button>
+<button class="w-10 h-10 rounded-full bg-surface-container-high border border-white/10 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A sophisticated close-up portrait of a high-performance executive in soft dramatic lighting, wearing a charcoal turtleneck. The image has a moody, high-contrast aesthetic with deep shadows and subtle olive-tinted highlights to match the dark minimalism of the app. The look is professional, focused, and calm." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkE_-6lprC_6e7INANO2PBXFVZoPQ07c5vOIg0sQzaYNTtA8ZFnHkzAym6nlLo4Ip_hQem6xg6hkp6p-Ee84GspWSqCME3QK1wwF5VMvKtNRVILbqcXO-FgN8-W-kfCPqpuMZfGZQodaYGnDJcGLyZDOQKhoV5o-ssl1P560qaCD25Dk79aZs7VtJwgskCrGtj-2ki22Zsr-kiw6re5ZngbZ8ULXjMa08-L457odCWs10176Ssfu1LVwZlC_AW1GydOSlswiRx0BWd"/>
+</button>
+</div>
+</div>
+</header>
+<!-- Content Grid -->
+<div class="p-container-padding max-w-[1440px] mx-auto space-y-section-margin">
+<!-- Hero Analysis Section -->
+<section>
+<div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+<div class="max-w-2xl">
+<p class="font-label-caps text-primary-container tracking-widest mb-2 uppercase">Editorial Report / Q3 Performance</p>
+<h2 class="font-display-lg text-display-lg leading-tight">Architecture of <span class="text-primary-container">Consistency.</span></h2>
+<p class="font-body-lg text-on-surface-variant mt-4">Your discipline metrics for September indicate a 14% increase in deep-work density compared to the previous cycle. You are currently operating at peak cognitive efficiency.</p>
+</div>
+<div class="flex gap-2">
+<button class="bg-primary-container text-on-primary px-6 py-3 font-label-caps tracking-wider rounded-lg hover:opacity-90 transition-opacity">EXPORT PDF</button>
+<button class="bg-surface-container-high text-primary px-6 py-3 font-label-caps tracking-wider rounded-lg border border-white/5 hover:bg-surface-variant/30 transition-all">VIEW HISTORY</button>
+</div>
+</div>
+<!-- Bento Grid -->
+<div class="bento-grid">
+<!-- Promises Kept: Large Radial -->
+<div class="col-span-12 lg:col-span-5 glass-card rounded-xl p-container-padding flex flex-col justify-between min-h-[400px]">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="font-headline-md text-headline-md">Promises Kept</h3>
+<span class="material-symbols-outlined text-primary-container">verified</span>
+</div>
+<p class="text-on-surface-variant font-body-md">Integrity score based on ritual completion.</p>
+</div>
+<div class="flex justify-center items-center py-8 relative">
+<svg class="w-64 h-64 -rotate-90">
+<circle cx="128" cy="128" fill="transparent" r="110" stroke="#1A1F19" stroke-width="16"></circle>
+<circle class="drop-shadow-[0_0_15px_rgba(195,244,0,0.4)]" cx="128" cy="128" fill="transparent" r="110" stroke="url(#lime_gradient)" stroke-dasharray="690" stroke-dashoffset="69" stroke-linecap="round" stroke-width="18"></circle>
+<defs>
+<lineargradient id="lime_gradient" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" style="stop-color:#c3f400;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#556d00;stop-opacity:1"></stop>
+</lineargradient>
+</defs>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+<span class="font-display-lg text-display-lg text-primary-container lime-glow">91%</span>
+<span class="font-label-caps text-on-surface-variant tracking-widest">+4% vs AUG</span>
+</div>
+</div>
+</div>
+<!-- Monthly Trajectory: Bar Chart -->
+<div class="col-span-12 lg:col-span-7 glass-card rounded-xl p-container-padding flex flex-col min-h-[400px]">
+<div class="flex justify-between items-center mb-10">
+<div>
+<h3 class="font-headline-md text-headline-md">Monthly Trajectory</h3>
+<p class="text-on-surface-variant font-body-md">Discipline output over 30 days.</p>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary-container"></div>
+<span class="text-[10px] font-label-caps uppercase text-on-surface-variant">Active</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-outline-variant"></div>
+<span class="text-[10px] font-label-caps uppercase text-on-surface-variant">Baseline</span>
+</div>
+</div>
+</div>
+<div class="flex-1 flex items-end justify-between gap-2 px-2">
+<!-- Minimalist Bars -->
+<div class="w-full bg-outline-variant/10 rounded-t-sm h-[40%] hover:bg-primary-container/40 transition-all cursor-help relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-container-high px-2 py-1 rounded text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">4.2h</div>
+</div>
+<div class="w-full bg-outline-variant/10 rounded-t-sm h-[65%] hover:bg-primary-container/40 transition-all cursor-help relative group"></div>
+<div class="w-full bg-outline-variant/10 rounded-t-sm h-[55%] hover:bg-primary-container/40 transition-all cursor-help relative group"></div>
+<div class="w-full bg-outline-variant/10 rounded-t-sm h-[85%] hover:bg-primary-container/40 transition-all cursor-help relative group"></div>
+<div class="w-full bg-primary-container rounded-t-sm h-[95%] shadow-[0_0_20px_rgba(195,244,0,0.2)] relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-container-high px-2 py-1 rounded text-[10px]">PEAK</div>
+</div>
+<div class="w-full bg-outline-variant/10 rounded-t-sm h-[70%] hover:bg-primary-container/40 transition-all cursor-help relative group"></div>
+<div class="w-full bg-outline-variant/10 rounded-t-sm h-[45%] hover:bg-primary-container/40 transition-all cursor-help relative group"></div>
+<div class="w-full bg-outline-variant/10 rounded-t-sm h-[30%] hover:bg-primary-container/40 transition-all cursor-help relative group"></div>
+<div class="w-full bg-outline-variant/10 rounded-t-sm h-[90%] hover:bg-primary-container/40 transition-all cursor-help relative group"></div>
+<div class="w-full bg-outline-variant/10 rounded-t-sm h-[75%] hover:bg-primary-container/40 transition-all cursor-help relative group"></div>
+<div class="w-full bg-outline-variant/10 rounded-t-sm h-[50%] hover:bg-primary-container/40 transition-all cursor-help relative group"></div>
+<div class="w-full bg-outline-variant/10 rounded-t-sm h-[60%] hover:bg-primary-container/40 transition-all cursor-help relative group"></div>
+</div>
+<div class="flex justify-between mt-4 text-[10px] font-label-caps text-on-surface-variant uppercase tracking-tighter opacity-50">
+<span>Week 1</span>
+<span>Week 2</span>
+<span>Week 3</span>
+<span>Week 4</span>
+</div>
+</div>
+<!-- Recovery Efficiency: Small Bento -->
+<div class="col-span-12 md:col-span-4 glass-card rounded-xl p-container-padding flex flex-col justify-between min-h-[220px]">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-blue-400 text-sm">bedtime</span>
+<h4 class="font-label-caps text-on-surface-variant uppercase tracking-widest">Recovery Efficiency</h4>
+</div>
+<p class="font-display-lg text-headline-md">88.4<span class="text-on-surface-variant text-body-md ml-1">avg</span></p>
+</div>
+<div class="w-full bg-surface-container-low h-1.5 rounded-full overflow-hidden">
+<div class="bg-blue-400 h-full w-[88%]" style="box-shadow: 0 0 10px rgba(96, 165, 250, 0.5)"></div>
+</div>
+<p class="text-[12px] text-on-surface-variant font-body-md italic mt-2">Deep sleep cycles improved by 12 mins.</p>
+</div>
+<!-- Chapter Impact: Small Bento -->
+<div class="col-span-12 md:col-span-4 glass-card rounded-xl p-container-padding flex flex-col justify-between min-h-[220px]">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary-container text-sm">military_tech</span>
+<h4 class="font-label-caps text-on-surface-variant uppercase tracking-widest">Chapter Impact</h4>
+</div>
+<p class="font-display-lg text-headline-md">14,200 <span class="text-on-surface-variant text-body-md ml-1">pts</span></p>
+</div>
+<div class="flex items-center gap-1">
+<div class="w-3 h-3 rounded-sm bg-primary-container"></div>
+<div class="w-3 h-3 rounded-sm bg-primary-container"></div>
+<div class="w-3 h-3 rounded-sm bg-primary-container"></div>
+<div class="w-3 h-3 rounded-sm bg-primary-container"></div>
+<div class="w-3 h-3 rounded-sm bg-primary-container/20"></div>
+<span class="text-[10px] font-mono-data ml-2">LEVEL 4 RESILIENCE</span>
+</div>
+<p class="text-[12px] text-on-surface-variant font-body-md mt-2">Gained from navigating 4 high-stress events.</p>
+</div>
+<!-- Daily Quote: Philosophy Card -->
+<div class="col-span-12 md:col-span-4 bg-primary-container text-on-primary rounded-xl p-container-padding flex flex-col justify-between min-h-[220px] relative overflow-hidden group">
+<!-- Abstract pattern background -->
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-700">
+<span class="material-symbols-outlined text-[80px]" style="font-variation-settings: 'FILL' 1;">format_quote</span>
+</div>
+<h4 class="font-label-caps text-on-primary uppercase tracking-widest border-b border-on-primary/20 pb-2 w-fit">Philosophical Bridge</h4>
+<p class="font-headline-md text-headline-md italic leading-tight mt-4">"Discipline is the bridging of the gap between where you are and where you intend to be."</p>
+<div class="mt-4 flex items-center justify-between">
+<span class="font-mono-data text-xs uppercase opacity-80">Marcus Aurelius Mode</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</div>
+</div>
+<!-- Long-form Analysis Card -->
+<div class="col-span-12 glass-card rounded-xl p-container-padding grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="col-span-2">
+<h3 class="font-headline-md text-headline-md mb-4">Neural Feedback Loops</h3>
+<div class="space-y-6">
+<div class="flex gap-6 items-start">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary-container">psychology</span>
+</div>
+<div>
+<h5 class="font-body-md font-bold text-primary">Cognitive Load Distribution</h5>
+<p class="text-on-surface-variant text-sm">Your morning rituals show the lowest entropy. Consider moving complex strategic decisions to the 06:00 - 09:00 window for maximum clarity.</p>
+</div>
+</div>
+<div class="flex gap-6 items-start">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary-container">speed</span>
+</div>
+<div>
+<h5 class="font-body-md font-bold text-primary">Velocity Stability</h5>
+<p class="text-on-surface-variant text-sm">The variance in your habit execution has dropped by 30%. This suggests your discipline is moving from 'effort-based' to 'identity-based'.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-lg p-6 relative flex flex-col justify-center items-center text-center">
+<div class="mb-4 text-primary-container animate-breathe">
+<span class="material-symbols-outlined text-[48px]">auto_awesome</span>
+</div>
+<h4 class="font-headline-md text-body-lg mb-2">AI Companion Note</h4>
+<p class="text-on-surface-variant text-sm italic">"The data doesn't lie. Your resilience in the face of last week's setbacks was statistically anomalous. You are becoming unbreakable."</p>
+<button class="mt-6 text-primary-container font-label-caps text-[10px] uppercase border border-primary-container/20 px-4 py-2 rounded hover:bg-primary-container hover:text-on-primary transition-all">Deep Dive Session</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Section: Focus Heatmap -->
+<section class="pb-10">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-display-lg text-headline-md">Identity Heatmap</h3>
+<div class="text-on-surface-variant font-label-caps text-xs">Last 12 Months</div>
+</div>
+<div class="glass-card rounded-xl p-gutter overflow-x-auto">
+<div class="flex gap-1 min-w-[800px]">
+<!-- Simulate 52 weeks of GitHub-style contribution squares -->
+<div class="grid grid-rows-7 gap-1">
+<div class="w-3 h-3 bg-surface-container-highest rounded-sm"></div>
+<div class="w-3 h-3 bg-primary-container/20 rounded-sm"></div>
+<div class="w-3 h-3 bg-primary-container/40 rounded-sm"></div>
+<div class="w-3 h-3 bg-surface-container-highest rounded-sm"></div>
+<div class="w-3 h-3 bg-primary-container rounded-sm"></div>
+<div class="w-3 h-3 bg-primary-container/60 rounded-sm"></div>
+<div class="w-3 h-3 bg-surface-container-highest rounded-sm"></div>
+</div>
+<!-- Repeat columns for effect (loop simplified for layout) -->
+<div class="flex gap-1" id="heatmap-container"></div>
+</div>
+<div class="flex justify-between mt-4 font-mono-data text-[10px] text-on-surface-variant uppercase tracking-widest">
+<span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Micro-interaction Script -->
+<script>
+        // Generate heatmap cells
+        const container = document.getElementById('heatmap-container');
+        const levels = ['bg-surface-container-highest', 'bg-primary-container/20', 'bg-primary-container/40', 'bg-primary-container/60', 'bg-primary-container'];
+        
+        for (let i = 0; i < 45; i++) {
+            const col = document.createElement('div');
+            col.className = 'grid grid-rows-7 gap-1';
+            for (let j = 0; j < 7; j++) {
+                const cell = document.createElement('div');
+                const level = levels[Math.floor(Math.random() * levels.length)];
+                cell.className = `w-3 h-3 ${level} rounded-sm transition-all duration-500 hover:scale-125 cursor-crosshair`;
+                col.appendChild(cell);
+            }
+            container.appendChild(col);
+        }
+
+        // Simple parallax effect on scroll for cards
+        window.addEventListener('scroll', () => {
+            const cards = document.querySelectorAll('.glass-card');
+            cards.forEach(card => {
+                const speed = 0.05;
+                const rect = card.getBoundingClientRect();
+                const visible = rect.top < window.innerHeight && rect.bottom > 0;
+                if (visible) {
+                    const shift = (window.innerHeight / 2 - rect.top) * speed;
+                    card.style.transform = `translateY(${shift}px)`;
+                }
+            });
+        });
+    </script>
+</body></html>

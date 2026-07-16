@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LOCKEDIN-X | Discipline Calendar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;900&amp;family=Manrope:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0D110C;
+            color: #e0e4db;
+            overflow-x: hidden;
+        }
+        .bento-card {
+            background: #161B15;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .bento-card:hover {
+            transform: translateY(-2px);
+            background: #1d211b;
+        }
+        .glass-panel {
+            background: rgba(42, 49, 40, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-lime {
+            box-shadow: 0 0 15px rgba(195, 244, 0, 0.15);
+        }
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        .discipline-ring {
+            stroke-dasharray: 283;
+            stroke-dashoffset: 70;
+            transition: stroke-dashoffset 1s ease-out;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-container": "#c3f400",
+                      "on-tertiary-container": "#5f665c",
+                      "on-tertiary-fixed": "#171d16",
+                      "primary": "#ffffff",
+                      "on-secondary-fixed": "#171d15",
+                      "on-primary": "#283500",
+                      "on-secondary-fixed-variant": "#42493f",
+                      "on-secondary-container": "#b3bbae",
+                      "on-primary-container": "#556d00",
+                      "secondary-fixed-dim": "#c1c9bc",
+                      "on-tertiary": "#2b322a",
+                      "error": "#ffb4ab",
+                      "tertiary": "#ffffff",
+                      "surface-tint": "#abd600",
+                      "surface-container-low": "#191d17",
+                      "outline": "#8e9379",
+                      "surface-container": "#1d211b",
+                      "on-surface-variant": "#c4c9ac",
+                      "primary-fixed-dim": "#abd600",
+                      "on-tertiary-fixed-variant": "#424940",
+                      "surface-bright": "#363a34",
+                      "surface-container-lowest": "#0b0f0a",
+                      "on-surface": "#e0e4db",
+                      "error-container": "#93000a",
+                      "surface-dim": "#10140f",
+                      "inverse-on-surface": "#2d322c",
+                      "on-error-container": "#ffdad6",
+                      "surface-container-highest": "#323630",
+                      "secondary-fixed": "#dde5d7",
+                      "tertiary-fixed": "#dee5d8",
+                      "surface-container-high": "#272b25",
+                      "background": "#10140f",
+                      "tertiary-fixed-dim": "#c1c9bd",
+                      "surface-variant": "#323630",
+                      "inverse-surface": "#e0e4db",
+                      "on-error": "#690005",
+                      "primary-fixed": "#c3f400",
+                      "surface": "#10140f",
+                      "on-background": "#e0e4db",
+                      "on-primary-fixed": "#161e00",
+                      "secondary": "#c1c9bc",
+                      "inverse-primary": "#506600",
+                      "on-primary-fixed-variant": "#3c4d00",
+                      "tertiary-container": "#dee5d8",
+                      "secondary-container": "#444b41",
+                      "outline-variant": "#444933",
+                      "on-secondary": "#2b3229"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "section-margin": "48px",
+                      "container-padding": "24px",
+                      "base": "8px",
+                      "gutter": "16px",
+                      "bento-gap": "12px"
+              },
+              "fontFamily": {
+                      "mono-data": ["Geist"],
+                      "label-caps": ["Geist"],
+                      "display-lg": ["Epilogue"],
+                      "body-lg": ["Manrope"],
+                      "headline-md": ["Epilogue"],
+                      "body-md": ["Manrope"]
+              },
+              "fontSize": {
+                      "mono-data": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                      "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "52px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="font-body-md text-on-surface">
+<!-- Sidebar (Shared Component) -->
+<aside class="fixed left-0 top-0 h-full flex flex-col p-gutter space-y-4 z-50 bg-surface-container border-r border-white/5 w-72 hidden md:flex">
+<div class="px-4 py-6">
+<h1 class="font-display-lg text-display-lg font-black text-primary-fixed tracking-tighter">LOCKEDIN-X</h1>
+<p class="text-on-surface-variant font-label-caps text-label-caps opacity-60">Stay Disciplined</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined">rebase_edit</span>
+<span class="font-label-caps text-label-caps">Daily Ritual</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined">shield</span>
+<span class="font-label-caps text-label-caps">Support Mode</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-label-caps text-label-caps">Memoir</span>
+</a>
+<a class="flex items-center gap-4 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 font-bold shadow-lg shadow-primary-container/10" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-label-caps text-label-caps">Calendar</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<span class="font-label-caps text-label-caps">Insights</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</nav>
+<div class="mt-auto p-4 bg-surface-container-highest/50 rounded-xl border border-white/5">
+<div class="flex items-center gap-3 mb-4">
+<img class="w-10 h-10 rounded-full border border-primary-fixed/20" data-alt="A cinematic close-up portrait of a determined young man with short dark hair, sharp features, and focused eyes. The lighting is dramatic and moody, utilizing high-contrast shadows and a subtle green rim light reflecting the brand's aesthetic. He is set against a dark, textured background that conveys a sense of strength and discipline. The overall mood is serious, professional, and elite." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7ouNeEKuLIfrSq1qsaNuj9DcwCfrD-lTRw2VHi9defyUPJUhv5zUr0fXKQhsuY_wW2INvLrgjtgEQgCcycCUeCsJR5gJw1pur2BjZllNUjjgIpx4UIYn9OPeLNCIEVmxBozlphJVq1W7ZziXQGbIzgyoxPlfPhUQnxAhM1EG0RkT7BggvuP9ymOllT2ZlBONj1cIfvUV3Nvq9MhfuuE9bk5g3p0BzQzQUEvqv2LmBpeuI__ieP0jtOW6ddqQuao5urlODz3axC-4w"/>
+<div>
+<p class="font-bold text-sm">Arjun</p>
+<p class="text-xs text-on-surface-variant">Day 42 • Level 1</p>
+</div>
+</div>
+<button class="w-full py-2 bg-primary-fixed text-on-primary-fixed font-bold rounded-lg text-xs hover:opacity-90 transition-opacity">
+                Go Pro
+            </button>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="md:ml-72 min-h-screen p-container-padding flex flex-col gap-gutter">
+<!-- Header Section -->
+<header class="flex justify-between items-end mb-4">
+<div>
+<h2 class="font-display-lg text-display-lg tracking-tight">Discipline Calendar</h2>
+<p class="text-on-surface-variant font-body-lg text-body-lg italic opacity-80">The legacy of your daily decisions.</p>
+</div>
+<div class="flex gap-4 mb-2">
+<div class="flex items-center gap-2 px-4 py-2 glass-panel rounded-full border border-white/10">
+<span class="material-symbols-outlined text-primary-fixed text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-32 placeholder:text-on-tertiary-container" placeholder="Search archive..." type="text"/>
+<span class="text-[10px] text-on-tertiary-container">⌘K</span>
+</div>
+<button class="w-10 h-10 flex items-center justify-center glass-panel rounded-full hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-on-surface text-xl">notifications</span>
+</button>
+</div>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-bento-gap">
+<!-- Monthly Calendar View -->
+<section class="col-span-12 lg:col-span-8 bento-card rounded-2xl p-6 flex flex-col gap-6">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-4">
+<h3 class="font-headline-md text-headline-md">April 2025</h3>
+<div class="flex gap-2">
+<button class="p-1 hover:bg-white/5 rounded"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="p-1 hover:bg-white/5 rounded"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary-fixed shadow-[0_0_8px_rgba(195,244,0,0.4)]"></div>
+<span class="text-[10px] font-label-caps text-label-caps uppercase text-on-surface-variant">Complete</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-on-tertiary-container"></div>
+<span class="text-[10px] font-label-caps text-label-caps uppercase text-on-surface-variant">Partial</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-7 gap-2 text-center text-on-tertiary-container font-mono-data text-mono-data mb-2">
+<div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div><div>SUN</div>
+</div>
+<div class="calendar-grid">
+<!-- Day Outlines (Previous Month) -->
+<div class="aspect-square border border-white/5 rounded-lg opacity-20"></div>
+<div class="aspect-square border border-white/5 rounded-lg opacity-20"></div>
+<!-- Successful Days -->
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center relative glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">1</span>
+<div class="absolute bottom-1 right-1 w-1 h-1 bg-primary-fixed rounded-full"></div>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">2</span>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">3</span>
+</div>
+<div class="aspect-square bg-on-tertiary-container/10 border border-on-tertiary-container/30 rounded-lg flex items-center justify-center">
+<span class="text-xs font-mono-data text-on-tertiary-container">4</span>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">5</span>
+</div>
+<!-- Week 2 -->
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">6</span>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">7</span>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">8</span>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">9</span>
+</div>
+<div class="aspect-square bg-on-tertiary-container/10 border border-on-tertiary-container/30 rounded-lg flex items-center justify-center">
+<span class="text-xs font-mono-data text-on-tertiary-container">10</span>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">11</span>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">12</span>
+</div>
+<!-- Week 3 -->
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">13</span>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">14</span>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">15</span>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">16</span>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">17</span>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">18</span>
+</div>
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">19</span>
+</div>
+<!-- Week 4 (Active Week) -->
+<div class="aspect-square bg-primary-fixed/20 border border-primary-fixed/40 rounded-lg flex items-center justify-center glow-lime">
+<span class="text-xs font-mono-data text-primary-fixed">20</span>
+</div>
+<!-- Active Day -->
+<div class="aspect-square border-2 border-primary-fixed rounded-lg flex items-center justify-center animate-pulse-slow">
+<span class="text-xs font-bold font-mono-data text-primary-fixed">21</span>
+<div class="absolute -top-1 -right-1 w-2 h-2 bg-primary-fixed rounded-full"></div>
+</div>
+<!-- Future Days -->
+<div class="aspect-square border border-white/10 rounded-lg flex items-center justify-center">
+<span class="text-xs font-mono-data text-on-surface-variant opacity-40">22</span>
+</div>
+<div class="aspect-square border border-white/10 rounded-lg flex items-center justify-center">
+<span class="text-xs font-mono-data text-on-surface-variant opacity-40">23</span>
+</div>
+<div class="aspect-square border border-white/10 rounded-lg flex items-center justify-center">
+<span class="text-xs font-mono-data text-on-surface-variant opacity-40">24</span>
+</div>
+<div class="aspect-square border border-white/10 rounded-lg flex items-center justify-center">
+<span class="text-xs font-mono-data text-on-surface-variant opacity-40">25</span>
+</div>
+<div class="aspect-square border border-white/10 rounded-lg flex items-center justify-center">
+<span class="text-xs font-mono-data text-on-surface-variant opacity-40">26</span>
+</div>
+<!-- Remaining -->
+<div class="aspect-square border border-white/10 rounded-lg flex items-center justify-center">
+<span class="text-xs font-mono-data text-on-surface-variant opacity-40">27</span>
+</div>
+<div class="aspect-square border border-white/10 rounded-lg flex items-center justify-center">
+<span class="text-xs font-mono-data text-on-surface-variant opacity-40">28</span>
+</div>
+<div class="aspect-square border border-white/10 rounded-lg flex items-center justify-center">
+<span class="text-xs font-mono-data text-on-surface-variant opacity-40">29</span>
+</div>
+<div class="aspect-square border border-white/10 rounded-lg flex items-center justify-center">
+<span class="text-xs font-mono-data text-on-surface-variant opacity-40">30</span>
+</div>
+</div>
+</section>
+<!-- Monthly Architecture Panel -->
+<section class="col-span-12 lg:col-span-4 flex flex-col gap-bento-gap">
+<!-- Luxury Radial Analytics -->
+<div class="bento-card rounded-2xl p-6 flex items-center justify-between">
+<div class="space-y-1">
+<h4 class="font-label-caps text-label-caps text-on-surface-variant opacity-60">TOTAL STREAK</h4>
+<p class="text-3xl font-display-lg">42 Days</p>
+<p class="text-xs text-primary-fixed">+12% vs last month</p>
+</div>
+<div class="relative w-20 h-20">
+<svg class="w-full h-full transform -rotate-90">
+<circle cx="40" cy="40" fill="transparent" r="36" stroke="rgba(255,255,255,0.05)" stroke-width="6"></circle>
+<circle class="discipline-ring" cx="40" cy="40" fill="transparent" r="36" stroke="#c3f400" stroke-linecap="round" stroke-width="6"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center font-mono-data text-xs">84%</div>
+</div>
+</div>
+<!-- Bento Metrics Row -->
+<div class="grid grid-cols-2 gap-bento-gap flex-1">
+<div class="bento-card rounded-2xl p-6 flex flex-col justify-between">
+<span class="material-symbols-outlined text-primary-fixed mb-4">verified</span>
+<div>
+<p class="text-2xl font-bold">18</p>
+<p class="text-[10px] font-label-caps text-label-caps opacity-60">Covenants Sealed</p>
+</div>
+</div>
+<div class="bento-card rounded-2xl p-6 flex flex-col justify-between">
+<span class="material-symbols-outlined text-primary-fixed mb-4">bolt</span>
+<div>
+<p class="text-2xl font-bold">142h</p>
+<p class="text-[10px] font-label-caps text-label-caps opacity-60">Deep Work Hours</p>
+</div>
+</div>
+</div>
+<!-- Monthly Identity Statement -->
+<div class="bento-card rounded-2xl p-6 bg-gradient-to-br from-[#161B15] to-[#0D110C] relative overflow-hidden">
+<div class="relative z-10">
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-4">CURRENT IDENTITY</h4>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 glass-panel rounded-full text-[10px] font-bold border border-primary-fixed/20 text-primary-fixed">THE UNSTOPPABLE</span>
+<span class="px-3 py-1 glass-panel rounded-full text-[10px] font-bold opacity-60">STOIC</span>
+<span class="px-3 py-1 glass-panel rounded-full text-[10px] font-bold opacity-60">CRAFTSMAN</span>
+</div>
+</div>
+<span class="material-symbols-outlined absolute -bottom-4 -right-4 text-8xl opacity-5 text-primary-fixed">fingerprint</span>
+</div>
+</section>
+<!-- Editorial Section (Full Width Bottom) -->
+<section class="col-span-12 bento-card rounded-2xl overflow-hidden grid lg:grid-cols-2">
+<div class="p-10 flex flex-col justify-center">
+<span class="font-label-caps text-label-caps text-primary-fixed mb-4">CHAPTER REFLECTION • APRIL</span>
+<h3 class="font-display-lg text-display-lg mb-6 leading-tight">Mastery is found in the monotony of correct decisions.</h3>
+<p class="text-on-surface-variant font-body-lg text-body-lg mb-8 opacity-80 leading-relaxed">
+                        This month was characterized by an unwavering commitment to the "Morning Ritual." Even on days when the mind suggested ease, the body chose motion. You've established a foundation that can now support heavier weight.
+                    </p>
+<div class="flex items-center gap-4">
+<button class="px-8 py-3 bg-white text-black font-bold rounded-lg hover:bg-primary-fixed transition-colors">Read Full Journal</button>
+<button class="px-8 py-3 border border-white/10 rounded-lg hover:bg-white/5 transition-colors">Export Record</button>
+</div>
+</div>
+<div class="relative min-h-[400px]">
+<img class="absolute inset-0 w-full h-full object-cover grayscale opacity-50 hover:grayscale-0 transition-all duration-700" data-alt="A breathtaking, minimalist editorial photograph of a jagged mountain peak at twilight. The sky is a deep obsidian transitioning to a faint sage green glow at the horizon. The composition is clean and centered, emphasizing the solitary strength of the peak against the vast, empty sky. High-contrast lighting captures the sharp textures of the rock and snow. The aesthetic is serene, powerful, and reflects an elite sense of discipline and solitude." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdJZDfPdVZxVuO7HqhMRCuAuE81jdnxfUjhlmuwC-5EzIRlhHC62rjO0i0hHX-PSQUXLMLI5WNRiR7H4nF45ohnXV11wy6KsS-u8T7fvy2AN1CTitaCa2CXHy1KwM3tigDbfX5wFWiLkvwi94TbcD6VQxIS20zoqnOWOUXigd_mH9ZpfgbokGvvhKx7cJ6gEkVAZLnyEBgN4kK_e7-mRZVoLjkKW2qbAd1KJMWevfVCXz9TEiu410S0cMWS05UkLUMW0QnlJ_APbFE"/>
+<div class="absolute inset-0 bg-gradient-to-r from-[#161B15] via-transparent to-transparent"></div>
+</div>
+</section>
+</div>
+<!-- Footer -->
+<footer class="mt-section-margin pb-10 border-t border-white/5 pt-8 flex flex-col items-center gap-4">
+<div class="flex gap-8 text-[10px] font-label-caps tracking-widest text-on-tertiary-container">
+<a class="hover:text-primary-fixed transition-colors" href="#">THE STOIC WAY</a>
+<a class="hover:text-primary-fixed transition-colors" href="#">TERMS OF HONOR</a>
+<a class="hover:text-primary-fixed transition-colors" href="#">PRIVACY</a>
+</div>
+<p class="font-mono-data text-xs text-on-tertiary-container italic">
+                © 2024 LOCKEDIN-X. DISCIPLINE IS FREEDOM.
+            </p>
+</footer>
+</main>
+<script>
+        // Micro-interaction for Calendar Days
+        document.querySelectorAll('.calendar-grid > div').forEach(day => {
+            day.addEventListener('mouseenter', () => {
+                day.style.transform = 'scale(1.05)';
+                day.style.transition = 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            });
+            day.addEventListener('mouseleave', () => {
+                day.style.transform = 'scale(1)';
+            });
+        });
+
+        // Simple Ring Animation Simulation
+        window.addEventListener('DOMContentLoaded', () => {
+            const ring = document.querySelector('.discipline-ring');
+            if(ring) {
+                setTimeout(() => {
+                    ring.style.strokeDashoffset = '45'; // Simulate progress loading
+                }, 500);
+            }
+        });
+    </script>
+</body></html>

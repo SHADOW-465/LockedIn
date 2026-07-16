@@ -2,84 +2,60 @@
 
 import { useAuth } from '@/lib/contexts/auth-context'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
-// Routes that can be accessed without an authenticated session.
-// NOTE: "/" is intentionally NOT public — the middleware SSR redirect and this
-// guard both redirect authenticated users away from "/", and unauthenticated
-// users away from protected paths. Listing "/" here would cause authenticated
-// users to see the landing page if the SW/network ever delivers the root HTML
-// instead of the server's 302 redirect to /home.
 const PUBLIC_PATHS = ['/login', '/signup']
 
+/**
+ * Sole client-side auth gate (root layout).
+ * After first auth settle, never blank the whole tree on pathname changes —
+ * that was a major cause of "slow page switches".
+ */
 export function RouteGuard({ children }: { children: React.ReactNode }) {
-    const { user, profile, loading } = useAuth()
-    const router = useRouter()
-    const pathname = usePathname()
+  const { user, profile, loading } = useAuth()
+  const router = useRouter()
+  const pathname = usePathname()
+  const everReady = useRef(false)
 
-    // When a user IS authenticated but their profile hasn't loaded yet,
-    // we must not redirect or render — we wait for the profile.
-    // This prevents a brief user!==null + profile===null state from causing
-    // wrong onboarding redirects or missing-data renders.
-    const [profileSettled, setProfileSettled] = useState(false)
+  if (!loading) everReady.current = true
 
-    useEffect(() => {
-        // Profile is "settled" once loading is done.
-        // Once settled stays settled (no flicker on re-renders).
-        if (!loading) {
-            setProfileSettled(true)
-        }
-    }, [loading])
+  useEffect(() => {
+    if (loading) return
 
-    useEffect(() => {
-        // Don't make any routing decisions until both auth and profile are settled.
-        if (loading || !profileSettled) return
+    const isPublic = PUBLIC_PATHS.includes(pathname)
 
-        const isPublic = PUBLIC_PATHS.includes(pathname)
-
-        // ── Case 1: Root path ("/") ──────────────────────────────────────────
-        // The server component at page.tsx renders the landing page for
-        // unauthenticated visitors and redirects authenticated users to /home.
-        // The client guard only needs to redirect authenticated users away —
-        // unauthenticated users should stay on "/" to see the landing page.
-        if (pathname === '/') {
-            if (user) {
-                router.replace(profile?.onboarding_completed ? '/home' : '/onboarding')
-            }
-            // Unauthenticated users stay on "/" — the landing page is their home.
-            return
-        }
-
-        // ── Case 2: Unauthenticated on a protected route ────────────────────
-        if (!user && !isPublic) {
-            router.replace('/login')
-            return
-        }
-
-        // ── Case 3: Authenticated on an auth-only page ──────────────────────
-        if (user && isPublic) {
-            router.replace(profile?.onboarding_completed ? '/home' : '/onboarding')
-            return
-        }
-
-        // ── Case 4: Authenticated but hasn't finished onboarding ────────────
-        if (user && profile && !profile.onboarding_completed && pathname !== '/onboarding') {
-            router.replace('/onboarding')
-            return
-        }
-    }, [user, profile, loading, profileSettled, pathname, router])
-
-    // Show loading spinner while auth state or profile is being resolved
-    if (loading || (user && !profileSettled)) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-bg-primary">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-10 h-10 border-2 border-red-primary border-t-transparent rounded-full animate-spin" />
-                    <span className="text-text-tertiary text-sm font-mono">Loading...</span>
-                </div>
-            </div>
-        )
+    if (pathname === '/') {
+      if (user) {
+        router.replace(profile?.onboarding_completed ? '/home' : '/onboarding')
+      }
+      return
     }
 
-    return <>{children}</>
+    if (!user && !isPublic) {
+      router.replace('/login')
+      return
+    }
+
+    if (user && isPublic) {
+      router.replace(profile?.onboarding_completed ? '/home' : '/onboarding')
+      return
+    }
+
+    if (user && profile && !profile.onboarding_completed && pathname !== '/onboarding') {
+      router.replace('/onboarding')
+    }
+  }, [user, profile, loading, pathname, router])
+
+  // Only full-screen gate on the *first* auth bootstrap — never on route changes
+  if (loading && !everReady.current) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-on-surface">
+        <p className="font-label-caps text-sm tracking-wide text-on-surface-variant">
+          Authenticating…
+        </p>
+      </div>
+    )
+  }
+
+  return <>{children}</>
 }

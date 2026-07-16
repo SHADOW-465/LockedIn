@@ -1,603 +1,530 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { TimerCard } from '@/components/features/timer/timer-card'
-import { BentoGrid, BentoItem } from '@/components/layout/bento-grid'
-import { TopBar } from '@/components/layout/top-bar'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { BottomNav } from '@/components/layout/bottom-nav'
-import { Flame, TrendingUp, AlertTriangle, Calendar, Target, Zap, Play, Trophy, Dumbbell, Loader2 } from 'lucide-react'
-import { useAuth } from '@/lib/contexts/auth-context'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { getActiveSession } from '@/lib/supabase/sessions'
-import { getActiveTasks } from '@/lib/supabase/tasks'
-import type { Session, Task } from '@/lib/supabase/schema'
-import { SessionStartFlow } from '@/components/features/session-start-flow'
-import type { SessionConfig } from '@/components/features/session-start-flow'
-import { getSupabase } from '@/lib/supabase/client'
-import { archiveSession } from '@/lib/local-storage/session-archive'
-import { getDriveState } from '@/lib/google-drive/drive-client'
-import { uploadSessionArchive } from '@/lib/google-drive/session-uploader'
-import { MoodCheckinModal } from '@/components/features/mood/mood-checkin-modal'
-import { PunishmentWheelModal } from '@/components/features/punishment/punishment-wheel-modal'
+import { useAuth } from '@/lib/contexts/auth-context'
+import { useSessionHub } from '@/lib/hooks/use-session-hub'
+import type { Task } from '@/lib/supabase/schema'
+import {
+  SessionStartModal,
+  type SessionStartConfig,
+} from '@/components/features/session/session-start-modal'
+import { SessionCompleteOverlay } from '@/components/features/session/session-complete-overlay'
+import { finalizeSession } from '@/lib/session-finalize'
+import { invalidateSessionCache } from '@/lib/supabase/sessions'
+import { invalidateHubCache } from '@/lib/hooks/use-session-hub'
+import { MobileHome } from '@/components/mobile/mobile-home'
+import { Icon } from '@/components/ui/icon'
+import { cn } from '@/lib/utils'
 
-// ── Session Summary Overlay ──────────────────────────────────
-function SessionSummaryOverlay({
-    summary,
-    isArchiving,
-    onContinue,
-}: {
-    summary: Record<string, unknown>
-    isArchiving: boolean
-    onContinue: () => void
-}) {
-    const grade = typeof summary.performance_grade === 'string' ? summary.performance_grade : ''
-    const compliance = typeof summary.compliance_rate === 'number' ? summary.compliance_rate : null
-    const narrative = typeof summary.narrative === 'string' ? summary.narrative : null
-    const highlights = Array.isArray(summary.highlights) ? (summary.highlights as string[]) : []
-    const improvements = Array.isArray(summary.improvement_areas) ? (summary.improvement_areas as string[]) : []
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 overflow-y-auto">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl max-w-lg w-full p-6 space-y-4 my-4">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold uppercase tracking-wide">Session Complete</h2>
-                    <p className="text-white/50 text-sm mt-1">
-                        {grade && <>Grade: <span className="text-white font-bold text-lg">{grade}</span>{' · '}</>}
-                        {compliance !== null && <>Compliance: <span className="text-white">{compliance}%</span></>}
-                    </p>
-                </div>
-
-                {narrative && (
-                    <div className="bg-zinc-800/50 rounded-xl p-4 text-sm text-white/85 italic leading-relaxed">
-                        {narrative}
-                    </div>
-                )}
-
-                {highlights.length > 0 && (
-                    <div>
-                        <p className="text-sm font-semibold text-emerald-400 mb-2">Highlights</p>
-                        <ul className="space-y-1">
-                            {highlights.map((h, i) => (
-                                <li key={i} className="text-sm text-white/85 flex items-start gap-2">
-                                    <span className="text-emerald-400 mt-0.5 font-mono">+</span> {h}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-
-                {improvements.length > 0 && (
-                    <div>
-                        <p className="text-sm font-semibold text-amber-400 mb-2">Areas to Improve</p>
-                        <ul className="space-y-1">
-                            {improvements.map((a, i) => (
-                                <li key={i} className="text-sm text-white/85 flex items-start gap-2">
-                                    <span className="text-amber-400 mt-0.5 font-mono">-</span> {a}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-
-                {isArchiving && (
-                    <div className="flex items-center justify-center gap-2 text-sm text-white/50">
-                        <Loader2 size={14} className="animate-spin" />
-                        Archiving session data...
-                    </div>
-                )}
-
-                <button
-                    onClick={onContinue}
-                    className="w-full py-3 rounded-xl font-semibold text-white transition-opacity hover:opacity-90"
-                    style={{ backgroundColor: 'var(--accent)' }}
-                >
-                    Continue
-                </button>
-            </div>
-        </div>
-    )
+function greetingForHour(h: number): string {
+  if (h < 12) return 'Good morning'
+  if (h < 17) return 'Good afternoon'
+  return 'Good evening'
 }
 
-export default function DashboardPage() {
-    const { user, profile, loading: authLoading } = useAuth()
-    const router = useRouter()
-    const [session, setSession] = useState<Session | null>(null)
-    const [currentTask, setCurrentTask] = useState<Task | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [showSessionFlow, setShowSessionFlow] = useState(false)
-    const [isArchiving, setIsArchiving] = useState(false)
-    const [sessionSummary, setSessionSummary] = useState<Record<string, unknown> | null>(null)
-    const [showMoodModal, setShowMoodModal] = useState(false)
-    const [showWheelModal, setShowWheelModal] = useState(false)
+function isDone(t: Task) {
+  return t.status === 'completed' || t.status === 'verified'
+}
 
-    useEffect(() => {
-        if (authLoading || !user) return
+/**
+ * Home workbench canvas — Stitch home_dashboard DNA + live data.
+ */
+export default function HomePage() {
+  const { user, profile, refreshProfile } = useAuth()
+  const { session, tasks, behavior, proofSlots, loading, refresh } = useSessionHub(user?.id)
+  const [wizardOpen, setWizardOpen] = useState(false)
+  const [startError, setStartError] = useState('')
+  const [logging, setLogging] = useState<string | null>(null)
+  const [completeOpen, setCompleteOpen] = useState(false)
+  const [archiving, setArchiving] = useState(false)
+  const [summary, setSummary] = useState<Record<string, unknown> | null>(null)
+  const [finalizeError, setFinalizeError] = useState('')
+  const finalizeStarted = useRef<string | null>(null)
 
-        async function loadDashboard() {
-            try {
-                const activeSession = await getActiveSession(user!.id)
-                setSession(activeSession)
+  const name =
+    profile?.username?.trim() || user?.email?.split('@')[0] || 'there'
+  const greeting = greetingForHour(new Date().getHours())
+  const streak = profile?.compliance_streak ?? 0
+  const xp = profile?.xp_total ?? 0
+  const willpower = profile?.willpower_score ?? 0
+  const level = Math.max(1, Math.floor(xp / 1000) + 1)
+  const xpInLevel = xp % 1000
+  const xpPct = Math.min(100, Math.round((xpInLevel / 1000) * 100))
 
-                const tasks = await getActiveTasks(user!.id)
-                const active = tasks.find((t) => t.status === 'active') ?? tasks[0] ?? null
-                setCurrentTask(active)
+  const checkins = useMemo(
+    () => tasks.filter((t) => t.task_type === 'checkin'),
+    [tasks],
+  )
+  const morning = checkins.find((t) => t.title.toLowerCase().includes('morning'))
+  const night = checkins.find(
+    (t) => t.title.toLowerCase().includes('night') || t.title.toLowerCase().includes('evening'),
+  )
+  const openTasks = useMemo(
+    () =>
+      tasks.filter(
+        (t) =>
+          t.task_type !== 'checkin' &&
+          !['completed', 'verified', 'failed', 'skipped'].includes(t.status),
+      ),
+    [tasks],
+  )
+  const primaryTask = openTasks[0]
 
-                // Auto-show mood modal if active session and not skipped/checked-in today
-                if (activeSession) {
-                    const skipKey = `mood_skip_${activeSession.id}`
-                    const alreadySkipped = sessionStorage.getItem(skipKey) === '1'
-                    if (!alreadySkipped) {
-                        const today = new Date().toISOString().slice(0, 10)
-                        const supabase = getSupabase()
-                        const { data: existing } = await supabase
-                            .from('mood_checkins')
-                            .select('id')
-                            .eq('user_id', user!.id)
-                            .eq('date', today)
-                            .maybeSingle()
-                        if (!existing) setShowMoodModal(true)
-                    }
-                }
-            } catch (err) {
-                console.error('[Home] loadDashboard error:', err)
-            } finally {
-                setLoading(false)
-            }
-        }
+  const nextProof = proofSlots.find((s) => !s.completed && !s.missed)
 
-        loadDashboard()
-    }, [user, authLoading])
+  // Detect timer expiry or server `completing` → run archival pipeline once
+  useEffect(() => {
+    if (!user || !session) return
+    const expired =
+      session.status === 'completing' ||
+      (session.status === 'active' &&
+        new Date(session.scheduled_end_time).getTime() <= Date.now())
+    if (!expired) return
+    if (finalizeStarted.current === session.id) return
+    finalizeStarted.current = session.id
+    setCompleteOpen(true)
+    setArchiving(true)
+    setFinalizeError('')
+    void (async () => {
+      const result = await finalizeSession(user.id, session)
+      setArchiving(false)
+      setSummary(result.summary)
+      if (!result.ok) setFinalizeError(result.error || 'Archive failed')
+      await refresh()
+      await refreshProfile()
+    })()
+  }, [user, session, refresh, refreshProfile])
 
-    useEffect(() => {
-        if (!session || session.status !== 'completing' || isArchiving) return
-
-        const runArchival = async () => {
-            setIsArchiving(true)
-            try {
-                // 1. Fetch all session data from Supabase
-                const supabase = getSupabase()
-                const [chatRes, tasksRes, eventsRes, proofsRes] = await Promise.all([
-                    supabase.from('chat_messages').select('*').eq('session_id', session.id),
-                    supabase.from('tasks').select('*').eq('session_id', session.id),
-                    supabase.from('session_events').select('*').eq('session_id', session.id),
-                    supabase.from('proof_documents').select('*').eq('session_id', session.id),
-                ])
-
-                // 2. Request persistent storage
-                if (navigator.storage?.persist) {
-                    await navigator.storage.persist()
-                }
-
-                // 3. Archive to IndexedDB
-                await archiveSession(session.id, session.user_id, {
-                    session_data: session as unknown as Record<string, unknown>,
-                    chat_messages: chatRes.data ?? [],
-                    tasks: tasksRes.data ?? [],
-                    session_events: eventsRes.data ?? [],
-                    proof_documents: proofsRes.data ?? [],
-                    summary: null,
-                })
-
-                // 3b. Non-blocking Drive backup
-                const driveState = getDriveState()
-                if (driveState) {
-                    const { getSessionArchive } = await import('@/lib/local-storage/session-archive')
-                    const archive = await getSessionArchive(session.id)
-                    if (archive) {
-                        uploadSessionArchive(session.user_id, archive).catch(console.error)
-                    }
-                }
-
-                // 4. Generate AI summary
-                const completedTasks = (tasksRes.data ?? []).filter((t: { status: string }) => t.status === 'completed')
-                const failedTasks = (tasksRes.data ?? []).filter((t: { status: string }) => t.status === 'failed' || t.status === 'overdue')
-                const masterCompleted = (tasksRes.data ?? []).filter((t: { task_type: string; status: string }) => t.task_type === 'master' && t.status === 'completed')
-                const masterFailed = (tasksRes.data ?? []).filter((t: { task_type: string; status: string }) => t.task_type === 'master' && (t.status === 'failed' || t.status === 'overdue'))
-                const punishments = (tasksRes.data ?? []).filter((t: { task_type: string }) => t.task_type === 'punishment')
-
-                const startWillpower = profile?.willpower_score ?? 50
-                const plannedMs = session.total_duration_minutes * 60 * 1000
-                const actualMs = session.actual_end_time
-                    ? new Date(session.actual_end_time).getTime() - new Date(session.start_time).getTime()
-                    : plannedMs
-
-                const summaryRes = await fetch('/api/sessions/summary', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        sessionId: session.id,
-                        userId: session.user_id,
-                        sessionData: {
-                            actual_minutes: Math.floor(actualMs / 60000),
-                            planned_minutes: session.total_duration_minutes,
-                            tasks_completed: completedTasks.length,
-                            tasks_assigned: (tasksRes.data ?? []).length,
-                            tasks_failed: failedTasks.length,
-                            master_completed: masterCompleted.length,
-                            master_failed: masterFailed.length,
-                            punishment_count: punishments.length,
-                            compliance_rate: (tasksRes.data ?? []).length > 0
-                                ? Math.round((completedTasks.length / (tasksRes.data ?? []).length) * 100)
-                                : 100,
-                            willpower_start: startWillpower,
-                            willpower_end: profile?.willpower_score ?? startWillpower,
-                            streak_change: 1,
-                        },
-                    }),
-                })
-
-                if (summaryRes.ok) {
-                    const { summary: aiSummary } = await summaryRes.json()
-                    setSessionSummary(aiSummary)
-                }
-
-                // 5. Purge Supabase heavy data
-                await fetch('/api/sessions/purge', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId: session.id, userId: session.user_id }),
-                })
-
-                // 6. Mark session completed
-                await fetch('/api/sessions/complete', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId: session.id, userId: session.user_id }),
-                })
-
-            } catch (err) {
-                console.error('[Home] Archival error:', err)
-            } finally {
-                setIsArchiving(false)
-            }
-        }
-
-        runArchival()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [session?.status])
-
-    const handleStartSession = async (config: SessionConfig) => {
-        if (!user) return
-        const res = await fetch('/api/sessions/start', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id, config }),
-        })
-        if (!res.ok) {
-            const err = await res.json()
-            if (err.error === 'active_session_exists') {
-                // Session already exists - just close the flow and refresh
-                setShowSessionFlow(false)
-                router.refresh()
-                return
-            }
-            throw new Error(err.error || 'Failed to start session')
-        }
-        router.refresh()
-        setShowSessionFlow(false)
+  async function startSession(config: SessionStartConfig) {
+    if (!user || !profile) throw new Error('Not signed in')
+    setStartError('')
+    const res = await fetch('/api/sessions/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: user.id,
+        config: {
+          tier: config.tier,
+          ai_personality: config.ai_personality,
+          hard_limits: profile.hard_limits || [],
+          soft_limits: profile.soft_limits || [],
+          regimens: profile.preferred_regimens || [],
+          desired_duration_minutes: config.desired_duration_minutes,
+        },
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok && res.status !== 409) {
+      const msg = data.error || 'Could not start session'
+      setStartError(msg)
+      throw new Error(msg)
     }
+    invalidateSessionCache(user.id)
+    invalidateHubCache(user.id)
+    await refresh()
+    await refreshProfile()
+  }
 
-    const tier = profile?.tier ?? 'Newbie'
-    const willpowerScore = profile?.willpower_score ?? 50
-    const complianceStreak = profile?.compliance_streak ?? 0
-    const onboardingCompleted = profile?.onboarding_completed ?? false
+  async function logBehavior(type: 'touch' | 'urge' | 'removal') {
+    if (!user) return
+    setLogging(type)
+    try {
+      await fetch('/api/behavior/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          sessionId: session?.id,
+          type,
+          intensity: type === 'urge' ? 5 : undefined,
+          reason: type === 'removal' ? 'Self-reported' : undefined,
+        }),
+      })
+      await refresh()
+    } finally {
+      setLogging(null)
+    }
+  }
 
-    return (
-        <>
-            <TopBar />
+  return (
+    <>
+      {/* ── Mobile (Stitch) — dedicated layout below xl ── */}
+      <MobileHome
+        name={name}
+        session={session}
+        streak={streak}
+        willpower={willpower}
+        morning={morning}
+        night={night}
+        primaryTask={primaryTask}
+        behavior={behavior}
+        nextProof={nextProof}
+        onStartSession={() => setWizardOpen(true)}
+        onLogBehavior={(t) => void logBehavior(t)}
+        logging={logging}
+        startError={startError}
+      />
 
-            {showSessionFlow && profile && (
-                <SessionStartFlow
-                    profile={profile}
-                    onStart={handleStartSession}
-                    onCancel={() => setShowSessionFlow(false)}
-                />
+      <SessionStartModal
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        defaults={{
+          tier: profile?.tier,
+          ai_personality: profile?.ai_personality,
+          initial_lock_goal_hours: profile?.initial_lock_goal_hours,
+        }}
+        onStart={startSession}
+      />
+
+      <SessionCompleteOverlay
+        open={completeOpen}
+        archiving={archiving}
+        summary={summary}
+        error={finalizeError}
+        onContinue={() => {
+          setCompleteOpen(false)
+          setSummary(null)
+          finalizeStarted.current = null
+        }}
+      />
+
+      {/* ── Desktop workbench — xl+ only ── */}
+      <div className="hidden px-8 pb-12 pt-6 xl:block">
+      <header className="mb-6 flex items-center justify-between">
+        <h2 className="font-headline-md text-xl font-semibold text-on-surface">Home Dashboard</h2>
+        <span
+          className={cn(
+            'rounded-full border px-3 py-1.5 font-mono-data text-[10px]',
+            session
+              ? 'border-primary-fixed/30 bg-primary-fixed/10 text-primary-fixed'
+              : 'border-white/10 text-on-surface-variant opacity-60',
+          )}
+        >
+          {session ? 'SESSION ACTIVE' : 'IDLE'}
+        </span>
+      </header>
+
+      {/* Greeting */}
+      <section className="relative mb-8 flex min-h-[160px] flex-col justify-end overflow-hidden rounded-2xl border border-white/5 bg-surface-container p-8">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary-fixed/5 via-transparent to-transparent" />
+        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight text-on-surface xl:text-4xl">
+              {greeting}, {name}.
+            </h2>
+            <p className="mt-2 max-w-md text-sm text-on-surface-variant">
+              {session
+                ? 'You are locked in. Rituals, tasks, and proof stay on this board.'
+                : 'Start a lock session to activate check-ins, random proof, and Master control.'}
+            </p>
+            {startError && <p className="mt-2 text-sm text-error">{startError}</p>}
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            {!session ? (
+              <button
+                type="button"
+                disabled={!user}
+                onClick={() => setWizardOpen(true)}
+                className="rounded-full bg-primary-fixed px-6 py-3 text-sm font-bold text-on-primary-fixed transition hover:brightness-110 disabled:opacity-50"
+              >
+                Start lock session
+              </button>
+            ) : (
+              <Link
+                href="/support"
+                className="rounded-full border border-error/40 px-5 py-3 text-xs font-bold text-error"
+              >
+                Support / release
+              </Link>
             )}
+          </div>
+        </div>
+      </section>
 
-            {showMoodModal && session && user && (
-                <MoodCheckinModal
-                    userId={user.id}
-                    sessionId={session.id}
-                    onClose={() => setShowMoodModal(false)}
-                    onSubmit={() => setShowMoodModal(false)}
-                />
-            )}
+      {/* Metrics */}
+      <div className="mb-8 grid grid-cols-4 gap-3">
+        <MetricCard label="Compliance streak" value={String(streak)} unit="days" icon="local_fire_department" accent />
+        <MetricCard label="Willpower" value={String(willpower)} unit="/ 100" icon="psychology" />
+        <div className="bento-card rounded-xl p-5">
+          <p className="mb-1 font-label-caps text-[11px] tracking-wide text-on-surface-variant">
+            Journey level
+          </p>
+          <h3 className="text-xl font-semibold text-on-surface">Level {level}</h3>
+          <p className="mt-1 text-[11px] uppercase tracking-widest text-on-surface-variant opacity-60">
+            {profile?.tier ?? '—'}
+          </p>
+          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-surface-container-highest">
+            <div className="h-full rounded-full bg-primary-fixed" style={{ width: `${xpPct}%` }} />
+          </div>
+          <div className="mt-2 flex justify-between font-mono-data text-[10px] opacity-40">
+            <span>{xp} XP</span>
+            <span>{level * 1000}</span>
+          </div>
+        </div>
+        <MetricCard
+          label="Today behavior"
+          value={String(behavior.urge + behavior.touch + behavior.removal)}
+          unit={`U${behavior.urge} T${behavior.touch} R${behavior.removal}`}
+          icon="monitoring"
+        />
+      </div>
 
-            {showWheelModal && session && user && (
-                <PunishmentWheelModal
-                    userId={user.id}
-                    sessionId={session.id}
-                    onClose={() => setShowWheelModal(false)}
-                />
-            )}
+      {/* Main bento */}
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-12 xl:gap-bento-gap">
+        {/* Rituals */}
+        <section className="bento-card rounded-2xl p-6 xl:col-span-7">
+          <div className="mb-5 flex items-center justify-between">
+            <h3 className="font-headline-md text-lg font-semibold">Today&apos;s Rituals</h3>
+            <Link href="/ritual" className="font-label-caps text-xs text-primary-fixed hover:underline">
+              VIEW ALL
+            </Link>
+          </div>
+          {loading ? (
+            <p className="text-sm text-on-surface-variant">Loading…</p>
+          ) : !session ? (
+            <p className="text-sm text-on-surface-variant">
+              Start a session to generate morning and night check-ins.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              <RitualRow
+                icon="wb_sunny"
+                title="Morning Check-in"
+                subtitle="Cage photo · 6am–10am on-time"
+                done={morning ? isDone(morning) : false}
+                href="/tasks"
+              />
+              <RitualRow
+                icon="nightlight"
+                title="Night Check-in"
+                subtitle="Cage photo · 8pm–midnight on-time"
+                done={night ? isDone(night) : false}
+                href="/tasks"
+              />
+              <RitualRow
+                icon="history_edu"
+                title="Daily ritual page"
+                subtitle="Intention + reflection"
+                done={false}
+                href="/ritual"
+              />
+            </ul>
+          )}
+        </section>
 
-            <div className="min-h-screen bg-black pb-24 lg:pb-8">
-                {/* Progressive Onboarding Banner removed */}
-
-                {(authLoading || (loading && user)) ? (
-                    <div className="flex h-[50vh] items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)]" />
-                    </div>
-                ) : (
-                    <BentoGrid>
-                        {/* Hero Timer */}
-                        <BentoItem span="hero" className="!bg-transparent !shadow-none !border-none !p-0">
-                            {session ? (
-                                <TimerCard
-                                    endTime={new Date(session.scheduled_end_time)}
-                                    startTime={new Date(session.start_time)}
-                                    totalDurationMinutes={session.total_duration_minutes ?? 10080}
-                                    tier={session.tier}
-                                    status={session.status}
-                                    punishmentActive={(session.total_punishments ?? 0) > 0}
-                                    onAddTime={async (minutes: number) => {
-                                        if (!user || !session) return
-                                        const res = await fetch('/api/sessions/extend', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({
-                                                sessionId: session.id,
-                                                userId: user.id,
-                                                deltaMinutes: minutes,
-                                                reason: 'User voluntarily added time',
-                                            }),
-                                        })
-                                        if (res.ok) {
-                                            const { session: updatedSession } = await res.json()
-                                            // Merge API response into existing session to preserve all fields
-                                            setSession(prev => prev ? { ...prev, ...updatedSession } : updatedSession)
-                                            // Re-fetch from DB as safety net for full consistency
-                                            const fresh = await getActiveSession(user.id)
-                                            if (fresh) setSession(fresh)
-                                        }
-                                    }}
-                                />
-                            ) : (
-                                <Card variant="hero" className="text-center py-12">
-                                    <div className="space-y-4">
-                                        <h2 className="text-2xl font-bold">No Active Session</h2>
-                                        <p className="text-text-secondary text-sm">
-                                            Start a new lock session to begin your training.
-                                        </p>
-                                        <Button variant="primary" onClick={() => setShowSessionFlow(true)} className="mx-auto">
-                                            <Play size={16} className="mr-2" />
-                                            Start Session
-                                        </Button>
-                                    </div>
-                                </Card>
-                            )}
-                        </BentoItem>
-
-                        {/* Willpower */}
-                        <BentoItem>
-                            <div className="space-y-4 animate-card-in" style={{ animationDelay: '0.05s' }}>
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
-                                        Willpower
-                                    </h3>
-                                    <Zap size={16} className="text-[var(--accent)]" />
-                                </div>
-                                <div className="relative w-28 h-28 mx-auto">
-                                    <svg className="transform -rotate-90 w-28 h-28">
-                                        <circle cx="56" cy="56" r="48" stroke="currentColor" strokeWidth="6" fill="none" className="text-zinc-800" />
-                                        <circle
-                                            cx="56" cy="56" r="48"
-                                            stroke="currentColor" strokeWidth="6" fill="none"
-                                            strokeDasharray={2 * Math.PI * 48}
-                                            strokeDashoffset={2 * Math.PI * 48 * (1 - willpowerScore / 100)}
-                                            className="transition-all duration-1000"
-                                            style={{ stroke: 'var(--accent)' }}
-                                            strokeLinecap="round"
-                                        />
-                                    </svg>
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <span className="text-3xl font-bold font-mono">
-                                            {willpowerScore}
-                                        </span>
-                                    </div>
-                                </div>
-                                <p className="text-center text-xs text-white/30">
-                                    {willpowerScore >= 70
-                                        ? 'Strong resistance'
-                                        : willpowerScore >= 40
-                                            ? 'Moderate resolve'
-                                            : 'Breaking point near'}
-                                </p>
-                            </div>
-                        </BentoItem>
-
-                        {/* Current Task */}
-                        <BentoItem span="wide">
-                            <div className="space-y-4 animate-card-in" style={{ animationDelay: '0.1s' }}>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <Target size={16} className="text-[var(--accent)]" />
-                                        <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
-                                            Current Task
-                                        </h3>
-                                    </div>
-                                    {currentTask && (
-                                        <div className="flex gap-2">
-                                            {currentTask.genres.map((g) => (
-                                                <Badge key={g} variant="genre">{g}</Badge>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                                {currentTask ? (
-                                    <>
-                                        <h4 className="text-lg font-semibold">{currentTask.title}</h4>
-                                        <p className="text-text-secondary text-sm leading-relaxed line-clamp-3">
-                                            {currentTask.description}
-                                        </p>
-                                        <div className="flex items-center gap-3">
-                                            <Badge variant={currentTask.cage_status === 'uncaged' ? 'uncaged' : 'caged'}>
-                                                {currentTask.cage_status.toUpperCase()}
-                                            </Badge>
-                                            {currentTask.deadline && (
-                                                <span className="text-sm text-white/30 font-mono">
-                                                    Deadline: {formatTimeLeft(new Date(currentTask.deadline))}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="flex gap-3">
-                                            <Button variant="primary" className="flex-1" onClick={() => router.push('/tasks')}>
-                                                View Tasks
-                                            </Button>
-                                            <Button variant="ghost" size="sm" onClick={() => router.push('/tasks')}>
-                                                Details
-                                            </Button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <p className="text-white/30 text-sm">No active task. Generate one from the Tasks page.</p>
-                                )}
-                            </div>
-                        </BentoItem>
-
-                        {/* Compliance Streak */}
-                        <BentoItem>
-                            <div className="text-center space-y-3 animate-card-in" style={{ animationDelay: '0.15s' }}>
-                                <Flame size={32} className="mx-auto text-tier-slave" />
-                                <div>
-                                    <div className="text-4xl font-bold font-mono">
-                                        {complianceStreak}
-                                    </div>
-                                    <div className="text-sm text-text-secondary mt-1">Day Streak</div>
-                                </div>
-                                <div className="flex justify-center gap-1">
-                                    {Array.from({ length: 7 }).map((_, i) => (
-                                        <div
-                                            key={i}
-                                            className={`w-3 h-3 border ${i < complianceStreak % 7
-                                                ? 'bg-tier-slave border-tier-slave'
-                                                : 'bg-zinc-800 border-zinc-700'
-                                                }`}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        </BentoItem>
-
-                        {/* Next Release */}
-                        <BentoItem>
-                            <div className="space-y-3 animate-card-in" style={{ animationDelay: '0.2s' }}>
-                                <div className="flex items-center gap-2">
-                                    <Calendar size={16} className="text-[var(--accent)]" />
-                                    <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
-                                        Next Release
-                                    </h3>
-                                </div>
-                                <div className="text-2xl font-bold font-mono">
-                                    {session
-                                        ? new Date(session.scheduled_end_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                                        : '—'}
-                                </div>
-                                <p className="text-xs text-text-secondary">
-                                    {session ? 'Based on current compliance. Subject to AI adjustments.' : 'Start a session to see your release date.'}
-                                </p>
-                                <Badge variant="info">Dynamic</Badge>
-                            </div>
-                        </BentoItem>
-
-                        {/* Session Stats */}
-                        <BentoItem>
-                            <div className="space-y-3 animate-card-in" style={{ animationDelay: '0.25s' }}>
-                                <div className="flex items-center gap-2">
-                                    <TrendingUp size={16} className="text-[var(--accent)]" />
-                                    <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
-                                        Session Stats
-                                    </h3>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <div className="text-lg font-bold font-mono">
-                                            {session?.total_tasks_completed ?? profile?.total_sessions ?? 0}
-                                        </div>
-                                        <div className="text-xs text-white/30">Tasks Done</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-lg font-bold font-mono">
-                                            {session?.total_tasks_failed ?? 0}
-                                        </div>
-                                        <div className="text-xs text-white/30">Violations</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-lg font-bold font-mono">
-                                            {profile?.total_denial_hours ?? 0}h
-                                        </div>
-                                        <div className="text-xs text-white/30">Total Denial</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-lg font-bold font-mono">
-                                            {profile?.total_edges ?? 0}
-                                        </div>
-                                        <div className="text-xs text-white/30">Total Edges</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </BentoItem>
-
-                        {/* Quick Links */}
-                        <BentoItem>
-                            <div className="space-y-3 animate-card-in" style={{ animationDelay: '0.3s' }}>
-                                <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">Quick Access</h3>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Link href="/achievements" className="p-3 bg-zinc-900 hover:bg-zinc-800 rounded-[var(--radius-md)] border border-zinc-800 hover:border-zinc-700 transition-colors flex items-center gap-2">
-                                        <Trophy size={16} className="text-tier-slave" />
-                                        <span className="text-sm font-medium">Achievements</span>
-                                    </Link>
-                                    <Link href="/regimens" className="p-3 bg-zinc-900 hover:bg-zinc-800 rounded-[var(--radius-md)] border border-zinc-800 hover:border-zinc-700 transition-colors flex items-center gap-2">
-                                        <Dumbbell size={16} className="text-[var(--accent)]" />
-                                        <span className="text-sm font-medium">Regimens</span>
-                                    </Link>
-                                    {session && (
-                                        <button
-                                            onClick={() => setShowMoodModal(true)}
-                                            className="p-3 bg-zinc-900 hover:bg-zinc-800 rounded-[var(--radius-md)] border border-zinc-800 hover:border-zinc-700 transition-colors flex items-center gap-2"
-                                        >
-                                            <Zap size={16} className="text-[var(--accent)]" />
-                                            <span className="text-sm font-medium">Check In</span>
-                                        </button>
-                                    )}
-                                    {session && (
-                                        <button
-                                            onClick={() => setShowWheelModal(true)}
-                                            className="p-3 bg-zinc-900 hover:bg-zinc-800 rounded-[var(--radius-md)] border border-zinc-800 hover:border-zinc-700 transition-colors flex items-center gap-2"
-                                        >
-                                            <AlertTriangle size={16} className="text-red-500" />
-                                            <span className="text-sm font-medium">Punishment</span>
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </BentoItem>
-                    </BentoGrid>
-                )}
+        {/* Current task */}
+        <section className="bento-card rounded-2xl p-6 xl:col-span-5">
+          <div className="mb-5 flex items-center justify-between">
+            <h3 className="font-headline-md text-lg font-semibold">Current task</h3>
+            <Link href="/tasks" className="font-label-caps text-xs text-primary-fixed hover:underline">
+              ALL TASKS
+            </Link>
+          </div>
+          {primaryTask ? (
+            <div>
+              <p className="mb-1 font-label-caps text-[10px] tracking-widest text-on-surface-variant">
+                {primaryTask.task_type.toUpperCase()} · D{primaryTask.difficulty}
+              </p>
+              <h4 className="text-base font-semibold text-on-surface">{primaryTask.title}</h4>
+              {primaryTask.description && (
+                <p className="mt-2 line-clamp-3 text-sm text-on-surface-variant">
+                  {primaryTask.description}
+                </p>
+              )}
+              <Link
+                href="/tasks"
+                className="mt-4 inline-flex rounded-full bg-primary-fixed px-4 py-2 text-xs font-bold text-on-primary-fixed"
+              >
+                Open tasks
+              </Link>
             </div>
+          ) : (
+            <div>
+              <p className="text-sm text-on-surface-variant">
+                {session
+                  ? 'No open tasks. Ask your Master in Companion, or generate from Tasks.'
+                  : 'Tasks appear once a session is active.'}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  href="/chat"
+                  className="rounded-full border border-white/10 px-4 py-2 text-xs font-bold hover:bg-white/5"
+                >
+                  Companion
+                </Link>
+                <Link
+                  href="/tasks"
+                  className="rounded-full border border-white/10 px-4 py-2 text-xs font-bold hover:bg-white/5"
+                >
+                  Tasks
+                </Link>
+              </div>
+            </div>
+          )}
+        </section>
 
-            {/* Session Summary Overlay */}
-            {sessionSummary && (
-                <SessionSummaryOverlay
-                    summary={sessionSummary}
-                    isArchiving={isArchiving}
-                    onContinue={() => { setSessionSummary(null); router.refresh() }}
-                />
-            )}
+        {/* Behavior quick log */}
+        <section className="bento-card rounded-2xl p-6 xl:col-span-4">
+          <h3 className="mb-4 font-headline-md text-lg font-semibold">Behavior log</h3>
+          <p className="mb-4 text-xs text-on-surface-variant">
+            Today: {behavior.urge} urges · {behavior.touch} touches · {behavior.removal} removals
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                ['urge', 'Urge'],
+                ['touch', 'Touch'],
+                ['removal', 'Removal'],
+              ] as const
+            ).map(([type, label]) => (
+              <button
+                key={type}
+                type="button"
+                disabled={!user || logging === type}
+                onClick={() => void logBehavior(type)}
+                className="min-h-11 rounded-full border border-white/10 px-4 py-2 text-xs font-bold text-on-surface transition hover:border-primary-fixed/40 hover:bg-primary-fixed/5 disabled:opacity-40"
+              >
+                {logging === type ? '…' : `+ ${label}`}
+              </button>
+            ))}
+          </div>
+        </section>
 
-            <BottomNav />
-        </>
-    )
+        {/* Random proof */}
+        <section className="bento-card rounded-2xl p-6 xl:col-span-4">
+          <h3 className="mb-4 font-headline-md text-lg font-semibold">Random proof</h3>
+          {nextProof ? (
+            <p className="text-sm text-on-surface-variant">
+              Next window{' '}
+              <span className="font-mono-data text-primary-fixed">
+                {new Date(nextProof.window_start).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}{' '}
+                –{' '}
+                {new Date(nextProof.window_end).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </p>
+          ) : (
+            <p className="text-sm text-on-surface-variant">
+              {session
+                ? 'No pending proof windows right now.'
+                : 'Proof schedule activates with a session.'}
+            </p>
+          )}
+          <Link
+            href="/tasks"
+            className="mt-4 inline-flex text-xs font-bold text-primary-fixed hover:underline"
+          >
+            Submit from Tasks →
+          </Link>
+        </section>
+
+        {/* Companion CTA */}
+        <section className="bento-card rounded-2xl p-6 xl:col-span-4">
+          <div className="mb-3 flex items-center gap-2">
+            <Icon name="psychology" className="text-primary-fixed" />
+            <h3 className="font-headline-md text-lg font-semibold">
+              {profile?.ai_personality || 'Master'}
+            </h3>
+          </div>
+          <p className="text-sm text-on-surface-variant">
+            Companion chat is live. Safeword: {profile?.safeword || 'MERCY'}.
+          </p>
+          <Link
+            href="/chat"
+            className="mt-4 inline-flex rounded-full bg-primary-fixed px-4 py-2 text-xs font-bold text-on-primary-fixed"
+          >
+            Open companion
+          </Link>
+        </section>
+      </div>
+      </div>
+    </>
+  )
 }
 
-function formatTimeLeft(deadline: Date) {
-    const diff = deadline.getTime() - Date.now()
-    if (diff <= 0) return 'OVERDUE'
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-    return `${hours}h ${minutes}m`
+function MetricCard({
+  label,
+  value,
+  unit,
+  icon,
+  accent,
+}: {
+  label: string
+  value: string
+  unit: string
+  icon: string
+  accent?: boolean
+}) {
+  return (
+    <div className="bento-card rounded-xl p-5">
+      <div className="mb-3 flex items-start justify-between">
+        <p className="font-label-caps text-[11px] tracking-wide text-on-surface-variant">{label}</p>
+        <Icon
+          name={icon}
+          filled={accent}
+          className={accent ? 'text-primary-fixed' : 'text-on-surface-variant opacity-50'}
+        />
+      </div>
+      <div className="flex flex-wrap items-baseline gap-1">
+        <span
+          className={cn(
+            'text-3xl font-bold xl:text-4xl',
+            accent ? 'text-primary-fixed' : 'text-on-surface',
+          )}
+        >
+          {value}
+        </span>
+        {unit && (
+          <span className="font-label-caps text-[10px] text-on-surface-variant opacity-50">
+            {unit}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function RitualRow({
+  icon,
+  title,
+  subtitle,
+  done,
+  href,
+}: {
+  icon: string
+  title: string
+  subtitle: string
+  done: boolean
+  href: string
+}) {
+  return (
+    <li>
+      <Link
+        href={href}
+        className="flex items-center gap-4 rounded-xl border border-white/5 bg-surface-container/40 px-4 py-3 transition hover:border-primary-fixed/25"
+      >
+        <div
+          className={cn(
+            'flex h-10 w-10 items-center justify-center rounded-full',
+            done ? 'bg-primary-fixed/20 text-primary-fixed' : 'bg-surface-container text-on-surface-variant',
+          )}
+        >
+          <Icon name={done ? 'check' : icon} filled={done} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className={cn('text-sm font-semibold', done && 'text-on-surface-variant line-through')}>
+            {title}
+          </p>
+          <p className="text-[11px] text-on-surface-variant opacity-70">{subtitle}</p>
+        </div>
+        <Icon name="chevron_right" className="text-on-surface-variant opacity-40" />
+      </Link>
+    </li>
+  )
 }

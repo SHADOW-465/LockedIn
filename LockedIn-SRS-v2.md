@@ -271,7 +271,7 @@ Users select one during onboarding. Sample messages shown for each before select
 | 6 | Goddess | Receives worship as her natural state. |
 | 7 | Dommy Mommy | Warm and controlling. Disappointment hurts more than cruelty. |
 | 8 | Bratty Keyholder | Changes the rules mid-sentence. Makes you work for every second. |
-| 9 | Psychological Manipulator | Never direct. Uses your words against you. |
+| 9 | Psychological Manipulator | AURA: Deeply seductive and logical dominant who bends your arrogant rebellious will. Mix of 60% clinical cold, 30% devotional, 10% mocking. |
 | 10 | Extreme Sadist | Pure, unfiltered. No warmth, no mercy, no explanation. Only Tier 4+. |
 
 ### 5.2 AI Control Rules

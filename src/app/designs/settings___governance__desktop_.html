@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings &amp; Governance | LOCKEDIN-X</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;900&amp;family=Manrope:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#dde5d7",
+                        "surface-tint": "#abd600",
+                        "on-tertiary-container": "#5f665c",
+                        "on-secondary-container": "#b3bbae",
+                        "secondary": "#c1c9bc",
+                        "tertiary-fixed-dim": "#c1c9bd",
+                        "surface-dim": "#10140f",
+                        "tertiary-container": "#dee5d8",
+                        "on-tertiary": "#2b322a",
+                        "on-primary": "#283500",
+                        "background": "#10140f",
+                        "surface-container": "#1d211b",
+                        "primary-fixed-dim": "#abd600",
+                        "on-secondary": "#2b3229",
+                        "inverse-on-surface": "#2d322c",
+                        "on-background": "#e0e4db",
+                        "surface-bright": "#363a34",
+                        "inverse-surface": "#e0e4db",
+                        "on-surface": "#e0e4db",
+                        "secondary-fixed-dim": "#c1c9bc",
+                        "secondary-container": "#444b41",
+                        "primary-fixed": "#c3f400",
+                        "inverse-primary": "#506600",
+                        "surface-container-low": "#191d17",
+                        "tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#42493f",
+                        "on-primary-fixed": "#161e00",
+                        "primary-container": "#c3f400",
+                        "tertiary-fixed": "#dee5d8",
+                        "surface-container-lowest": "#0b0f0a",
+                        "surface": "#10140f",
+                        "on-tertiary-fixed-variant": "#424940",
+                        "outline": "#8e9379",
+                        "error-container": "#93000a",
+                        "on-secondary-fixed": "#171d15",
+                        "surface-container-high": "#272b25",
+                        "outline-variant": "#444933",
+                        "on-error": "#690005",
+                        "on-primary-container": "#556d00",
+                        "primary": "#ffffff",
+                        "on-tertiary-fixed": "#171d16",
+                        "error": "#ffb4ab",
+                        "on-surface-variant": "#c4c9ac",
+                        "on-primary-fixed-variant": "#3c4d00",
+                        "surface-variant": "#323630",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-highest": "#323630"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-margin": "48px",
+                        "container-padding": "24px",
+                        "bento-gap": "12px",
+                        "base": "8px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Geist"],
+                        "body-lg": ["Manrope"],
+                        "display-lg-mobile": ["Epilogue"],
+                        "mono-data": ["Geist"],
+                        "headline-md": ["Epilogue"],
+                        "display-lg": ["Epilogue"],
+                        "body-md": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "400"}],
+                        "display-lg-mobile": ["36px", {"lineHeight": "40px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                        "mono-data": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "52px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0D110C;
+            color: #e0e4db;
+            -webkit-font-smoothing: antialiased;
+        }
+        .bento-card {
+            background-color: #161B15;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .bento-card:hover {
+            border-color: rgba(195, 244, 0, 0.2);
+            box-shadow: 0 0 40px rgba(195, 244, 0, 0.03);
+        }
+        .glass-card {
+            background: rgba(29, 33, 27, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .custom-toggle:checked + .toggle-slider {
+            background-color: #c3f400;
+        }
+        .custom-toggle:checked + .toggle-slider::before {
+            transform: translateX(20px);
+            background-color: #161e00;
+        }
+        .toggle-slider::before {
+            content: "";
+            position: absolute;
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: #ffffff;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0D110C;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1d211b;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #444b41;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<!-- Sidebar Navigation -->
+<nav class="fixed left-0 top-0 h-full flex flex-col p-gutter space-y-4 z-50 bg-surface-container dark:bg-surface-container border-r border-white/5 w-72 hidden md:flex">
+<div class="mb-10 px-4">
+<h1 class="font-display-lg text-display-lg font-black text-primary-fixed tracking-tighter">LOCKEDIN-X</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant opacity-60">STAY DISCIPLINED</p>
+</div>
+<div class="flex-1 space-y-1">
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="rebase_edit">rebase_edit</span>
+<span class="font-label-caps text-label-caps">Daily Ritual</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="shield">shield</span>
+<span class="font-label-caps text-label-caps">Support Mode</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+<span class="font-label-caps text-label-caps">Memoir</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+<span class="font-label-caps text-label-caps">AI Companion</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+<span class="font-label-caps text-label-caps">Insights</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+<span class="font-label-caps text-label-caps">Progress</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-caps text-label-caps">Calendar</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-white/5 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="fingerprint">fingerprint</span>
+<span class="font-label-caps text-label-caps">Identity</span>
+</a>
+<a class="flex items-center gap-4 bg-primary-container dark:bg-primary-container text-on-primary-container rounded-lg px-4 py-3 font-bold transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</div>
+<div class="mt-auto p-4 bg-surface-container-highest rounded-2xl">
+<p class="font-label-caps text-label-caps text-on-surface mb-2">Power Plan</p>
+<button class="w-full bg-primary-fixed text-on-primary-fixed py-2 rounded-lg font-bold hover:scale-105 transition-transform">Go Pro</button>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="md:ml-72 min-h-screen p-container-padding">
+<!-- Header Section -->
+<header class="mb-section-margin max-w-6xl mx-auto pt-8">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<h2 class="font-display-lg text-display-lg text-on-surface tracking-tighter leading-tight">Settings &amp; Governance</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant opacity-80 mt-2 italic">Architect your environment.</p>
+</div>
+<div class="flex gap-4">
+<button class="px-6 py-3 border border-outline rounded-full font-label-caps text-label-caps hover:bg-surface-variant transition-colors">EXPORT DATA</button>
+<button class="px-6 py-3 bg-primary-fixed text-on-primary-fixed rounded-full font-label-caps text-label-caps font-bold hover:scale-105 transition-transform">SAVE CONFIG</button>
+</div>
+</div>
+<div class="h-px w-full bg-outline-variant opacity-20 mt-12"></div>
+</header>
+<!-- Bento Grid Layout -->
+<div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-bento-gap">
+<!-- Account & Identity (Bento Card) -->
+<section class="md:col-span-8 bento-card p-container-padding rounded-[2rem] flex flex-col justify-between">
+<div>
+<div class="flex items-start justify-between mb-8">
+<div>
+<span class="font-label-caps text-label-caps text-primary-fixed uppercase tracking-[0.2em]">Primary Node</span>
+<h3 class="font-headline-md text-headline-md mt-2">Account &amp; Identity</h3>
+</div>
+<span class="material-symbols-outlined text-4xl text-on-surface-variant opacity-20" data-icon="fingerprint">fingerprint</span>
+</div>
+<div class="flex items-center gap-6 mb-10">
+<div class="w-24 h-24 rounded-3xl overflow-hidden relative group">
+<img class="w-full h-full object-cover" data-alt="A cinematic, high-contrast portrait of a focused individual in a dark techwear outfit, illuminated by a single soft green rim light in a minimalist obsidian-colored studio environment. The style is premium editorial photography with sharp details and deep shadows, emphasizing the 'LockedIn-X' aesthetic of discipline and high performance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkV95cACTQeetRAUyjbEisW-aFkrP60zoWwSynKQDDvPk6uGYGNE5ceT4HNSitfb77moYEif59bXpPEfPgVONHGS4jdhDptJ1ENa4qLRfKTaChIUQkewBAF15mehsH-2MXx7CAl_US8UUBvfQFOM7-SdcWB05jX8rjKvDzB242o3AzQXW76nO0L6XOvUqI38wPt_EGm_hn-AhYMOxyBZsH_Ku0fXjYObTpguslDidnqm4bFSdFp0iL2ToxAoTPumaL8YalXZAVJz5L"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+<span class="material-symbols-outlined text-white" data-icon="edit">edit</span>
+</div>
+</div>
+<div>
+<p class="font-headline-md text-headline-md">Marcus Aurelius Dev</p>
+<div class="flex items-center gap-3 mt-1">
+<span class="px-3 py-1 bg-primary-container/20 text-primary-fixed text-[10px] font-bold rounded-full border border-primary-fixed/20">JOURNEY LEVEL: ARCHITECT</span>
+<span class="text-on-surface-variant text-sm font-mono-data">Member since Nov 2023</span>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<div class="flex items-center justify-between p-4 bg-surface-container rounded-xl border border-white/5">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="face">face</span>
+<div>
+<p class="font-label-caps text-label-caps">Biometric Authentication</p>
+<p class="text-sm text-on-surface-variant">Unlock via FaceID or TouchID</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only custom-toggle" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest rounded-full transition-colors border border-white/10 toggle-slider"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container rounded-xl border border-white/5">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="shield_person">shield_person</span>
+<div>
+<p class="font-label-caps text-label-caps">Multi-factor Shield</p>
+<p class="text-sm text-on-surface-variant">Secure your progress with 2FA</p>
+</div>
+</div>
+<button class="text-primary-fixed font-label-caps text-label-caps hover:underline">CONFIGURE</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Subscription/Pro (Bento Card) -->
+<section class="md:col-span-4 glass-card p-container-padding rounded-[2rem] overflow-hidden relative flex flex-col">
+<div class="absolute -top-12 -right-12 w-48 h-48 bg-primary-fixed/10 blur-[80px] rounded-full"></div>
+<div class="relative z-10">
+<span class="font-label-caps text-label-caps text-on-primary-container px-3 py-1 bg-primary-fixed rounded-full inline-block mb-4">PREMIUM TIER</span>
+<h3 class="font-headline-md text-headline-md text-white mb-6">LOCKEDIN-X Pro</h3>
+<ul class="space-y-4 mb-10">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary-fixed text-sm mt-1" data-icon="check_circle">check_circle</span>
+<span class="text-sm text-on-surface-variant">Deep History: Unlimited record keeping of your ritual evolutions.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary-fixed text-sm mt-1" data-icon="check_circle">check_circle</span>
+<span class="text-sm text-on-surface-variant">Global Sync: Encrypted real-time synchronization across all nodes.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary-fixed text-sm mt-1" data-icon="check_circle">check_circle</span>
+<span class="text-sm text-on-surface-variant">Stoic AI: Priority access to the Zen-mode companion engine.</span>
+</li>
+</ul>
+<div class="mt-auto">
+<div class="flex items-end gap-1 mb-4">
+<span class="text-3xl font-bold">$24.99</span>
+<span class="text-on-surface-variant mb-1">/ mo</span>
+</div>
+<button class="w-full py-4 bg-white text-black font-black rounded-2xl hover:bg-primary-fixed transition-colors">RENEW STATUS</button>
+</div>
+</div>
+</section>
+<!-- Interface & Rituals -->
+<section class="md:col-span-5 bento-card p-container-padding rounded-[2rem]">
+<div class="flex items-center gap-3 mb-8">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="palette">palette</span>
+<h3 class="font-headline-md text-headline-md">Interface &amp; Rituals</h3>
+</div>
+<div class="space-y-8">
+<div>
+<p class="font-label-caps text-label-caps mb-4 text-on-surface-variant">Theme Architecture</p>
+<div class="grid grid-cols-2 gap-3">
+<button class="p-4 rounded-xl border border-primary-fixed bg-primary-fixed/5 text-primary-fixed flex flex-col items-center gap-2">
+<span class="material-symbols-outlined" data-icon="schedule">schedule</span>
+<span class="text-xs font-bold">Adaptive UI</span>
+</button>
+<button class="p-4 rounded-xl border border-white/5 hover:bg-white/5 text-on-surface-variant flex flex-col items-center gap-2">
+<span class="material-symbols-outlined" data-icon="dark_mode">dark_mode</span>
+<span class="text-xs font-bold">Obsidian Black</span>
+</button>
+</div>
+</div>
+<div>
+<p class="font-label-caps text-label-caps mb-4 text-on-surface-variant">Notification Resonance</p>
+<div class="space-y-3">
+<div class="flex items-center justify-between text-sm">
+<span>Daily Dawn (Summary)</span>
+<input checked="" class="sr-only custom-toggle" id="notif-1" type="checkbox"/>
+<label class="relative inline-flex items-center cursor-pointer" for="notif-1">
+<div class="w-11 h-6 bg-surface-container-highest rounded-full border border-white/10 toggle-slider"></div>
+</label>
+</div>
+<div class="flex items-center justify-between text-sm">
+<span>Random Discipline Check</span>
+<input class="sr-only custom-toggle" id="notif-2" type="checkbox"/>
+<label class="relative inline-flex items-center cursor-pointer" for="notif-2">
+<div class="w-11 h-6 bg-surface-container-highest rounded-full border border-white/10 toggle-slider"></div>
+</label>
+</div>
+</div>
+</div>
+<div>
+<p class="font-label-caps text-label-caps mb-4 text-on-surface-variant">Soundscape Resonance</p>
+<div class="relative h-1 w-full bg-surface-container-highest rounded-full mb-2">
+<div class="absolute h-full w-[65%] bg-primary-fixed rounded-full"></div>
+<div class="absolute left-[65%] -top-1.5 w-4 h-4 bg-primary-fixed border-4 border-[#0D110C] rounded-full"></div>
+</div>
+<div class="flex justify-between text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">
+<span>Deep Silence</span>
+<span>White Noise</span>
+<span>Zen Rain</span>
+</div>
+</div>
+</div>
+</section>
+<!-- The Vault (Privacy & Security) -->
+<section class="md:col-span-7 bento-card p-container-padding rounded-[2rem] flex flex-col">
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="lock">lock</span>
+<h3 class="font-headline-md text-headline-md">The Vault</h3>
+</div>
+<span class="text-[10px] font-mono-data text-primary-fixed bg-primary-fixed/10 px-2 py-1 rounded">ENCRYPTED_STATE: ACTIVE</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+<div class="p-6 bg-surface-container rounded-3xl border border-white/5 flex flex-col justify-between">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface mb-2">AI Accountability Mirror</p>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-6">Determines how much behavioral data is analyzed to refine your discipline prompts.</p>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex-1 py-2 bg-surface-container-highest text-xs rounded-lg hover:bg-white/5 transition-colors">STRICT</button>
+<button class="flex-1 py-2 bg-primary-fixed/20 text-primary-fixed border border-primary-fixed/30 text-xs rounded-lg">BALANCED</button>
+</div>
+</div>
+<div class="p-6 bg-surface-container rounded-3xl border border-white/5 flex flex-col justify-between">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface mb-2">End-to-End Tunnel</p>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-6">Zero-knowledge proof for your daily logs and sensitive ritual data.</p>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-xs text-primary-fixed font-bold">SECURED</span>
+<input checked="" class="sr-only custom-toggle" id="vault-tunnel" type="checkbox"/>
+<label class="relative inline-flex items-center cursor-pointer" for="vault-tunnel">
+<div class="w-11 h-6 bg-surface-container-highest rounded-full border border-white/10 toggle-slider"></div>
+</label>
+</div>
+</div>
+</div>
+<div class="mt-8 flex items-center justify-between p-6 bg-error-container/5 border border-error/20 rounded-3xl group cursor-pointer hover:bg-error-container/10 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-error" data-icon="dangerous">dangerous</span>
+<div>
+<p class="font-label-caps text-label-caps text-error">Delete Legacy</p>
+<p class="text-sm text-on-surface-variant">Permanently wipe all logs, rituals, and identity data.</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</section>
+<!-- Stoic Reminders -->
+<section class="md:col-span-12 bento-card p-container-padding rounded-[2rem] mt-4">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-8">
+<div class="max-w-md">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="format_quote">format_quote</span>
+<h3 class="font-headline-md text-headline-md">Stoic Reminders</h3>
+</div>
+<p class="text-on-surface-variant">Customize the philosophical anchor that pulls you back to the present. Select a lineage and frequency.</p>
+</div>
+<div class="flex flex-wrap gap-4">
+<div class="flex flex-col gap-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant">Philosophy Theme</label>
+<select class="bg-surface-container border border-white/10 rounded-xl px-6 py-3 text-sm focus:ring-1 focus:ring-primary-fixed outline-none text-white appearance-none min-w-[200px]">
+<option>Stoicism (Marcus Aurelius)</option>
+<option>Zen (Shunryu Suzuki)</option>
+<option>Bushido (Musashi)</option>
+<option>Modern High-Performance</option>
+</select>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant">Interval (Read My Reason)</label>
+<div class="flex items-center gap-2">
+<input class="w-20 bg-surface-container border border-white/10 rounded-xl px-4 py-3 text-sm text-center focus:ring-1 focus:ring-primary-fixed outline-none" type="number" value="4"/>
+<span class="text-on-surface-variant text-sm">Times / Day</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="p-6 border border-white/5 bg-white/[0.02] rounded-3xl italic text-on-surface-variant leading-relaxed text-sm">
+                        "Waste no more time arguing about what a good man should be. Be one." — Marcus Aurelius
+                    </div>
+<div class="p-6 border border-white/5 bg-white/[0.02] rounded-3xl italic text-on-surface-variant leading-relaxed text-sm">
+                        "In the beginner's mind there are many possibilities, but in the expert's there are few." — Shunryu Suzuki
+                    </div>
+<div class="p-6 border border-white/5 bg-white/[0.02] rounded-3xl italic text-on-surface-variant leading-relaxed text-sm">
+                        "Do nothing which is of no use." — Miyamoto Musashi
+                    </div>
+</div>
+</section>
+</div>
+<!-- Footer -->
+<footer class="w-full flex flex-col items-center justify-center gap-base text-center mt-section-margin py-section-margin border-t border-white/5">
+<h4 class="font-display-lg text-display-lg text-primary-fixed">LOCKEDIN-X</h4>
+<p class="font-label-caps text-label-caps font-mono-data text-mono-data italic text-on-tertiary-container">© 2024 LOCKEDIN-X. DISCIPLINE IS FREEDOM.</p>
+<div class="flex gap-8 mt-4">
+<a class="font-label-caps text-label-caps text-on-tertiary-container hover:text-primary-fixed transition-colors" href="#">THE STOIC WAY</a>
+<a class="font-label-caps text-label-caps text-on-tertiary-container hover:text-primary-fixed transition-colors" href="#">TERMS OF HONOR</a>
+<a class="font-label-caps text-label-caps text-on-tertiary-container hover:text-primary-fixed transition-colors" href="#">PRIVACY</a>
+</div>
+</footer>
+</main>
+<script>
+        // Micro-interactions and effects
+        document.querySelectorAll('.bento-card, .glass-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+
+        // Simple scale effect on save button click
+        const saveBtn = document.querySelector('button.bg-primary-fixed');
+        saveBtn.addEventListener('mousedown', () => saveBtn.style.transform = 'scale(0.95)');
+        saveBtn.addEventListener('mouseup', () => saveBtn.style.transform = 'scale(1.05)');
+    </script>
+</body></html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LOCKEDIN-X | Support Mode</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700&amp;family=Manrope:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@100..900&amp;family=Geist:wght@100..900&amp;family=Manrope:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#323630",
+                    "surface-tint": "#abd600",
+                    "on-secondary": "#2b3229",
+                    "tertiary-fixed-dim": "#c1c9bd",
+                    "surface-container-highest": "#323630",
+                    "on-tertiary-fixed": "#171d16",
+                    "primary": "#ffffff",
+                    "background": "#10140f",
+                    "primary-container": "#c3f400",
+                    "on-primary-container": "#556d00",
+                    "on-tertiary": "#2b322a",
+                    "error": "#ffb4ab",
+                    "on-primary": "#283500",
+                    "surface-container-low": "#191d17",
+                    "primary-fixed-dim": "#abd600",
+                    "surface-container": "#1d211b",
+                    "on-secondary-container": "#b3bbae",
+                    "on-secondary-fixed-variant": "#42493f",
+                    "on-background": "#e0e4db",
+                    "surface-container-high": "#272b25",
+                    "on-error-container": "#ffdad6",
+                    "secondary-fixed-dim": "#c1c9bc",
+                    "on-primary-fixed-variant": "#3c4d00",
+                    "secondary-fixed": "#dde5d7",
+                    "secondary-container": "#444b41",
+                    "error-container": "#93000a",
+                    "surface": "#10140f",
+                    "surface-dim": "#10140f",
+                    "tertiary": "#ffffff",
+                    "outline": "#8e9379",
+                    "inverse-surface": "#e0e4db",
+                    "on-error": "#690005",
+                    "on-tertiary-container": "#5f665c",
+                    "on-secondary-fixed": "#171d15",
+                    "on-primary-fixed": "#161e00",
+                    "inverse-primary": "#506600",
+                    "surface-bright": "#363a34",
+                    "tertiary-fixed": "#dee5d8",
+                    "tertiary-container": "#dee5d8",
+                    "inverse-on-surface": "#2d322c",
+                    "on-surface-variant": "#c4c9ac",
+                    "surface-container-lowest": "#0b0f0a",
+                    "secondary": "#c1c9bc",
+                    "on-tertiary-fixed-variant": "#424940",
+                    "outline-variant": "#444933",
+                    "primary-fixed": "#c3f400",
+                    "on-surface": "#e0e4db"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "bento-gap": "12px",
+                    "section-margin": "48px",
+                    "gutter": "16px",
+                    "base": "8px",
+                    "container-padding": "24px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Epilogue"],
+                    "body-md": ["Manrope"],
+                    "mono-data": ["Geist"],
+                    "headline-md": ["Epilogue"],
+                    "display-lg-mobile": ["Epilogue"],
+                    "label-caps": ["Geist"],
+                    "body-lg": ["Manrope"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "52px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400"}],
+                    "mono-data": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "display-lg-mobile": ["36px", {"lineHeight": "40px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0D110C;
+            color: #e0e4db;
+            overflow: hidden;
+        }
+        .glass-card {
+            background: rgba(22, 27, 21, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .breathing-circle {
+            animation: breathe 8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.4); opacity: 0.8; }
+        }
+        .weighted-transition {
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- Global Background Shader -->
+
+<div class="flex h-screen w-full relative z-10">
+<!-- SideNavBar - Identity Shell -->
+<aside class="fixed left-0 top-0 h-screen z-50 flex flex-col w-64 bg-surface dark:bg-surface border-r border-white/5">
+<div class="p-8">
+<h1 class="font-headline-md text-headline-md font-bold tracking-tighter text-on-surface dark:text-on-surface">LOCKEDIN-X</h1>
+<p class="font-label-caps text-label-caps opacity-50 tracking-widest mt-1 uppercase">Discipline. Identity. Freedom.</p>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<!-- Home -->
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</a>
+<!-- Support Mode (Active) -->
+<a class="flex items-center gap-3 bg-secondary-container text-primary-fixed font-bold rounded-lg mx-2 px-3 py-2 border-l-4 border-primary-fixed" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+<span class="font-label-caps text-label-caps">Support Mode</span>
+</a>
+<!-- Other items as per JSON -->
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">psychology</span>
+<span class="font-label-caps text-label-caps">AI Companion</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">book</span>
+<span class="font-label-caps text-label-caps">Memoir</span>
+</a>
+</nav>
+<div class="p-6 mt-auto">
+<button class="w-full bg-primary-container text-on-primary-container py-3 rounded-xl font-bold font-label-caps text-label-caps tracking-widest hover:scale-[0.98] transition-transform duration-200">
+                    FOCUS MODE
+                </button>
+<div class="mt-8 flex items-center gap-3 px-2 opacity-60">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="font-label-caps text-label-caps">Arjun</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-64 flex flex-col relative overflow-hidden">
+<!-- Top Navigation Cluster -->
+<header class="flex justify-between items-center w-full px-8 py-4 h-20 bg-transparent">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-md text-headline-md text-on-surface">Support Mode</h2>
+<span class="bg-error-container text-error px-3 py-1 rounded-full font-label-caps text-[10px] tracking-tighter">EMERGENCY OVERRIDE ACTIVE</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</div>
+<div class="w-10 h-10 rounded-full border border-white/10 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist portrait of a focused man in his late 20s, Arjun, shot with dramatic low-key lighting in a dark moss-green studio environment. His expression is calm and resolute, reflecting high discipline and mental clarity. The aesthetic is editorial and premium, with sharp focus and cinematic depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCS4ptzfRJBCJ84pMgUNQSD4e0uTSPqEjE4LWRaCEGAm301pou12u5DF_Pi5APOjIvyi-IosS0Wt7atIFuceDfR5RwYhlzUZXf6lNxktYjSs7jZCjvju6FxQB-ea8EcM3uZSuToEWT3GVEnLaNgSdQfAgQAeJfw8mRgkZP1bc1ncYz7InJn_-rmkN5ZuTNRggyYxhwPgEm0w1Aq6ncoCUnaRbSTAK92dNBjrRq6l80SAcR7wsXjty4RkXA08Tq0rXdASJQvENMm_O1I"/>
+</div>
+</div>
+</header>
+<!-- Center Stage: The Breathing Exercise & Countdown -->
+<section class="flex-1 flex flex-col items-center justify-center relative p-bento-gap">
+<!-- Large Breathing Ring -->
+<div class="relative flex items-center justify-center w-[400px] h-[400px]">
+<!-- Outer Halo -->
+<div class="absolute w-full h-full rounded-full border-[1px] border-primary-fixed/20 animate-ping opacity-20" style="animation-duration: 4s;"></div>
+<!-- Breathing Pulse -->
+<div class="breathing-circle absolute w-64 h-64 bg-primary-fixed rounded-full blur-3xl mix-blend-screen pointer-events-none"></div>
+<!-- Inner Core -->
+<div class="relative glass-card w-80 h-80 rounded-full flex flex-col items-center justify-center text-center p-8 border-white/10 shadow-2xl">
+<span class="font-display-lg text-display-lg text-primary-fixed mb-2 weighted-transition" id="breathing-text">Exhale</span>
+<div class="h-px w-12 bg-white/20 my-4"></div>
+<div class="flex flex-col">
+<span class="font-mono-data text-4xl tracking-tighter text-on-surface" id="countdown">04:59</span>
+<span class="font-label-caps text-label-caps opacity-40 uppercase mt-1">Cooling Down</span>
+</div>
+</div>
+</div>
+<div class="mt-section-margin text-center max-w-lg">
+<p class="font-body-lg text-body-lg text-on-surface/70 italic">"The urge is a wave. You are the shore. Let it break and recede. You remain."</p>
+</div>
+</section>
+<!-- Quick Action Bento Grid -->
+<section class="px-section-margin pb-section-margin">
+<div class="grid grid-cols-12 gap-bento-gap max-w-6xl mx-auto">
+<!-- Read My Reason -->
+<div class="col-span-12 md:col-span-4 glass-card p-6 rounded-2xl hover:bg-surface-container-high transition-all duration-300 group cursor-pointer border-white/5 hover:border-primary-fixed/30">
+<div class="flex justify-between items-start mb-6">
+<div class="p-3 bg-surface-container rounded-xl text-primary-fixed">
+<span class="material-symbols-outlined">history_edu</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+<h3 class="font-headline-md text-xl mb-2">Read My Reason</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">A letter to yourself, written in your moment of absolute clarity.</p>
+</div>
+<!-- Talk to AI -->
+<div class="col-span-12 md:col-span-4 glass-card p-6 rounded-2xl hover:bg-surface-container-high transition-all duration-300 group cursor-pointer border-white/5 hover:border-primary-fixed/30">
+<div class="flex justify-between items-start mb-6">
+<div class="p-3 bg-surface-container rounded-xl text-primary-fixed">
+<span class="material-symbols-outlined">psychology</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+<h3 class="font-headline-md text-xl mb-2">Talk to AI</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">Immediate logical intervention to deconstruct the current craving.</p>
+</div>
+<!-- Impulse Log -->
+<div class="col-span-12 md:col-span-4 glass-card p-6 rounded-2xl hover:bg-surface-container-high transition-all duration-300 group cursor-pointer border-white/5 hover:border-primary-fixed/30">
+<div class="flex justify-between items-start mb-6">
+<div class="p-3 bg-surface-container rounded-xl text-primary-fixed">
+<span class="material-symbols-outlined">trending_up</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+<h3 class="font-headline-md text-xl mb-2">Log This Impulse</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">Map the triggers. Turn the struggle into data for future defense.</p>
+</div>
+</div>
+</section>
+<!-- Footer Meta -->
+<footer class="w-full flex justify-center items-center py-4 bg-surface-dim dark:bg-surface-dim opacity-60 italic border-t border-white/5">
+<p class="font-label-caps text-label-caps text-on-surface-variant">
+                    You are not your urges. You are your decisions.
+                </p>
+</footer>
+</main>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+        // Countdown Timer Logic
+        let timeLeft = 300; // 5 minutes
+        const timerElement = document.getElementById('countdown');
+        
+        const updateTimer = () => {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            if (timeLeft > 0) {
+                timeLeft--;
+            }
+        };
+        setInterval(updateTimer, 1000);
+
+        // Breathing Text Logic
+        const breathingText = document.getElementById('breathing-text');
+        const phrases = ["Inhale", "Hold", "Exhale", "Hold"];
+        let currentPhraseIndex = 0;
+
+        setInterval(() => {
+            currentPhraseIndex = (currentPhraseIndex + 1) % phrases.length;
+            breathingText.style.opacity = '0';
+            breathingText.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                breathingText.textContent = phrases[currentPhraseIndex];
+                breathingText.style.opacity = '1';
+                breathingText.style.transform = 'translateY(0)';
+            }, 600);
+        }, 4000); // Matches the 8s animation cycle (4s for in/out half cycle)
+
+        // Subtle parallax/glow following mouse in background
+        document.addEventListener('mousemove', (e) => {
+            const moveX = (e.clientX / window.innerWidth) - 0.5;
+            const moveY = (e.clientY / window.innerHeight) - 0.5;
+            // Apply slight offset to some background elements
+        });
+    </script>
+</body></html>

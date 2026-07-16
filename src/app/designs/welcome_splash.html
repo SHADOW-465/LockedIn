@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LOCKEDIN-X | The Architecture of Discipline</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&family=Manrope:wght@400;500;600&family=Geist:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@100..900&family=Geist:wght@100..900&family=Manrope:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#323630",
+                    "surface-tint": "#abd600",
+                    "on-secondary": "#2b3229",
+                    "tertiary-fixed-dim": "#c1c9bd",
+                    "surface-container-highest": "#323630",
+                    "on-tertiary-fixed": "#171d16",
+                    "primary": "#ffffff",
+                    "background": "#10140f",
+                    "primary-container": "#c3f400",
+                    "on-primary-container": "#556d00",
+                    "on-tertiary": "#2b322a",
+                    "error": "#ffb4ab",
+                    "on-primary": "#283500",
+                    "surface-container-low": "#191d17",
+                    "primary-fixed-dim": "#abd600",
+                    "surface-container": "#1d211b",
+                    "on-secondary-container": "#b3bbae",
+                    "on-secondary-fixed-variant": "#42493f",
+                    "on-background": "#e0e4db",
+                    "surface-container-high": "#272b25",
+                    "on-error-container": "#ffdad6",
+                    "secondary-fixed-dim": "#c1c9bc",
+                    "on-primary-fixed-variant": "#3c4d00",
+                    "secondary-fixed": "#dde5d7",
+                    "secondary-container": "#444b41",
+                    "error-container": "#93000a",
+                    "surface": "#10140f",
+                    "surface-dim": "#10140f",
+                    "tertiary": "#ffffff",
+                    "outline": "#8e9379",
+                    "inverse-surface": "#e0e4db",
+                    "on-error": "#690005",
+                    "on-tertiary-container": "#5f665c",
+                    "on-secondary-fixed": "#171d15",
+                    "on-primary-fixed": "#161e00",
+                    "inverse-primary": "#506600",
+                    "surface-bright": "#363a34",
+                    "tertiary-fixed": "#dee5d8",
+                    "tertiary-container": "#dee5d8",
+                    "inverse-on-surface": "#2d322c",
+                    "on-surface-variant": "#c4c9ac",
+                    "surface-container-lowest": "#0b0f0a",
+                    "secondary": "#c1c9bc",
+                    "on-tertiary-fixed-variant": "#424940",
+                    "outline-variant": "#444933",
+                    "primary-fixed": "#c3f400",
+                    "on-surface": "#e0e4db"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "bento-gap": "12px",
+                    "section-margin": "48px",
+                    "gutter": "16px",
+                    "base": "8px",
+                    "container-padding": "24px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Epilogue"],
+                    "body-md": ["Manrope"],
+                    "mono-data": ["Geist"],
+                    "headline-md": ["Epilogue"],
+                    "display-lg-mobile": ["Epilogue"],
+                    "label-caps": ["Geist"],
+                    "body-lg": ["Manrope"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "52px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400"}],
+                    "mono-data": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "display-lg-mobile": ["36px", {"lineHeight": "40px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(22, 27, 21, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .reveal-text {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+            animation: reveal 1.2s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        @keyframes reveal {
+            0% { transform: translateY(100%); }
+            100% { transform: translateY(0); }
+        }
+        .ambient-glow {
+            filter: blur(80px);
+            opacity: 0.15;
+            animation: pulse 10s ease-in-out infinite alternate;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.1; }
+            100% { transform: scale(1.2); opacity: 0.2; }
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed overflow-hidden">
+<!-- Ambient Background -->
+<div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-primary-fixed rounded-full ambient-glow"></div>
+<div class="absolute -bottom-[10%] -right-[5%] w-[50%] h-[50%] bg-surface-variant rounded-full ambient-glow" style="animation-delay: -5s;"></div>
+</div>
+<!-- Main Canvas -->
+<main class="relative z-10 min-h-screen flex flex-col items-center justify-center px-container-padding">
+<!-- Splash Content Wrapper -->
+<div class="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-bento-gap items-center">
+<!-- Left Editorial Section -->
+<div class="lg:col-span-7 flex flex-col space-y-6">
+<div class="overflow-hidden">
+<span class="font-label-caps text-label-caps text-primary-fixed tracking-[0.2em] reveal-text block mb-2">
+                        SYSTEM STATUS: OPTIMIZED
+                    </span>
+</div>
+<h1 class="font-display-lg text-display-lg lg:text-[84px] lg:leading-[90px] tracking-tighter max-w-2xl">
+<div class="overflow-hidden mb-2">
+<span class="reveal-text block" style="animation-delay: 0.2s;">The</span>
+</div>
+<div class="overflow-hidden mb-2">
+<span class="reveal-text block" style="animation-delay: 0.4s;">Architecture</span>
+</div>
+<div class="overflow-hidden">
+<span class="reveal-text block italic text-outline" style="animation-delay: 0.6s;">of Discipline.</span>
+</div>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg mt-8 opacity-0 animate-[fadeIn_1s_ease-out_1s_forwards]">
+                    Transforming raw ambition into precise execution. A digital sanctuary for high-achievers who view self-mastery as a masterpiece.
+                </p>
+<div class="mt-12 flex items-center space-y-0 space-x-6 opacity-0 animate-[fadeIn_1s_ease-out_1.4s_forwards]">
+<button class="group relative px-8 py-4 bg-primary-fixed text-on-primary-fixed font-label-caps text-label-caps rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(171,214,0,0.2)]">
+<span class="relative z-10 flex items-center gap-2">
+                            Begin Journey
+                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</span>
+<div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
+</button>
+<button class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-2 border-b border-transparent hover:border-on-surface py-2">
+                        Watch Manifesto
+                    </button>
+</div>
+</div>
+<!-- Right Visual Component (The Shield) -->
+<div class="lg:col-span-5 relative mt-16 lg:mt-0 flex justify-center items-center">
+<div class="relative w-full aspect-square max-w-[500px]">
+<!-- Background Card with Glassmorphism -->
+<div class="absolute inset-0 glass-panel rounded-[40px] opacity-0 animate-[fadeIn_1s_ease-out_0.8s_forwards] overflow-hidden">
+<div class="w-full h-full object-cover opacity-30 mix-blend-overlay" data-alt="A macro close-up of a high-end matte black obsidian sculpture with sharp geometric edges, illuminated by a single soft lime green light source from the side, creating deep shadows and high-fidelity textures. The style is moody, luxury editorial photography." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCEX5d_xswgbKP5wgOwIlUdnU0QzhVF4fzEdTeanBi27tHLjBMmD9OuqBZc3tg_pmeP68M5jHXx4-CcnizvpZYxyS_5NJqHQPnDvXH6hxgfbKF26GeWrvrjMryFETFoeYHxBkLqod_MGBFhnbvCzdskI03kr9IOnPdsZbUcnocgADTKsVkfafCqRaUqikHaZQFxGXygvBt3-fQRYbz3dMi_Ej5V4bMiqdQRfmEcId1oTim0hklG1KP_urnQsAGzE-iyOgID9eysgYyU')"></div>
+</div>
+<!-- Floating Identity Module -->
+<div class="absolute inset-0 flex flex-col items-center justify-center space-y-6 opacity-0 scale-90 animate-[scaleIn_1.2s_cubic-bezier(0.19,1,0.22,1)_1s_forwards]">
+<!-- Brand Logo -->
+<div class="w-32 h-32 bg-background border border-white/10 rounded-3xl flex items-center justify-center shadow-2xl">
+<span class="material-symbols-outlined text-primary-fixed text-6xl" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+</div>
+<div class="text-center">
+<h2 class="font-headline-md text-headline-md font-bold tracking-tighter">LOCKEDIN-X</h2>
+<p class="font-label-caps text-label-caps text-on-surface-variant opacity-60">IDENTITY • DISCIPLINE • FREEDOM</p>
+</div>
+<!-- Data Visualizer Micro-interaction -->
+<div class="w-48 h-12 flex items-end justify-center gap-1.5 opacity-40">
+<div class="w-1 bg-primary-fixed/30 rounded-full h-4 animate-[bounce_2s_infinite]"></div>
+<div class="w-1 bg-primary-fixed/30 rounded-full h-8 animate-[bounce_2.4s_infinite]"></div>
+<div class="w-1 bg-primary-fixed/50 rounded-full h-12 animate-[bounce_1.8s_infinite]"></div>
+<div class="w-1 bg-primary-fixed rounded-full h-6 animate-[bounce_2.2s_infinite]"></div>
+<div class="w-1 bg-primary-fixed/40 rounded-full h-10 animate-[bounce_2s_infinite]"></div>
+</div>
+</div>
+<!-- Decorative Geometric Accents -->
+<div class="absolute -top-4 -right-4 w-24 h-24 border-t-2 border-r-2 border-primary-fixed/20 rounded-tr-3xl opacity-0 animate-[fadeIn_1s_forwards_2s]"></div>
+<div class="absolute -bottom-4 -left-4 w-24 h-24 border-b-2 border-l-2 border-primary-fixed/20 rounded-bl-3xl opacity-0 animate-[fadeIn_1s_forwards_2s]"></div>
+</div>
+</div>
+</div>
+<!-- Footer / Credits -->
+<footer class="absolute bottom-12 left-0 w-full px-container-padding flex justify-between items-center opacity-0 animate-[fadeIn_1s_ease-out_2s_forwards]">
+<div class="flex items-center gap-4">
+<div class="h-[1px] w-12 bg-white/10"></div>
+<span class="font-label-caps text-[10px] text-on-surface-variant tracking-widest uppercase">Protocol v4.0.2</span>
+</div>
+<div class="text-center italic text-on-surface-variant font-label-caps text-[10px] opacity-60 max-w-xs hidden md:block">
+                "You are not your urges. You are your decisions."
+            </div>
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] hover:text-primary-fixed cursor-pointer transition-colors">hub</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] hover:text-primary-fixed cursor-pointer transition-colors">language</span>
+</div>
+</footer>
+</main>
+<script>
+        // Micro-interaction: Mouse tracking for light ambient motion
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            const glows = document.querySelectorAll('.ambient-glow');
+            glows.forEach((glow, index) => {
+                const multiplier = index === 0 ? 30 : -30;
+                glow.style.transform = `translate(${x * multiplier}px, ${y * multiplier}px) scale(${1 + (x * 0.1)})`;
+            });
+        });
+
+        // Keyframe additions for Tailwind
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes scaleIn {
+                from { opacity: 0; transform: scale(0.9); }
+                to { opacity: 1; transform: scale(1); }
+            }
+            @keyframes bounce {
+                0%, 100% { height: 10px; }
+                50% { height: 30px; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body></html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LOCKEDIN-X | AI Companion &amp; Identity</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700&amp;family=Manrope:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@100..900&amp;family=Geist:wght@100..900&amp;family=Manrope:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(22, 27, 21, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .inner-glow {
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.02); opacity: 1; }
+        }
+        .animate-pulse-slow {
+            animation: breathe 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#323630",
+                        "surface-tint": "#abd600",
+                        "on-secondary": "#2b3229",
+                        "tertiary-fixed-dim": "#c1c9bd",
+                        "surface-container-highest": "#323630",
+                        "on-tertiary-fixed": "#171d16",
+                        "primary": "#ffffff",
+                        "background": "#10140f",
+                        "primary-container": "#c3f400",
+                        "on-primary-container": "#556d00",
+                        "on-tertiary": "#2b322a",
+                        "error": "#ffb4ab",
+                        "on-primary": "#283500",
+                        "surface-container-low": "#191d17",
+                        "primary-fixed-dim": "#abd600",
+                        "surface-container": "#1d211b",
+                        "on-secondary-container": "#b3bbae",
+                        "on-secondary-fixed-variant": "#42493f",
+                        "on-background": "#e0e4db",
+                        "surface-container-high": "#272b25",
+                        "on-error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#c1c9bc",
+                        "on-primary-fixed-variant": "#3c4d00",
+                        "secondary-fixed": "#dde5d7",
+                        "secondary-container": "#444b41",
+                        "error-container": "#93000a",
+                        "surface": "#10140f",
+                        "surface-dim": "#10140f",
+                        "tertiary": "#ffffff",
+                        "outline": "#8e9379",
+                        "inverse-surface": "#e0e4db",
+                        "on-error": "#690005",
+                        "on-tertiary-container": "#5f665c",
+                        "on-secondary-fixed": "#171d15",
+                        "on-primary-fixed": "#161e00",
+                        "inverse-primary": "#506600",
+                        "surface-bright": "#363a34",
+                        "tertiary-fixed": "#dee5d8",
+                        "tertiary-container": "#dee5d8",
+                        "inverse-on-surface": "#2d322c",
+                        "on-surface-variant": "#c4c9ac",
+                        "surface-container-lowest": "#0b0f0a",
+                        "secondary": "#c1c9bc",
+                        "on-tertiary-fixed-variant": "#424940",
+                        "outline-variant": "#444933",
+                        "primary-fixed": "#c3f400",
+                        "on-surface": "#e0e4db"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "bento-gap": "12px",
+                        "section-margin": "48px",
+                        "gutter": "16px",
+                        "base": "8px",
+                        "container-padding": "24px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Epilogue"],
+                        "body-md": ["Manrope"],
+                        "mono-data": ["Geist"],
+                        "headline-md": ["Epilogue"],
+                        "label-caps": ["Geist"],
+                        "body-lg": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "52px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400"}],
+                        "mono-data": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background selection:bg-primary-fixed selection:text-on-primary-fixed no-scrollbar">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-screen z-50 flex flex-col w-64 border-r border-white/5 bg-surface-dim shadow-none">
+<div class="px-8 py-10">
+<h1 class="font-headline-md text-headline-md font-bold tracking-tighter text-on-surface">LOCKEDIN-X</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1 opacity-60">DISCIPLINE. IDENTITY. FREEDOM.</p>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 hover:bg-surface-variant transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined mr-3">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</a>
+<a class="flex items-center text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 hover:bg-surface-variant transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined mr-3">history_edu</span>
+<span class="font-label-caps text-label-caps">Daily Ritual</span>
+</a>
+<a class="flex items-center bg-secondary-container text-primary-fixed font-bold rounded-lg mx-2 px-3 py-2 border-l-4 border-primary-fixed scale-[0.98] transition-transform duration-200 ease-out" href="#">
+<span class="material-symbols-outlined mr-3">psychology</span>
+<span class="font-label-caps text-label-caps">AI Companion</span>
+</a>
+<a class="flex items-center bg-secondary-container text-primary-fixed font-bold rounded-lg mx-2 px-3 py-2 border-l-4 border-primary-fixed mt-1" href="#">
+<span class="material-symbols-outlined mr-3">fingerprint</span>
+<span class="font-label-caps text-label-caps">Identity</span>
+</a>
+<a class="flex items-center text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 hover:bg-surface-variant transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined mr-3">leaderboard</span>
+<span class="font-label-caps text-label-caps">Insights &amp; Analytics</span>
+</a>
+</nav>
+<div class="px-6 py-6 border-t border-white/5 mt-auto">
+<button class="w-full py-3 bg-primary-fixed text-on-primary-fixed rounded-lg font-label-caps text-label-caps font-bold transition-all hover:opacity-90 active:scale-95">
+                Focus Mode
+            </button>
+<div class="flex items-center mt-6 px-2">
+<span class="material-symbols-outlined text-on-surface-variant mr-3">account_circle</span>
+<span class="font-label-caps text-label-caps text-on-surface">Arjun</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen relative flex flex-col">
+<!-- Top Nav Bar -->
+<header class="flex justify-between items-center w-full px-8 py-6 h-20 bg-transparent sticky top-0 z-40">
+<h2 class="font-headline-md text-headline-md text-on-surface">Identity Dashboard</h2>
+<div class="flex items-center space-y-0 space-x-6">
+<button class="hover:bg-surface-container-highest rounded-full p-2 transition-opacity duration-300">
+<span class="material-symbols-outlined text-primary">wb_sunny</span>
+</button>
+<button class="hover:bg-surface-container-highest rounded-full p-2 transition-opacity duration-300 relative">
+<span class="material-symbols-outlined text-primary">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary-container rounded-full border-2 border-background"></span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-white/10">
+<img class="w-full h-full object-cover" data-alt="A sophisticated, high-contrast black and white portrait of a modern high-achiever with sharp features and a look of deep focus. The lighting is dramatic and moody, reflecting a high-performance lifestyle in a minimalist architectural setting with deep shadows and Electric Lime highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7nObOLos1CwdY9i7hkp8Mz3F0sQIaCUqWp_EA27mzRYag1q-wRvU_tyBT-G6zoeKlKwPRQtkZgBzMP-KcoDMy669dEh90Z6SnCHOCvVXOtjSXRWw_JI1mpOL6ENAznqsdlWHu3fnwCyzIkAOTe9l1_BIFuKpUwF5QzdXGDIYMdeTvWJIGg50QpNi4BxoAp-0AT1Z3cND3A5qOiVqpmXNY1FjMn0TkizwJ0KWMwJPFnkBEt9NGWXgQUv1G0L97uMunEXGNi143Nobn"/>
+</div>
+</div>
+</header>
+<div class="p-8 grid grid-cols-12 gap-bento-gap flex-1">
+<!-- Left Panel: AI Companion Conversation -->
+<section class="col-span-12 lg:col-span-7 flex flex-col space-y-bento-gap h-[calc(100vh-140px)]">
+<div class="glass-card flex-1 p-container-padding flex flex-col overflow-hidden rounded-xl">
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center space-x-3">
+<div class="w-12 h-12 bg-primary-fixed/10 rounded-full flex items-center justify-center animate-pulse-slow">
+<span class="material-symbols-outlined text-primary-fixed" style="font-variation-settings: 'FILL' 1;">psychology</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Atlas</h3>
+<p class="font-label-caps text-label-caps text-on-surface-variant opacity-60">Identity Architect AI</p>
+</div>
+</div>
+<span class="font-mono-data text-mono-data px-3 py-1 bg-surface-container-highest rounded-full text-on-surface-variant">SYNCED: 100%</span>
+</div>
+<div class="flex-1 overflow-y-auto pr-4 space-y-8 no-scrollbar scroll-smooth">
+<!-- User Letter -->
+<div class="flex justify-end">
+<div class="max-w-[85%] glass-card p-6 rounded-2xl rounded-tr-none border-primary-fixed/20">
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+                                    Atlas, I struggled with the morning routine today. The rain made the run feel impossible, and I felt the urge to regress into comfort. How does this affect my Current Chapter?
+                                </p>
+<div class="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant italic">Reflected at 05:42 AM</span>
+<span class="material-symbols-outlined text-primary-fixed-dim text-sm">done_all</span>
+</div>
+</div>
+</div>
+<!-- AI Response (Editorial Style) -->
+<div class="flex justify-start">
+<div class="max-w-[90%] space-y-6">
+<div class="font-display-lg text-headline-md italic text-primary-fixed-dim leading-tight">
+                                    "Comfort is the graveyard of potential, Arjun."
+                                </div>
+<div class="space-y-4">
+<p class="font-body-lg text-body-lg text-on-surface/90 leading-relaxed">
+                                        Your identity isn't defined by the ease of the path, but by the friction you overcome. In <span class="text-primary-fixed">Chapter 4: The Crucible</span>, resistance is the primary data point. 
+                                    </p>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                                        While the morning run was missed, you logged a 15-minute cold exposure and 30 minutes of deep work before the sun was up. You are 84% on track for your weekly Promises Kept. Let's redirect that energy into the 'Recovery' metric tonight.
+                                    </p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container p-4 rounded-xl border border-white/5">
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">RECOMMENDED ADJUSTMENT</div>
+<div class="font-body-md text-body-md text-primary-fixed font-bold">Extended Evening Meditation</div>
+</div>
+<div class="bg-surface-container p-4 rounded-xl border border-white/5">
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">CHAPTER IMPACT</div>
+<div class="font-body-md text-body-md text-primary-fixed font-bold">+2 Resilience Points</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Placeholder for visual flow -->
+<div class="flex justify-end opacity-50">
+<div class="w-32 h-1 bg-surface-variant rounded-full"></div>
+</div>
+</div>
+<div class="mt-6 pt-6 border-t border-white/5">
+<div class="relative group">
+<input class="w-full bg-surface-container-high border-none rounded-xl px-6 py-4 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/40 focus:ring-1 focus:ring-primary-fixed transition-all" placeholder="Reflect on your decisions..." type="text"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-primary-fixed text-on-primary-fixed rounded-lg transition-transform hover:scale-105 active:scale-95">
+<span class="material-symbols-outlined">north_east</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Panel: Identity Metrics -->
+<section class="col-span-12 lg:col-span-5 grid grid-cols-1 gap-bento-gap h-fit lg:h-[calc(100vh-140px)] overflow-y-auto no-scrollbar pb-10">
+<!-- Promises Kept: Large Radial -->
+<div class="glass-card p-container-padding rounded-xl relative overflow-hidden group">
+
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-full flex justify-between items-start mb-6">
+<div>
+<h4 class="font-label-caps text-label-caps text-primary-fixed tracking-[0.2em]">CORE METRIC</h4>
+<h3 class="font-headline-md text-headline-md text-on-surface">Promises Kept</h3>
+</div>
+<span class="font-mono-data text-mono-data text-primary-fixed-dim">+4.2% THIS WEEK</span>
+</div>
+<div class="relative flex items-center justify-center py-8">
+<svg class="w-56 h-56 transform -rotate-90">
+<circle cx="112" cy="112" fill="transparent" r="100" stroke="#1A1F19" stroke-width="12"></circle>
+<circle class="transition-all duration-1000 ease-out" cx="112" cy="112" fill="transparent" r="100" stroke="url(#gradient-lime)" stroke-dasharray="628" stroke-dashoffset="100" stroke-linecap="round" stroke-width="12"></circle>
+<defs>
+<lineargradient id="gradient-lime" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#c3f400;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#556d00;stop-opacity:1"></stop>
+</lineargradient>
+</defs>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+<span class="font-display-lg text-display-lg text-on-surface">84<span class="text-2xl">%</span></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">INTEGRITY SCORE</span>
+</div>
+</div>
+<div class="w-full grid grid-cols-3 gap-4 mt-4">
+<div class="text-center">
+<div class="font-mono-data text-on-surface">12/14</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant opacity-60">Daily Habits</div>
+</div>
+<div class="text-center border-x border-white/5">
+<div class="font-mono-data text-on-surface">100%</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant opacity-60">Focus Sessions</div>
+</div>
+<div class="text-center">
+<div class="font-mono-data text-on-surface">22d</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant opacity-60">Active Streak</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recovery & Capacity -->
+<div class="grid grid-cols-2 gap-bento-gap">
+<div class="glass-card p-6 rounded-xl">
+<div class="flex justify-between items-center mb-4">
+<span class="material-symbols-outlined text-primary-fixed" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="font-mono-data text-mono-data text-on-surface-variant">92%</span>
+</div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-1">RECOVERY</h4>
+<div class="h-1.5 w-full bg-surface-variant rounded-full mt-2 overflow-hidden">
+<div class="h-full bg-primary-fixed-dim w-[92%]"></div>
+</div>
+<p class="font-mono-data text-[10px] mt-2 text-on-surface-variant/40">Optimum HRV detected</p>
+</div>
+<div class="glass-card p-6 rounded-xl">
+<div class="flex justify-between items-center mb-4">
+<span class="material-symbols-outlined text-primary-fixed" style="font-variation-settings: 'FILL' 1;">vital_signs</span>
+<span class="font-mono-data text-mono-data text-on-surface-variant">78%</span>
+</div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-1">CAPACITY</h4>
+<div class="h-1.5 w-full bg-surface-variant rounded-full mt-2 overflow-hidden">
+<div class="h-full bg-primary-fixed-dim w-[78%]"></div>
+</div>
+<p class="font-mono-data text-[10px] mt-2 text-on-surface-variant/40">Moderate cognitive load</p>
+</div>
+</div>
+<!-- Current Chapter: The Crucible -->
+<div class="glass-card p-container-padding rounded-xl relative group">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h4 class="font-label-caps text-label-caps text-primary-fixed tracking-[0.2em]">CURRENT CHAPTER</h4>
+<h3 class="font-headline-md text-headline-md text-on-surface">The Crucible</h3>
+</div>
+<div class="w-10 h-10 border border-primary-fixed/20 rounded flex items-center justify-center">
+<span class="font-display-lg text-lg text-primary-fixed">04</span>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex items-center space-x-4">
+<div class="w-full bg-surface-variant h-8 rounded-lg relative overflow-hidden flex items-center px-4">
+<div class="absolute inset-0 bg-primary-fixed/20 w-[65%]"></div>
+<span class="relative z-10 font-label-caps text-label-caps text-on-surface">65% TO COMPLETION</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed italic">
+                            "Phase of intense refinement. All systems are being tested through high-stakes commitment and radical honesty."
+                        </p>
+<div class="pt-4 flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-surface-container-highest rounded-full font-label-caps text-[10px] border border-white/5 text-on-surface-variant">#DISCIPLINE</span>
+<span class="px-3 py-1 bg-surface-container-highest rounded-full font-label-caps text-[10px] border border-white/5 text-on-surface-variant">#REBIRTH</span>
+<span class="px-3 py-1 bg-surface-container-highest rounded-full font-label-caps text-[10px] border border-white/5 text-on-surface-variant">#STARK_TRUTH</span>
+</div>
+</div>
+</div>
+<!-- Performance Chart -->
+<div class="glass-card p-container-padding rounded-xl">
+<div class="flex justify-between items-center mb-6">
+<h4 class="font-label-caps text-label-caps text-on-surface">MONTHLY TRAJECTORY</h4>
+<div class="flex space-x-2">
+<div class="w-2 h-2 rounded-full bg-primary-fixed"></div>
+<div class="w-2 h-2 rounded-full bg-surface-variant"></div>
+</div>
+</div>
+<div class="h-32 flex items-end space-x-2">
+<!-- Simple CSS/HTML Bar Chart for clean editorial look -->
+<div class="flex-1 bg-surface-variant rounded-t-sm h-[40%] transition-all hover:bg-primary-fixed/40"></div>
+<div class="flex-1 bg-surface-variant rounded-t-sm h-[55%] transition-all hover:bg-primary-fixed/40"></div>
+<div class="flex-1 bg-surface-variant rounded-t-sm h-[70%] transition-all hover:bg-primary-fixed/40"></div>
+<div class="flex-1 bg-primary-fixed rounded-t-sm h-[85%]"></div>
+<div class="flex-1 bg-surface-variant rounded-t-sm h-[60%] transition-all hover:bg-primary-fixed/40"></div>
+<div class="flex-1 bg-surface-variant rounded-t-sm h-[75%] transition-all hover:bg-primary-fixed/40"></div>
+<div class="flex-1 bg-primary-fixed rounded-t-sm h-[95%]"></div>
+<div class="flex-1 bg-surface-variant rounded-t-sm h-[80%] transition-all hover:bg-primary-fixed/40"></div>
+<div class="flex-1 bg-surface-variant rounded-t-sm h-[65%] transition-all hover:bg-primary-fixed/40"></div>
+<div class="flex-1 bg-primary-fixed rounded-t-sm h-[100%] animate-pulse-slow"></div>
+</div>
+<div class="flex justify-between mt-4 font-mono-data text-[10px] text-on-surface-variant opacity-40 uppercase tracking-widest">
+<span>WEEK 01</span>
+<span>WEEK 02</span>
+<span>WEEK 03</span>
+<span>WEEK 04</span>
+</div>
+</div>
+</section>
+</div>
+<!-- Sticky Footer -->
+<footer class="w-full py-4 border-t border-white/5 bg-surface-dim opacity-60 italic text-center">
+<p class="font-label-caps text-label-caps text-on-surface-variant">
+                You are not your urges. You are your decisions. © 2024 LOCKEDIN-X
+            </p>
+</footer>
+</main>
+<script>
+        // Micro-interactions for navigation and cards
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+                card.style.transition = 'transform 0.3s ease';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Simulating message typing/loading for AI Companion
+        const conversationContainer = document.querySelector('.overflow-y-auto');
+        if (conversationContainer) {
+            conversationContainer.scrollTop = conversationContainer.scrollHeight;
+        }
+    </script>
+</body></html>

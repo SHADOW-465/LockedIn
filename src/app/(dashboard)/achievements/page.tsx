@@ -1,110 +1,97 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { TopBar } from '@/components/layout/top-bar'
-import { BottomNav } from '@/components/layout/bottom-nav'
-import { Trophy, Flame, Zap } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { getSupabase } from '@/lib/supabase/client'
-import type { Achievement } from '@/lib/supabase/schema'
+import { ACHIEVEMENT_CATALOG } from '@/lib/achievements-catalog'
+import { Icon } from '@/components/ui/icon'
+import { cn } from '@/lib/utils'
 
+type Unlocked = { achievement_id: string; name?: string; awarded_at: string; xp_awarded?: number }
+
+/**
+ * Insights / achievements grid — catalog + unlocked rows from DB.
+ */
 export default function AchievementsPage() {
-    const { user, profile } = useAuth()
-    const [achievements, setAchievements] = useState<Achievement[]>([])
-    const [loading, setLoading] = useState(true)
+  const { user, profile } = useAuth()
+  const [unlocked, setUnlocked] = useState<Unlocked[]>([])
+  const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        if (!user) return
-        const supabase = getSupabase()
-        supabase
-            .from('achievements')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('awarded_at', { ascending: false })
-            .then(({ data }: { data: Achievement[] | null }) => {
-                setAchievements((data ?? []) as Achievement[])
-                setLoading(false)
-            })
-    }, [user])
+  useEffect(() => {
+    if (!user?.id) return
+    void (async () => {
+      const { data } = await getSupabase()
+        .from('achievements')
+        .select('achievement_id, name, awarded_at, xp_awarded')
+        .eq('user_id', user.id)
+        .order('awarded_at', { ascending: false })
+      setUnlocked((data as Unlocked[] | null) || [])
+      setLoading(false)
+    })()
+  }, [user?.id])
 
-    const totalXp = achievements.reduce((sum, a) => sum + a.xp_awarded, 0)
+  const unlockedNames = new Set(
+    unlocked.map((u) => (u.name || u.achievement_id || '').toLowerCase()),
+  )
 
-    return (
-        <>
-            <TopBar />
+  const unlockedCount = ACHIEVEMENT_CATALOG.filter((a) =>
+    unlockedNames.has(a.name.toLowerCase()),
+  ).length
 
-            <div className="min-h-screen bg-black pb-24 lg:pb-8 p-4">
-                <div className="max-w-2xl mx-auto space-y-6">
-                    <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-                        <Trophy size={28} className="text-[var(--accent)]" />
-                        Achievements
-                    </h1>
+  return (
+    <div className="px-6 py-6 xl:px-8 xl:py-8">
+      <header className="mb-6">
+        <p className="font-label-caps text-[10px] tracking-widest text-primary-fixed">INSIGHTS</p>
+        <h1 className="font-headline-md text-2xl font-semibold">Achievements</h1>
+      </header>
 
-                    {/* XP Summary */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                        <div className="grid grid-cols-3 gap-4 text-center">
-                            <div>
-                                <Zap size={20} className="mx-auto text-[var(--accent)] mb-1" />
-                                <div className="text-2xl font-bold font-mono text-white">{totalXp}</div>
-                                <div className="text-[10px] text-white/30 uppercase">Total XP</div>
-                            </div>
-                            <div>
-                                <Trophy size={20} className="mx-auto text-[var(--accent)] mb-1" />
-                                <div className="text-2xl font-bold font-mono text-white">{achievements.length}</div>
-                                <div className="text-[10px] text-white/30 uppercase">Unlocked</div>
-                            </div>
-                            <div>
-                                <Flame size={20} className="mx-auto text-[var(--accent)] mb-1" />
-                                <div className="text-2xl font-bold font-mono text-white">{profile?.compliance_streak ?? 0}</div>
-                                <div className="text-[10px] text-white/30 uppercase">Streak</div>
-                            </div>
-                        </div>
-                    </div>
+      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Stat label="Total XP" value={String(profile?.xp_total ?? 0)} />
+        <Stat label="Unlocked" value={`${unlockedCount}/${ACHIEVEMENT_CATALOG.length}`} />
+        <Stat label="Streak" value={`${profile?.compliance_streak ?? 0}d`} />
+        <Stat label="Willpower" value={String(profile?.willpower_score ?? 0)} />
+      </div>
 
-                    {/* Achievement List */}
-                    {loading ? (
-                        <div className="text-center py-8 text-white/30 text-sm">Loading...</div>
-                    ) : achievements.length === 0 ? (
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center py-12">
-                            <Trophy size={40} className="mx-auto text-white/30 mb-3" />
-                            <p className="text-white/30 text-sm mb-2">No achievements unlocked yet.</p>
-                            <p className="text-[10px] text-white/30">Complete tasks and maintain streaks to earn badges.</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {achievements.map((achievement, idx) => (
-                                <div
-                                    key={achievement.id}
-                                    className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 animate-card-in"
-                                    style={{ animationDelay: `${idx * 50}ms` }}
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <span className="text-2xl">{achievement.icon}</span>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="text-sm font-semibold text-white truncate">{achievement.name}</h4>
-                                                <Badge variant="info" className="shrink-0">+{achievement.xp_awarded} XP</Badge>
-                                            </div>
-                                            {achievement.description && (
-                                                <p className="text-xs text-white/30 mt-0.5">{achievement.description}</p>
-                                            )}
-                                            <span className="text-[10px] text-white/30">
-                                                {new Date(achievement.awarded_at).toLocaleDateString('en-US', {
-                                                    month: 'short', day: 'numeric', year: 'numeric',
-                                                })}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+      {loading ? (
+        <p className="text-sm text-on-surface-variant">Loading…</p>
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {ACHIEVEMENT_CATALOG.map((a) => {
+            const got = unlockedNames.has(a.name.toLowerCase())
+            return (
+              <div
+                key={a.id}
+                className={cn(
+                  'bento-card rounded-2xl p-5',
+                  !got && 'opacity-45',
+                )}
+              >
+                <div className="mb-3 flex items-start justify-between">
+                  <Icon
+                    name={a.icon}
+                    filled={got}
+                    className={got ? 'text-primary-fixed' : 'text-on-surface-variant'}
+                  />
+                  {got && (
+                    <span className="font-label-caps text-[10px] text-primary-fixed">UNLOCKED</span>
+                  )}
                 </div>
-            </div>
+                <h3 className="font-semibold text-on-surface">{a.name}</h3>
+                <p className="mt-1 text-sm text-on-surface-variant">{a.description}</p>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
-            <BottomNav />
-        </>
-    )
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bento-card rounded-xl p-4">
+      <p className="font-label-caps text-[10px] text-on-surface-variant">{label}</p>
+      <p className="mt-1 text-xl font-bold text-on-surface">{value}</p>
+    </div>
+  )
 }

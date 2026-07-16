@@ -1,328 +1,459 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { X, Loader2, Upload, Camera, Video, Mic, FileText, CheckCircle, RotateCcw } from 'lucide-react'
-import { TextProofCapture } from './text-proof-capture'
-import { ImageProofCapture } from './image-proof-capture'
-import { VideoProofCapture } from './video-proof-capture'
-import { AudioProofCapture } from './audio-proof-capture'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { fileToBase64 } from '@/lib/file-to-base64'
 import { saveFileToOPFS } from '@/lib/local-storage/opfs'
+import { Icon } from '@/components/ui/icon'
+import { cn } from '@/lib/utils'
 import type { Task } from '@/lib/supabase/schema'
 
-interface ProofCaptureModalProps {
-    task: Task
-    userId: string
-    sessionId?: string
-    onClose: () => void
-    onSubmitted: (result: { verified: boolean; reason: string; filePath?: string }) => void
+export type ProofSubmitResult = {
+  verified?: boolean
+  verificationReason?: string
+  error?: string
+  [key: string]: unknown
 }
 
-const PROOF_ICONS: Record<string, typeof Camera> = {
-    image: Camera,
-    video: Video,
-    audio: Mic,
-    text: FileText,
+type Mode = 'task' | 'random'
+
+type Props = {
+  open: boolean
+  onClose: () => void
+  mode: Mode
+  userId: string
+  sessionId?: string | null
+  tier?: string
+  /** Task proof */
+  task?: Task | null
+  /** Random proof schedule row id */
+  scheduleId?: string | null
+  onSubmitted?: (result: ProofSubmitResult) => void
 }
 
-const PROOF_LABELS: Record<string, string> = {
-    image: 'Photo',
-    video: 'Video',
-    audio: 'Audio',
-    text: 'Text',
-}
+/**
+ * Stitch verification vault — capture chrome for image/text proofs.
+ * Submits to /api/proof/submit or /api/proof/submit-random.
+ */
+export function ProofCaptureModal({
+  open,
+  onClose,
+  mode,
+  userId,
+  sessionId,
+  tier,
+  task,
+  scheduleId,
+  onSubmitted,
+}: Props) {
+  const fileRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
 
-/** Save proof data to localStorage so it persists on the device */
-function saveProofToLocal(key: string, data: { type: string; content: string; capturedAt: string }) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [textContent, setTextContent] = useState('')
+  const [cameraOn, setCameraOn] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [status, setStatus] = useState<'idle' | 'ok' | 'fail'>('idle')
+  const [message, setMessage] = useState('')
+
+  const proofType =
+    mode === 'random'
+      ? 'image'
+      : (task?.proof_type as 'image' | 'video' | 'audio' | 'text' | null) || 'image'
+
+  const title =
+    mode === 'random' ? 'Random proof check' : task?.title || 'Capture proof'
+  const requirement =
+    mode === 'random'
+      ? 'Show your locked chastity device clearly. Secure, closed, unmodified.'
+      : task?.verification_requirement || task?.description || 'Provide clear proof of completion.'
+
+  const stopCamera = useCallback(() => {
+    streamRef.current?.getTracks().forEach((t) => t.stop())
+    streamRef.current = null
+    setCameraOn(false)
+  }, [])
+
+  useEffect(() => {
+    if (!open) {
+      stopCamera()
+      setPreviewUrl(null)
+      setFile(null)
+      setTextContent('')
+      setStatus('idle')
+      setMessage('')
+      setSubmitting(false)
+    }
+  }, [open, stopCamera])
+
+  useEffect(() => {
+    return () => stopCamera()
+  }, [stopCamera])
+
+  async function startCamera() {
     try {
-        localStorage.setItem(key, JSON.stringify(data))
-    } catch (err) {
-        console.warn('[Proof] localStorage save failed (likely quota exceeded):', err)
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false,
+      })
+      streamRef.current = stream
+      setCameraOn(true)
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        await videoRef.current.play()
+      }
+    } catch {
+      setMessage('Camera unavailable — use gallery or file picker.')
+      fileRef.current?.click()
     }
-}
+  }
 
-export function ProofCaptureModal({ task, userId, sessionId, onClose, onSubmitted }: ProofCaptureModalProps) {
-    // Smart proof type: use task's proof_type, fallback to 'text' (self-report) not 'image'
-    const proofType = task.proof_type || 'text'
-    const [phase, setPhase] = useState<'capture' | 'review' | 'submitting' | 'result'>('capture')
-    const [capturedData, setCapturedData] = useState<{
-        textContent?: string
-        fileBase64?: string
-        previewUrl?: string
-        durationSeconds?: number
-    } | null>(null)
-    const [submitResult, setSubmitResult] = useState<{ verified: boolean; reason: string; filePath?: string } | null>(null)
-
-    const ProofIcon = PROOF_ICONS[proofType] || FileText
-
-    // ── Capture handlers — move to REVIEW phase, don't auto-submit ──
-
-    const handleTextCapture = useCallback((text: string) => {
-        setCapturedData({ textContent: text })
-        setPhase('review')
-    }, [])
-
-    const handleImageCapture = useCallback((base64: string) => {
-        setCapturedData({
-            fileBase64: base64,
-            previewUrl: `data:image/jpeg;base64,${base64}`,
-        })
-        setPhase('review')
-    }, [])
-
-    const handleVideoCapture = useCallback((base64: string, duration: number) => {
-        setCapturedData({
-            fileBase64: base64,
-            previewUrl: `data:video/webm;base64,${base64}`,
-            durationSeconds: duration,
-        })
-        setPhase('review')
-    }, [])
-
-    const handleAudioCapture = useCallback((base64: string, duration: number) => {
-        setCapturedData({
-            fileBase64: base64,
-            previewUrl: `data:audio/webm;base64,${base64}`,
-            durationSeconds: duration,
-        })
-        setPhase('review')
-    }, [])
-
-    // ── Retake — go back to capture ──
-
-    const handleRetake = () => {
-        setCapturedData(null)
-        setPhase('capture')
-    }
-
-    // ── Submit — only when user explicitly confirms ──
-
-    const handleSubmit = async () => {
-        if (!capturedData) return
-        setPhase('submitting')
-
-        // Save to localStorage first (device persistence — lightweight backup)
-        const storageKey = `lockedin_proof_${userId}_${task.id}_${Date.now()}`
-        saveProofToLocal(storageKey, {
-            type: proofType,
-            content: capturedData.textContent || capturedData.fileBase64 || '',
-            capturedAt: new Date().toISOString(),
-        })
-
-        // Save binary proof to OPFS for permanent device storage and export
-        let filePath: string | undefined
-        if (capturedData.fileBase64 && sessionId) {
-            try {
-                const ext = proofType === 'video' ? 'webm' : proofType === 'audio' ? 'webm' : 'jpg'
-                const category: 'videos' | 'proofs' = proofType === 'video' ? 'videos' : 'proofs'
-                const filename = `${task.id}_${Date.now()}.${ext}`
-                const binaryStr = atob(capturedData.fileBase64)
-                const bytes = new Uint8Array(binaryStr.length)
-                for (let i = 0; i < binaryStr.length; i++) {
-                    bytes[i] = binaryStr.charCodeAt(i)
-                }
-                filePath = await saveFileToOPFS(userId, sessionId, category, filename, bytes.buffer)
-            } catch (opfsErr) {
-                console.warn('[Proof] OPFS save failed — file will not be exportable:', opfsErr)
-            }
-        }
-
-        try {
-            const res = await fetch('/api/proof/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    taskId: task.id,
-                    userId,
-                    sessionId,
-                    proofType,
-                    textContent: capturedData.textContent,
-                    fileBase64: capturedData.fileBase64,
-                    filePath,
-                    localStorageKey: storageKey,
-                    captureMetadata: {
-                        device_user_agent: navigator.userAgent,
-                        capture_timestamp: new Date().toISOString(),
-                        local_hour: new Date().getHours(),
-                        duration_seconds: capturedData.durationSeconds,
-                    },
-                }),
-            })
-
-            const result = await res.json()
-            const verResult = {
-                verified: result.verified ?? false,
-                reason: result.verificationReason || result.error || 'Unknown',
-                filePath,
-            }
-            setSubmitResult(verResult)
-            setPhase('result')
-            onSubmitted(verResult)
-        } catch (err) {
-            console.error('Proof submission error:', err)
-            setSubmitResult({ verified: false, reason: 'Network error. Please try again.' })
-            setPhase('result')
-        }
-    }
-
-    // ── Render ──
-
-    return (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 pb-24 sm:pb-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full max-h-[90dvh] overflow-y-auto">
-                {/* Header */}
-                <div className="flex items-start justify-between p-5 border-b border-zinc-800">
-                    <div className="space-y-2">
-                        <h2 className="text-lg font-bold flex items-center gap-2">
-                            <ProofIcon size={20} className="text-[var(--accent)]" />
-                            Submit Proof
-                        </h2>
-                        <p className="text-sm text-white/60 line-clamp-1">{task.title}</p>
-                        <Badge variant="genre">{PROOF_LABELS[proofType] || proofType.toUpperCase()} Required</Badge>
-                    </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer">
-                        <X size={20} className="text-white/30" />
-                    </button>
-                </div>
-
-                {/* Requirement */}
-                {task.verification_requirement && (
-                    <div className="px-5 pt-4">
-                        <div className="bg-zinc-800 border border-zinc-700 rounded-[var(--radius-md)] p-3">
-                            <p className="text-xs text-[var(--accent)] font-bold uppercase mb-1">Requirement</p>
-                            <p className="text-sm text-white/60">{task.verification_requirement}</p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Content Area */}
-                <div className="p-5">
-                    {/* ── CAPTURE PHASE ── */}
-                    {phase === 'capture' && (
-                        <>
-                            {proofType === 'text' && (
-                                <TextProofCapture
-                                    requirement={task.verification_requirement || ''}
-                                    onCapture={handleTextCapture}
-                                    disabled={false}
-                                />
-                            )}
-                            {proofType === 'image' && (
-                                <ImageProofCapture
-                                    onCapture={handleImageCapture}
-                                    disabled={false}
-                                />
-                            )}
-                            {proofType === 'video' && (
-                                <VideoProofCapture
-                                    onCapture={handleVideoCapture}
-                                    disabled={false}
-                                />
-                            )}
-                            {proofType === 'audio' && (
-                                <AudioProofCapture
-                                    onCapture={handleAudioCapture}
-                                    disabled={false}
-                                />
-                            )}
-                        </>
-                    )}
-
-                    {/* ── REVIEW PHASE — user confirms before submitting ── */}
-                    {phase === 'review' && capturedData && (
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-bold text-white/60 uppercase">Review Your Proof</h3>
-
-                            {/* Text preview */}
-                            {proofType === 'text' && capturedData.textContent && (
-                                <div className="bg-zinc-800 border border-zinc-700 rounded-[var(--radius-md)] p-4 max-h-48 overflow-y-auto">
-                                    <p className="text-sm text-white whitespace-pre-wrap">{capturedData.textContent}</p>
-                                </div>
-                            )}
-
-                            {/* Image preview */}
-                            {proofType === 'image' && capturedData.previewUrl && (
-                                <div className="rounded-[var(--radius-lg)] overflow-hidden border border-zinc-700">
-                                    <img src={capturedData.previewUrl} alt="Captured proof" className="w-full" />
-                                </div>
-                            )}
-
-                            {/* Video preview */}
-                            {proofType === 'video' && capturedData.previewUrl && (
-                                <div className="rounded-[var(--radius-lg)] overflow-hidden border border-zinc-700">
-                                    <video src={capturedData.previewUrl} controls className="w-full" />
-                                    <p className="text-xs text-white/30 text-center py-1">
-                                        Duration: {capturedData.durationSeconds}s
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Audio preview */}
-                            {proofType === 'audio' && capturedData.previewUrl && (
-                                <div className="bg-zinc-800 rounded-[var(--radius-md)] p-4 space-y-2">
-                                    <audio src={capturedData.previewUrl} controls className="w-full" />
-                                    <p className="text-xs text-white/30 text-center">
-                                        Duration: {capturedData.durationSeconds}s
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Action buttons */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <Button variant="ghost" onClick={handleRetake}>
-                                    <RotateCcw size={14} className="mr-1" /> Retake
-                                </Button>
-                                <Button variant="primary" onClick={handleSubmit}>
-                                    <Upload size={14} className="mr-1" /> Submit Proof
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* ── SUBMITTING PHASE ── */}
-                    {phase === 'submitting' && (
-                        <div className="text-center py-10 space-y-3">
-                            <Loader2 size={32} className="mx-auto animate-spin text-[var(--accent)]" />
-                            <p className="text-sm text-white/60">Verifying your proof...</p>
-                            <p className="text-xs text-white/30 italic">
-                                Your Master is reviewing your submission.
-                            </p>
-                        </div>
-                    )}
-
-                    {/* ── RESULT PHASE ── */}
-                    {phase === 'result' && submitResult && (
-                        <div className="py-6 space-y-4">
-                            <div className="text-center space-y-2">
-                                <div className="text-xl font-bold tracking-widest">{submitResult.verified ? 'VERIFIED' : 'REJECTED'}</div>
-                                <h3 className={`text-lg font-bold ${submitResult.verified ? 'text-teal-400' : 'text-[var(--accent)]'}`}>
-                                    {submitResult.verified ? 'Proof Verified!' : 'Proof Rejected'}
-                                </h3>
-                            </div>
-                            {/* AI Feedback */}
-                            <div className={`rounded-[var(--radius-md)] p-4 border text-left ${submitResult.verified ? 'bg-teal-400/5 border-teal-400/20' : 'bg-[var(--accent)]/5 border-[var(--accent)]/20'}`}>
-                                <p className={`text-xs font-bold uppercase mb-2 ${submitResult.verified ? 'text-teal-400' : 'text-[var(--accent)]'}`}>
-                                    AI Feedback
-                                </p>
-                                <p className="text-sm text-white/60 whitespace-pre-line leading-relaxed">{submitResult.reason}</p>
-                            </div>
-                            <div className="flex justify-center gap-3">
-                                {!submitResult.verified && (
-                                    <Button variant="primary" size="sm" onClick={handleRetake}>
-                                        Try Again
-                                    </Button>
-                                )}
-                                {submitResult.verified && (
-                                    <Button variant="ghost" size="sm" onClick={onClose}>
-                                        <CheckCircle size={14} className="mr-1" /> Done
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
+  function captureFrame() {
+    const video = videoRef.current
+    if (!video) return
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth || 720
+    canvas.height = video.videoHeight || 1280
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.drawImage(video, 0, 0)
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return
+        const f = new File([blob], `capture-${Date.now()}.jpg`, { type: 'image/jpeg' })
+        setFile(f)
+        setPreviewUrl(URL.createObjectURL(blob))
+        stopCamera()
+      },
+      'image/jpeg',
+      0.9,
     )
+  }
+
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]
+    if (!f) return
+    setFile(f)
+    setPreviewUrl(URL.createObjectURL(f))
+    stopCamera()
+  }
+
+  async function submit() {
+    if (submitting) return
+    setSubmitting(true)
+    setMessage('')
+    setStatus('idle')
+
+    try {
+      if (proofType === 'text') {
+        if (!textContent.trim()) {
+          setMessage('Write your text proof first.')
+          setSubmitting(false)
+          return
+        }
+        if (mode !== 'task' || !task) {
+          setMessage('Text proof only for tasks.')
+          setSubmitting(false)
+          return
+        }
+        const res = await fetch('/api/proof/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            taskId: task.id,
+            userId,
+            sessionId: sessionId || task.session_id,
+            proofType: 'text',
+            textContent: textContent.trim(),
+            captureMetadata: {
+              device_user_agent: navigator.userAgent,
+              capture_timestamp: new Date().toISOString(),
+              local_hour: new Date().getHours(),
+            },
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          setStatus('fail')
+          setMessage(data.error || 'Submit failed')
+          setSubmitting(false)
+          return
+        }
+        setStatus(data.verified ? 'ok' : 'fail')
+        setMessage(data.verificationReason || (data.verified ? 'Verified' : 'Rejected'))
+        onSubmitted?.(data)
+        setSubmitting(false)
+        return
+      }
+
+      // Media proofs
+      if (!file) {
+        setMessage('Capture or choose a photo first.')
+        setSubmitting(false)
+        return
+      }
+
+      const base64 = await fileToBase64(file)
+      let localKey: string | undefined
+      try {
+        const sid = sessionId || task?.session_id || 'no-session'
+        localKey = await saveFileToOPFS(
+          userId,
+          sid,
+          'proofs',
+          `${Date.now()}-${file.name || 'proof.jpg'}`,
+          file,
+        )
+      } catch {
+        // OPFS optional
+      }
+
+      if (mode === 'random' && scheduleId) {
+        const res = await fetch('/api/proof/submit-random', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            scheduleId,
+            imageBase64: base64,
+            userId,
+            sessionId: sessionId || undefined,
+            tier,
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          setStatus('fail')
+          setMessage(data.error || 'Random proof failed')
+          setSubmitting(false)
+          return
+        }
+        setStatus(data.verified ? 'ok' : 'fail')
+        setMessage(data.reason || (data.verified ? 'Verified' : 'Not verified'))
+        onSubmitted?.(data)
+        setSubmitting(false)
+        return
+      }
+
+      if (!task) {
+        setMessage('No task selected.')
+        setSubmitting(false)
+        return
+      }
+
+      const res = await fetch('/api/proof/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskId: task.id,
+          userId,
+          sessionId: sessionId || task.session_id,
+          proofType: proofType === 'video' || proofType === 'audio' ? proofType : 'image',
+          fileBase64: base64,
+          localStorageKey: localKey,
+          captureMetadata: {
+            device_user_agent: navigator.userAgent,
+            capture_timestamp: new Date().toISOString(),
+            local_hour: new Date().getHours(),
+          },
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setStatus('fail')
+        setMessage(data.error || 'Submit failed')
+        setSubmitting(false)
+        return
+      }
+      setStatus(data.verified ? 'ok' : 'fail')
+      setMessage(data.verificationReason || (data.verified ? 'Verified' : 'Rejected'))
+      onSubmitted?.(data)
+    } catch (err) {
+      setStatus('fail')
+      setMessage(err instanceof Error ? err.message : 'Network error')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-[100] flex flex-col bg-background text-on-surface">
+      {/* Top bar */}
+      <header className="flex items-center justify-between border-b border-white/5 px-4 py-3 backdrop-blur-xl">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex min-h-11 min-w-11 items-center justify-center rounded-full hover:bg-surface-container"
+          aria-label="Close"
+        >
+          <Icon name="arrow_back" className="text-on-surface-variant" />
+        </button>
+        <span className="font-label-caps text-[11px] tracking-widest text-on-surface-variant">
+          VERIFICATION VAULT
+        </span>
+        <div className="w-11" />
+      </header>
+
+      <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden px-4 py-4 md:px-8">
+        <section className="mx-auto w-full max-w-4xl">
+          <h2 className="font-headline-md text-2xl font-semibold">Capture your proof.</h2>
+          <p className="mt-1 max-w-xl text-sm text-on-surface-variant">{requirement}</p>
+        </section>
+
+        <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-4 lg:grid-cols-12">
+          {/* Context */}
+          <div className="flex flex-col gap-3 lg:col-span-4">
+            <div className="glass-panel rounded-2xl border border-white/5 p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="font-label-caps text-[11px] tracking-widest text-primary-fixed">
+                  {mode === 'random' ? 'RANDOM SLOT' : 'ACTIVE TASK'}
+                </span>
+                <Icon name="sensors" className="animate-pulse text-primary-fixed" />
+              </div>
+              <h3 className="text-lg font-semibold">{title}</h3>
+              {task?.deadline && (
+                <p className="mt-2 font-mono-data text-[11px] text-on-surface-variant">
+                  Due {new Date(task.deadline).toLocaleString()}
+                </p>
+              )}
+              <p className="mt-3 text-xs text-on-surface-variant">
+                Proof type: <span className="text-on-surface">{proofType}</span>
+              </p>
+            </div>
+            {status !== 'idle' && (
+              <div
+                className={cn(
+                  'rounded-2xl border p-4 text-sm',
+                  status === 'ok'
+                    ? 'border-primary-fixed/40 bg-primary-fixed/10 text-on-surface'
+                    : 'border-error/40 bg-error/10 text-error',
+                )}
+              >
+                {message}
+              </div>
+            )}
+            {status === 'idle' && message && (
+              <p className="text-sm text-on-surface-variant">{message}</p>
+            )}
+          </div>
+
+          {/* Viewfinder */}
+          <div className="relative lg:col-span-8">
+            {proofType === 'text' ? (
+              <div className="rounded-2xl border border-white/5 bg-surface-container p-5">
+                <label className="block space-y-2">
+                  <span className="font-label-caps text-[11px] text-on-surface-variant">
+                    TEXT PROOF
+                  </span>
+                  <textarea
+                    value={textContent}
+                    onChange={(e) => setTextContent(e.target.value)}
+                    rows={10}
+                    className="w-full rounded-xl border border-white/10 bg-surface-container-lowest px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary-fixed"
+                    placeholder="Describe completion as required…"
+                  />
+                </label>
+              </div>
+            ) : (
+              <div className="relative aspect-[3/4] max-h-[70vh] overflow-hidden rounded-2xl border border-white/10 bg-surface-container-lowest camera-mesh sm:aspect-video">
+                {/* corners */}
+                <div className="viewfinder-corner viewfinder-corner-tl" />
+                <div className="viewfinder-corner viewfinder-corner-tr" />
+                <div className="viewfinder-corner viewfinder-corner-bl" />
+                <div className="viewfinder-corner viewfinder-corner-br" />
+
+                {cameraOn ? (
+                  <video
+                    ref={videoRef}
+                    playsInline
+                    muted
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : previewUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={previewUrl}
+                    alt="Proof preview"
+                    className="absolute inset-0 h-full w-full object-contain"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
+                    <Icon name="photo_camera" className="text-4xl text-on-surface-variant opacity-50" />
+                    <p className="text-sm text-on-surface-variant">
+                      Frame the device clearly. Use camera or gallery.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Controls */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              {proofType !== 'text' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => void startCamera()}
+                    className="min-h-11 rounded-full border border-white/10 px-5 py-2 text-xs font-bold hover:bg-white/5"
+                  >
+                    Camera
+                  </button>
+                  {cameraOn && (
+                    <button
+                      type="button"
+                      onClick={captureFrame}
+                      className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-primary-fixed bg-primary-fixed/20"
+                      aria-label="Shutter"
+                    >
+                      <span className="h-12 w-12 rounded-full bg-primary-fixed" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    className="min-h-11 rounded-full border border-white/10 px-5 py-2 text-xs font-bold hover:bg-white/5"
+                  >
+                    Gallery
+                  </button>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept={
+                      proofType === 'video'
+                        ? 'video/*'
+                        : proofType === 'audio'
+                          ? 'audio/*'
+                          : 'image/*'
+                    }
+                    capture="environment"
+                    className="hidden"
+                    onChange={onFileChange}
+                  />
+                </>
+              )}
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => void submit()}
+                className="min-h-11 rounded-full bg-primary-fixed px-8 py-2 text-xs font-bold text-on-primary-fixed disabled:opacity-50"
+              >
+                {submitting ? 'Verifying…' : 'Submit proof'}
+              </button>
+              {status === 'ok' && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="min-h-11 rounded-full border border-primary-fixed/40 px-5 py-2 text-xs font-bold text-primary-fixed"
+                >
+                  Done
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }

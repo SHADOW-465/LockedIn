@@ -1,5 +1,12 @@
 import { getSupabase } from './client'
 import type { Session } from './schema'
+import {
+  getCachedActiveSession,
+  getCachedLiveSession,
+  invalidateSessionCache,
+  setCachedActiveSession,
+  setCachedLiveSession,
+} from './session-cache'
 
 export async function createSession(
     userId: string,
@@ -35,16 +42,28 @@ export async function createSession(
     if (error) {
         // Double check if it was a race condition
         if (error.code === '23505') { // Unique violation
-            return getActiveSession(userId)
+            return getActiveSession(userId, { bypassCache: true })
         }
         console.error('Error creating session:', error)
         return null
     }
 
-    return data as Session
+    const session = data as Session
+    invalidateSessionCache(userId)
+    setCachedLiveSession(userId, session)
+    setCachedActiveSession(userId, session)
+    return session
 }
 
-export async function getActiveSession(userId: string): Promise<Session | null> {
+export async function getActiveSession(
+    userId: string,
+    opts?: { bypassCache?: boolean },
+): Promise<Session | null> {
+    if (!opts?.bypassCache) {
+        const cached = getCachedActiveSession(userId)
+        if (cached !== undefined) return cached
+    }
+
     const supabase = getSupabase()
     const { data, error } = await supabase
         .from('sessions')
@@ -60,8 +79,42 @@ export async function getActiveSession(userId: string): Promise<Session | null> 
         return null
     }
 
-    return data as Session | null
+    const session = (data as Session | null) ?? null
+    setCachedActiveSession(userId, session)
+    return session
 }
+
+/** Active, extending, or completing — for hub UI and end-of-session archival. */
+export async function getLiveSession(
+    userId: string,
+    opts?: { bypassCache?: boolean },
+): Promise<Session | null> {
+    if (!opts?.bypassCache) {
+        const cached = getCachedLiveSession(userId)
+        if (cached !== undefined) return cached
+    }
+
+    const supabase = getSupabase()
+    const { data, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .in('status', ['active', 'extending', 'completing'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+    if (error) {
+        console.error('Error fetching live session:', error)
+        return null
+    }
+
+    const session = (data as Session | null) ?? null
+    setCachedLiveSession(userId, session)
+    return session
+}
+
+export { invalidateSessionCache }
 
 export async function endSession(sessionId: string): Promise<boolean> {
     const supabase = getSupabase()

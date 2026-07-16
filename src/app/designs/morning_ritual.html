@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LOCKEDIN-X | Morning Ritual</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&amp;family=Manrope:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@100..900&amp;family=Geist:wght@100..900&amp;family=Manrope:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(22, 27, 21, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .bento-inner-glow {
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0D110C;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #323630;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-variant": "#323630",
+                      "surface-tint": "#abd600",
+                      "on-secondary": "#2b3229",
+                      "tertiary-fixed-dim": "#c1c9bd",
+                      "surface-container-highest": "#323630",
+                      "on-tertiary-fixed": "#171d16",
+                      "primary": "#ffffff",
+                      "background": "#10140f",
+                      "primary-container": "#c3f400",
+                      "on-primary-container": "#556d00",
+                      "on-tertiary": "#2b322a",
+                      "error": "#ffb4ab",
+                      "on-primary": "#283500",
+                      "surface-container-low": "#191d17",
+                      "primary-fixed-dim": "#abd600",
+                      "surface-container": "#1d211b",
+                      "on-secondary-container": "#b3bbae",
+                      "on-secondary-fixed-variant": "#42493f",
+                      "on-background": "#e0e4db",
+                      "surface-container-high": "#272b25",
+                      "on-error-container": "#ffdad6",
+                      "secondary-fixed-dim": "#c1c9bc",
+                      "on-primary-fixed-variant": "#3c4d00",
+                      "secondary-fixed": "#dde5d7",
+                      "secondary-container": "#444b41",
+                      "error-container": "#93000a",
+                      "surface": "#10140f",
+                      "surface-dim": "#10140f",
+                      "tertiary": "#ffffff",
+                      "outline": "#8e9379",
+                      "inverse-surface": "#e0e4db",
+                      "on-error": "#690005",
+                      "on-tertiary-container": "#5f665c",
+                      "on-secondary-fixed": "#171d15",
+                      "on-primary-fixed": "#161e00",
+                      "inverse-primary": "#506600",
+                      "surface-bright": "#363a34",
+                      "tertiary-fixed": "#dee5d8",
+                      "tertiary-container": "#dee5d8",
+                      "inverse-on-surface": "#2d322c",
+                      "on-surface-variant": "#c4c9ac",
+                      "surface-container-lowest": "#0b0f0a",
+                      "secondary": "#c1c9bc",
+                      "on-tertiary-fixed-variant": "#424940",
+                      "outline-variant": "#444933",
+                      "primary-fixed": "#c3f400",
+                      "on-surface": "#e0e4db"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "bento-gap": "12px",
+                      "section-margin": "48px",
+                      "gutter": "16px",
+                      "base": "8px",
+                      "container-padding": "24px"
+              },
+              "fontFamily": {
+                      "display-lg": ["Epilogue"],
+                      "body-md": ["Manrope"],
+                      "mono-data": ["Geist"],
+                      "headline-md": ["Epilogue"],
+                      "label-caps": ["Geist"],
+                      "body-lg": ["Manrope"]
+              },
+              "fontSize": {
+                      "display-lg": ["48px", {"lineHeight": "52px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400"}],
+                      "mono-data": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- SIDE NAVIGATION SHELL -->
+<aside class="fixed left-0 top-0 h-screen z-50 flex flex-col w-64 bg-surface border-r border-white/5">
+<div class="px-6 py-8">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-fixed" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold tracking-tighter text-on-surface leading-none">LOCKEDIN-X</h1>
+<p class="font-label-caps text-[10px] tracking-widest text-on-surface-variant mt-1 opacity-60">DISCIPLINE. IDENTITY. FREEDOM.</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-1 py-4 overflow-y-auto">
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 hover:bg-surface-variant transition-colors duration-200 flex items-center gap-3 rounded-lg" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</a>
+<a class="bg-secondary-container text-primary-fixed font-bold rounded-lg mx-2 px-3 py-2 border-l-4 border-primary-fixed flex items-center gap-3 active:scale-[0.98] transition-transform duration-200 ease-out" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-label-caps text-label-caps">Daily Ritual</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 hover:bg-surface-variant transition-colors duration-200 flex items-center gap-3 rounded-lg" href="#">
+<span class="material-symbols-outlined">shield_with_heart</span>
+<span class="font-label-caps text-label-caps">Support Mode</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 hover:bg-surface-variant transition-colors duration-200 flex items-center gap-3 rounded-lg" href="#">
+<span class="material-symbols-outlined">book</span>
+<span class="font-label-caps text-label-caps">Memoir</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 hover:bg-surface-variant transition-colors duration-200 flex items-center gap-3 rounded-lg" href="#">
+<span class="material-symbols-outlined">psychology</span>
+<span class="font-label-caps text-label-caps">AI Companion</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 hover:bg-surface-variant transition-colors duration-200 flex items-center gap-3 rounded-lg" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-label-caps text-label-caps">Insights &amp; Analytics</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 hover:bg-surface-variant transition-colors duration-200 flex items-center gap-3 rounded-lg" href="#">
+<span class="material-symbols-outlined">trending_up</span>
+<span class="font-label-caps text-label-caps">Progress</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 hover:bg-surface-variant transition-colors duration-200 flex items-center gap-3 rounded-lg" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-label-caps text-label-caps">Calendar</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 hover:bg-surface-variant transition-colors duration-200 flex items-center gap-3 rounded-lg" href="#">
+<span class="material-symbols-outlined">fingerprint</span>
+<span class="font-label-caps text-label-caps">Identity</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface px-3 py-2 mx-2 hover:bg-surface-variant transition-colors duration-200 flex items-center gap-3 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</nav>
+<div class="p-4 mt-auto">
+<button class="w-full bg-primary-fixed text-on-primary-fixed font-label-caps py-3 rounded hover:opacity-90 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+                Focus Mode
+            </button>
+<div class="mt-4 flex items-center gap-3 px-2 py-3 bg-surface-container rounded-lg border border-white/5">
+<span class="material-symbols-outlined text-on-surface-variant">account_circle</span>
+<span class="font-label-caps text-label-caps text-on-surface">Arjun</span>
+</div>
+</div>
+</aside>
+<!-- MAIN CANVAS -->
+<main class="ml-64 min-h-screen flex flex-col relative overflow-hidden">
+<!-- HEADER -->
+<header class="w-full h-20 flex justify-between items-center px-8 py-4 bg-transparent z-10 sticky top-0 backdrop-blur-sm">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary p-2 bg-surface-container-high rounded-full">wb_sunny</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Morning Ritual</h2>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative group">
+<input class="bg-surface-container-high border-none text-body-md rounded-full px-6 py-2 w-64 focus:ring-1 focus:ring-primary-fixed transition-all placeholder:opacity-50" placeholder="Search archives..." type="text"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+</div>
+<button class="hover:bg-surface-container-highest rounded-full p-2 transition-opacity duration-300">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</header>
+<!-- CONTENT BENTO GRID -->
+<div class="flex-1 px-8 pb-12 overflow-y-auto">
+<div class="grid grid-cols-12 gap-bento-gap max-w-7xl mx-auto">
+<!-- PROGRESS & IDENTITY OVERVIEW (Top Left) -->
+<div class="col-span-12 lg:col-span-4 bg-surface-container p-6 rounded-xl border border-white/5 flex flex-col justify-between min-h-[320px]">
+<div>
+<div class="flex justify-between items-start mb-6">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Promises Kept</span>
+<span class="material-symbols-outlined text-primary-fixed" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div class="flex items-center justify-center py-4">
+<div class="relative w-40 h-40">
+<svg class="w-full h-full -rotate-90">
+<circle class="text-surface-variant" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-width="12"></circle>
+<circle class="text-primary-fixed" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-dasharray="440" stroke-dashoffset="88" stroke-linecap="round" stroke-width="12"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-display-lg text-display-lg leading-none">82%</span>
+<span class="font-label-caps text-[10px] text-on-surface-variant opacity-60">STREAK: 14D</span>
+</div>
+</div>
+</div>
+</div>
+<p class="text-body-md text-on-surface-variant text-center px-4 italic opacity-70">"You are not your urges. You are your decisions."</p>
+</div>
+<!-- MORNING BLOCKS CHECKLIST (Top Middle-Right) -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container p-6 rounded-xl border border-white/5">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Morning Blocks</h3>
+<p class="font-body-md text-on-surface-variant">The architecture of your intention.</p>
+</div>
+<span class="font-mono-data text-mono-data text-primary-fixed bg-primary-fixed/10 px-3 py-1 rounded">05:30 AM - 09:00 AM</span>
+</div>
+<div class="space-y-4">
+<!-- Block Item -->
+<div class="flex items-center justify-between p-4 bg-surface-container-high rounded-lg group hover:border-primary-fixed/20 border border-transparent transition-all cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-6 h-6 rounded border-2 border-primary-fixed flex items-center justify-center transition-all group-hover:scale-110">
+<span class="material-symbols-outlined text-[18px] text-primary-fixed">check</span>
+</div>
+<div>
+<p class="font-body-lg text-body-lg font-bold">Deep Work: Identity Forge</p>
+<p class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest">90 Minutes • Focus</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">more_vert</span>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-high rounded-lg group border border-transparent transition-all cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-6 h-6 rounded border-2 border-on-surface-variant/30 flex items-center justify-center transition-all"></div>
+<div>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Somatic Grounding &amp; Mindfulness</p>
+<p class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest">20 Minutes • Presence</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant opacity-40">drag_indicator</span>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-high rounded-lg group border border-transparent transition-all cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-6 h-6 rounded border-2 border-on-surface-variant/30 flex items-center justify-center transition-all"></div>
+<div>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Cold Exposure Therapy</p>
+<p class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest">5 Minutes • Discipline</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant opacity-40">drag_indicator</span>
+</div>
+</div>
+</div>
+<!-- PHOTO VERIFICATION AREA (Bottom Left-Middle) -->
+<div class="col-span-12 lg:col-span-7 bg-surface-container p-8 rounded-xl border border-white/5 relative overflow-hidden group">
+<div class="absolute inset-0 z-0 opacity-20 pointer-events-none">
+
+</div>
+<div class="relative z-10 flex flex-col h-full">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Proof of Discipline</h3>
+<p class="text-body-md text-on-surface-variant">Upload your verification for today's ritual.</p>
+</div>
+<span class="material-symbols-outlined text-primary-fixed">photo_camera</span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-xl hover:border-primary-fixed/40 transition-colors bg-black/20 group-hover:bg-black/40 cursor-pointer p-8">
+<div class="w-20 h-20 rounded-full bg-surface-container-highest flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant">add_a_photo</span>
+</div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-2">DRAG IMAGE OR CLICK TO CAPTURE</p>
+<p class="text-[10px] font-mono-data opacity-40 uppercase tracking-widest text-center">Identity proofing builds permanent self-trust</p>
+</div>
+</div>
+</div>
+<!-- MOOD SELECTOR & DAILY VIBE (Bottom Right) -->
+<div class="col-span-12 lg:col-span-5 bg-surface-container p-8 rounded-xl border border-white/5">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">State Check-in</h3>
+<p class="text-body-md text-on-surface-variant mb-8">What is your current physiological baseline?</p>
+<div class="grid grid-cols-2 gap-4 mb-8">
+<button class="flex flex-col items-center justify-center p-6 bg-surface-container-highest rounded-xl border-2 border-transparent hover:border-primary-fixed/50 transition-all active:scale-95">
+<span class="text-3xl mb-2">⚡</span>
+<span class="font-label-caps text-label-caps text-on-surface">ELECTRIC</span>
+</button>
+<button class="flex flex-col items-center justify-center p-6 bg-surface-container-highest rounded-xl border-2 border-primary-fixed bg-primary-fixed/5 transition-all">
+<span class="text-3xl mb-2">🧘</span>
+<span class="font-label-caps text-label-caps text-primary-fixed">CENTERED</span>
+</button>
+<button class="flex flex-col items-center justify-center p-6 bg-surface-container-highest rounded-xl border-2 border-transparent hover:border-primary-fixed/50 transition-all active:scale-95">
+<span class="text-3xl mb-2">🌊</span>
+<span class="font-label-caps text-label-caps text-on-surface">FLOW</span>
+</button>
+<button class="flex flex-col items-center justify-center p-6 bg-surface-container-highest rounded-xl border-2 border-transparent hover:border-primary-fixed/50 transition-all active:scale-95">
+<span class="text-3xl mb-2">🌋</span>
+<span class="font-label-caps text-label-caps text-on-surface">DRIVEN</span>
+</button>
+</div>
+<div class="p-4 bg-black/20 rounded-lg border border-white/5">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">edit_note</span>
+<span class="font-label-caps text-[10px] text-on-surface-variant tracking-widest">INTENTION LOG</span>
+</div>
+<textarea class="w-full bg-transparent border-none resize-none focus:ring-0 text-body-md placeholder:opacity-30 p-0 h-16" placeholder="Write one sentence for your future self..."></textarea>
+</div>
+</div>
+<!-- ATMOSPHERIC BACKGROUND TEXTURE SECTION -->
+<div class="col-span-12 mt-bento-gap relative h-64 rounded-xl overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center grayscale opacity-60" data-alt="A moody cinematic high-contrast close-up of a person performing a mindfulness exercise in a dark, ultra-modern brutalist apartment. The lighting is low and atmospheric with soft green neon highlights from a digital display in the background. The aesthetic is clean, sophisticated, and focused, reflecting a luxury lifestyle of discipline." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBAe5YZfZdml3E7z_qMzeUaf9_2Aao1_XLxYJ3SGRVdH9K_ICnhKnOd-ActAgO-6Rh2OQbUUL1Tc13Se4f51ZILEl7dkPqJ_H9DuUiGeovE6kuRyLPChzckuYXr76kHyZZIHxlzaI_f7IaEhfG2Ss4XqbAZIjH-B-n9zL50jhvkLNuBsdRj2t2yzbVRWQyORU7zgSQsO8jzCKM6VFdWfBXdl7n2McCdSyhv-J7bvkafTwjuPqrRurEsmI2GaVvr3ROJt-vp_m4Po1AD')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+<div class="absolute bottom-8 left-8">
+<h4 class="font-display-lg text-display-lg text-primary max-w-xl">Master your mornings, master your destiny.</h4>
+</div>
+</div>
+</div>
+</div>
+<!-- FOOTER -->
+<footer class="w-full py-6 flex justify-center items-center bg-surface-dim border-t border-white/5 mt-auto">
+<p class="font-label-caps text-label-caps text-on-surface-variant italic opacity-60">
+                You are not your urges. You are your decisions.
+            </p>
+</footer>
+</main>
+<!-- FLOATING ACTION (Only contextually relevant) -->
+<!-- Suppressed based on "Ritual Details" focus, but we have a bottom CTA in sidebar -->
+<script>
+        // Micro-interaction for Mood Selection
+        document.querySelectorAll('.grid-cols-2 button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.grid-cols-2 button').forEach(b => {
+                    b.classList.remove('border-primary-fixed', 'bg-primary-fixed/5');
+                    b.classList.add('border-transparent');
+                    b.querySelector('span:last-child').classList.remove('text-primary-fixed');
+                    b.querySelector('span:last-child').classList.add('text-on-surface');
+                });
+                this.classList.add('border-primary-fixed', 'bg-primary-fixed/5');
+                this.classList.remove('border-transparent');
+                this.querySelector('span:last-child').classList.add('text-primary-fixed');
+                this.querySelector('span:last-child').classList.remove('text-on-surface');
+            });
+        });
+
+        // Simple Checklist Toggle
+        document.querySelectorAll('.space-y-4 > div').forEach(item => {
+            item.addEventListener('click', function() {
+                const check = this.querySelector('.w-6.h-6');
+                const title = this.querySelector('p:first-child');
+                const sub = this.querySelector('p:last-child');
+                
+                if(check.classList.contains('border-primary-fixed')) {
+                    check.classList.remove('border-primary-fixed');
+                    check.classList.add('border-on-surface-variant/30');
+                    check.innerHTML = '';
+                    title.classList.add('text-on-surface-variant');
+                    title.classList.remove('font-bold');
+                } else {
+                    check.classList.add('border-primary-fixed');
+                    check.classList.remove('border-on-surface-variant/30');
+                    check.innerHTML = '<span class="material-symbols-outlined text-[18px] text-primary-fixed">check</span>';
+                    title.classList.remove('text-on-surface-variant');
+                    title.classList.add('font-bold');
+                }
+            });
+        });
+    </script>
+</body></html>

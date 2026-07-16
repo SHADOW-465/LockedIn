@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LOCKEDIN-X | Home Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&amp;family=Manrope:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#dee5d8",
+                        "secondary": "#c1c9bc",
+                        "outline-variant": "#444933",
+                        "surface-dim": "#10140f",
+                        "surface-bright": "#363a34",
+                        "on-secondary-fixed-variant": "#42493f",
+                        "surface-tint": "#abd600",
+                        "on-tertiary": "#2b322a",
+                        "tertiary-fixed-dim": "#c1c9bd",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed": "#dee5d8",
+                        "on-tertiary-container": "#5f665c",
+                        "surface-container-lowest": "#0b0f0a",
+                        "secondary-fixed": "#dde5d7",
+                        "secondary-container": "#444b41",
+                        "on-secondary-container": "#b3bbae",
+                        "inverse-primary": "#506600",
+                        "inverse-on-surface": "#2d322c",
+                        "surface": "#10140f",
+                        "surface-variant": "#323630",
+                        "on-surface-variant": "#c4c9ac",
+                        "error-container": "#93000a",
+                        "on-secondary-fixed": "#171d15",
+                        "tertiary": "#ffffff",
+                        "surface-container": "#1d211b",
+                        "on-secondary": "#2b3229",
+                        "on-primary-fixed-variant": "#3c4d00",
+                        "primary-fixed": "#c3f400",
+                        "primary-fixed-dim": "#abd600",
+                        "outline": "#8e9379",
+                        "on-background": "#e0e4db",
+                        "primary-container": "#c3f400",
+                        "on-primary-container": "#556d00",
+                        "secondary-fixed-dim": "#c1c9bc",
+                        "on-tertiary-fixed-variant": "#424940",
+                        "on-primary-fixed": "#161e00",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-highest": "#323630",
+                        "on-primary": "#283500",
+                        "on-error": "#690005",
+                        "inverse-surface": "#e0e4db",
+                        "primary": "#ffffff",
+                        "background": "#0D110C",
+                        "on-surface": "#e0e4db",
+                        "surface-container-low": "#191d17",
+                        "surface-container-high": "#272b25",
+                        "on-tertiary-fixed": "#171d16"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "12px",
+                        "xl": "20px",
+                        "2xl": "28px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "base": "8px",
+                        "section-margin": "48px",
+                        "container-padding": "24px",
+                        "bento-gap": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Epilogue"],
+                        "mono-data": ["Geist"],
+                        "display-lg-mobile": ["Epilogue"],
+                        "label-caps": ["Geist"],
+                        "body-md": ["Manrope"],
+                        "display-lg": ["Epilogue"],
+                        "body-lg": ["Manrope"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0D110C;
+            color: #e0e4db;
+            font-family: 'Manrope', sans-serif;
+        }
+        .bento-card {
+            background-color: #161B15;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bento-card:hover {
+            transform: scale(1.01);
+            background-color: #1c221b;
+        }
+        .glass-panel {
+            background: rgba(42, 49, 40, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .text-glow-lime {
+            text-shadow: 0 0 15px rgba(204, 255, 0, 0.4);
+        }
+        .border-glow-lime {
+            box-shadow: inset 0 0 10px rgba(204, 255, 0, 0.1), 0 0 15px rgba(204, 255, 0, 0.1);
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            background: #1A1F19;
+            height: 6px;
+            border-radius: 3px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #c3f400;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(195, 244, 0, 0.5);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #323630;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- Sidebar -->
+<aside class="fixed left-0 top-0 h-screen z-50 flex flex-col w-64 bg-surface dark:bg-surface border-r border-white/5">
+<div class="px-6 py-8">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 bg-primary-fixed rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-fixed" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold tracking-tighter text-on-surface">LOCKEDIN-X</h1>
+<p class="font-label-caps text-[10px] tracking-widest opacity-60">DISCIPLINE. IDENTITY. FREEDOM.</p>
+</div>
+</div>
+<nav class="space-y-1">
+<!-- Home Active -->
+<a class="bg-secondary-container text-primary-fixed font-bold rounded-lg px-3 py-2 border-l-4 border-primary-fixed flex items-center gap-3 group transition-all duration-200 scale-[0.98]" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant px-3 py-2 flex items-center gap-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-label-caps text-label-caps">Daily Ritual</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant px-3 py-2 flex items-center gap-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">shield_with_heart</span>
+<span class="font-label-caps text-label-caps">Support Mode</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant px-3 py-2 flex items-center gap-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">book</span>
+<span class="font-label-caps text-label-caps">Memoir</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant px-3 py-2 flex items-center gap-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">psychology</span>
+<span class="font-label-caps text-label-caps">AI Companion</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant px-3 py-2 flex items-center gap-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-label-caps text-label-caps">Insights &amp; Analytics</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant px-3 py-2 flex items-center gap-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">trending_up</span>
+<span class="font-label-caps text-label-caps">Progress</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant px-3 py-2 flex items-center gap-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-label-caps text-label-caps">Calendar</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant px-3 py-2 flex items-center gap-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">fingerprint</span>
+<span class="font-label-caps text-label-caps">Identity</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant px-3 py-2 flex items-center gap-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-4">
+<div class="bento-card rounded-xl p-4 relative overflow-hidden group">
+<div class="absolute inset-0 opacity-20 scale-110 group-hover:scale-100 transition-transform duration-700" data-alt="A lush dark green jungle with thick foliage and soft mist, captured in a cinematic high-contrast style with moody lighting and deep shadows. The atmosphere is quiet, meditative, and focused, emphasizing natural textures and serene isolation." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDwhMtH5ZWb6ox3XMN9UyatAZh0Htpdsc-jTJxgfX6lV6tIRn8JmOpKesHBBAQljQp5O4vydmfQlVCfj3m7aXyfj5CjTgI8xTT1a2yotAJKV3_zg4wRjnOn_rLGB2EdggwzieroELE8GAwBgcWscmRv-M681fP5CPhPq0NNPQa6FP-XhvuDOSR2BKpcQpXYMB66zAFhIO3f7dmqbeh461KKKO79rCeH8qJKVpC0ATVZMjujP0dGR3yf_enKJPPS2wS6Uri2n28v5ezo')"></div>
+<div class="relative z-10">
+<h3 class="font-headline-md text-headline-md text-primary-fixed mb-1">Focus Mode</h3>
+<p class="text-[12px] opacity-70 mb-3">Minimize distractions.</p>
+<button class="w-full bg-primary-fixed text-on-primary-fixed font-bold py-2 rounded-lg text-sm hover:brightness-110 transition-all">Activate</button>
+</div>
+</div>
+<div class="mt-6 flex items-center gap-3 px-2">
+<img class="w-10 h-10 rounded-full border border-white/10" data-alt="Close-up headshot of Arjun, a focused 28-year-old man with sharp features and a determined expression. Professional studio lighting, dark olive background, high-end editorial photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGt6owfjisUa3w6nIMM0vze0YT4NPvIidyrb46wC7qhuiQp8CwUGRv6KnQBoI_C8k0j_pRkoQwoEuVmIw2fFp_4H4a8KEJIyvtOQE1Fk2YFwCE7Qbbx8qx3bKXg6pCOZca_t9Kii2SywYods535ekb4CGTqoaGU88uFYWuK3REOWJWrorMx612gAJ0_5KPRxCNItLQnG3m5A_0nh-hFp8vnxBjcYtTdbtZl_BEMJZQV-DKBmPlvpShq49Lvja2dOYMsf4TxZ_xLVjJ"/>
+<div>
+<p class="font-label-caps text-sm text-on-surface">Arjun</p>
+<p class="text-[10px] opacity-50">Day 42 • Level 1</p>
+</div>
+<span class="material-symbols-outlined ml-auto text-on-surface-variant text-sm">expand_more</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Cluster -->
+<main class="flex-1 ml-64 overflow-y-auto custom-scrollbar">
+<!-- Top Bar -->
+<header class="flex justify-between items-center w-full px-8 py-6">
+<h2 class="font-headline-md text-headline-md text-on-surface">Home Dashboard</h2>
+<div class="flex items-center gap-6">
+<div class="relative">
+<input class="bg-surface-container border-none rounded-full px-5 py-2 text-sm w-64 focus:ring-1 focus:ring-primary-fixed" placeholder="Search anything..." type="text"/>
+<span class="absolute right-4 top-2 text-[10px] opacity-40 font-mono-data border border-white/10 px-1 rounded">Ctrl K</span>
+</div>
+<div class="flex gap-4">
+<button class="hover:bg-surface-container-highest rounded-full p-2 transition-opacity duration-300">
+<span class="material-symbols-outlined text-on-surface-variant">wb_sunny</span>
+</button>
+<button class="hover:bg-surface-container-highest rounded-full p-2 transition-opacity duration-300 relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary-fixed rounded-full"></span>
+</button>
+</div>
+</div>
+</header>
+<div class="px-8 pb-12">
+<!-- Greeting & Header Image -->
+<section class="relative h-48 rounded-2xl overflow-hidden mb-8 flex flex-col justify-end p-8">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A breathtaking panoramic mountain range at dawn. The sky is a gradient of deep charcoal and soft amber. Mist clings to the peaks. The lighting is cinematic and moody, creating a sense of vast potential and calm resolve. Editorial photography style, minimalist composition." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAZKETAJo5Y5lmAtAEUN9kJGcIX5VdZkWYsLj5ZryXJz5FruS8ZDAmpHmTc2627WzEQa_lmFaCXe8ey7X-DZefRJCJY5cqFsZ5Dryiyi8j1Fw_vRYVi3YVb1_QSuzM_Z7n8zPo5cr9tRB3Bn32iKBhx9a5_nlqtUAtJYDtRfUSFtVdZvODvR2SE1FHimZAxODCR-fnUczu1bRrOB9LrBgLPH8UWHvz7US0UPzaNhP0Buhws0b_yHV_OFHppoLOPXel-lUnfntYZ5Q8m')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-80"></div>
+<div class="relative z-10 flex justify-between items-end">
+<div>
+<h2 class="font-display-lg text-display-lg text-on-surface mb-2">Good morning, Arjun.</h2>
+<p class="font-body-md text-body-md opacity-70 max-w-md">Every day is a new opportunity to become who you've decided to be.</p>
+</div>
+<div class="glass-panel p-6 rounded-xl max-w-xs border border-white/5">
+<span class="material-symbols-outlined text-primary-fixed text-xl mb-2" style="font-variation-settings: 'FILL' 1;">format_quote</span>
+<p class="font-body-md italic text-sm mb-2 text-on-surface-variant">"Discipline is remembering what you want most."</p>
+<p class="font-label-caps text-[10px] tracking-widest text-on-surface">– DAVID GOGGINS</p>
+</div>
+</div>
+</section>
+<!-- Hero Metric Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-bento-gap mb-section-margin">
+<div class="bento-card p-container-padding rounded-xl flex items-center justify-between overflow-hidden relative group">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">CURRENT STREAK</p>
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg text-display-lg text-primary-fixed text-glow-lime">42</span>
+<span class="font-label-caps text-label-caps opacity-50">DAYS</span>
+</div>
+<p class="text-[10px] opacity-40 mt-2">BEST: 42 DAYS</p>
+</div>
+<!-- Simplified Circular Progress -->
+<div class="relative w-24 h-24">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-highest" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-primary-fixed" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="60" stroke-linecap="round" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+</div>
+</div>
+<div class="bento-card p-container-padding rounded-xl relative overflow-hidden">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">JOURNEY LEVEL</p>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">Level 1</h3>
+<p class="text-xs opacity-60 mb-6 uppercase tracking-widest">Foundation</p>
+<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+<div class="bg-primary-fixed h-full w-[62%]"></div>
+</div>
+<div class="flex justify-between mt-2 font-mono-data text-[10px] opacity-40">
+<span>620 XP</span>
+<span>1,000 XP</span>
+</div>
+</div>
+<div class="bento-card p-container-padding rounded-xl flex items-center justify-between">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">NEXT MILESTONE</p>
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg text-display-lg text-primary-fixed">50</span>
+<span class="font-label-caps text-label-caps opacity-50">DAYS</span>
+</div>
+<p class="text-[10px] opacity-60 mt-2 leading-tight">Consistency is built<br/>one day at a time.</p>
+</div>
+<div class="w-16 h-16 rounded-full border-2 border-primary-fixed/20 border-glow-lime flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed scale-125">verified_user</span>
+</div>
+</div>
+</div>
+<!-- Main Bento Grid -->
+<div class="grid grid-cols-12 gap-bento-gap mb-section-margin">
+<!-- Today's Rituals -->
+<div class="col-span-8 bento-card p-container-padding rounded-2xl">
+<div class="flex justify-between items-center mb-6">
+<h4 class="font-headline-md text-headline-md">Today's Rituals</h4>
+<button class="text-primary-fixed font-label-caps text-xs hover:underline">VIEW ALL</button>
+</div>
+<div class="grid grid-cols-2 gap-8">
+<div>
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-amber-400 text-sm">wb_sunny</span>
+<span class="font-label-caps text-sm">Morning Ritual</span>
+</div>
+<ul class="space-y-4">
+<li class="flex items-center gap-3">
+<div class="w-5 h-5 rounded border border-primary-fixed bg-primary-fixed/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed text-xs font-bold">check</span>
+</div>
+<span class="text-sm opacity-90">Morning Reflection</span>
+</li>
+<li class="flex items-center gap-3">
+<div class="w-5 h-5 rounded border border-primary-fixed bg-primary-fixed/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed text-xs font-bold">check</span>
+</div>
+<span class="text-sm opacity-90">Read My Reason</span>
+</li>
+<li class="flex items-center gap-3">
+<div class="w-5 h-5 rounded border border-white/20"></div>
+<span class="text-sm opacity-50">Urge Visualization</span>
+</li>
+<li class="flex items-center gap-3">
+<div class="w-5 h-5 rounded border border-white/20"></div>
+<span class="text-sm opacity-50">Morning Journal</span>
+</li>
+</ul>
+</div>
+<div>
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-blue-300 text-sm">dark_mode</span>
+<span class="font-label-caps text-sm">Evening Ritual</span>
+</div>
+<ul class="space-y-4">
+<li class="flex items-center gap-3">
+<div class="w-5 h-5 rounded border border-primary-fixed bg-primary-fixed/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed text-xs font-bold">check</span>
+</div>
+<span class="text-sm opacity-90">Evening Reflection</span>
+</li>
+<li class="flex items-center gap-3">
+<div class="w-5 h-5 rounded border border-primary-fixed bg-primary-fixed/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed text-xs font-bold">check</span>
+</div>
+<span class="text-sm opacity-90">Gratitude Journal</span>
+</li>
+<li class="flex items-center gap-3">
+<div class="w-5 h-5 rounded border border-white/20"></div>
+<span class="text-sm opacity-50">Day Review</span>
+</li>
+<li class="flex items-center gap-3">
+<div class="w-5 h-5 rounded border border-white/20"></div>
+<span class="text-sm opacity-50">Prepare for Tomorrow</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Mood Tracker -->
+<div class="col-span-4 bento-card p-container-padding rounded-2xl flex flex-col">
+<h4 class="font-label-caps text-label-caps opacity-60 mb-6">HOW DO YOU FEEL?</h4>
+<div class="flex justify-between mb-8">
+<button class="w-10 h-10 rounded-full bg-surface-container hover:bg-surface-container-highest flex items-center justify-center opacity-40 transition-all">
+<span class="material-symbols-outlined">sentiment_very_dissatisfied</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface-container hover:bg-surface-container-highest flex items-center justify-center opacity-40 transition-all">
+<span class="material-symbols-outlined">sentiment_dissatisfied</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface-container hover:bg-surface-container-highest flex items-center justify-center opacity-40 transition-all">
+<span class="material-symbols-outlined">sentiment_neutral</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-primary-fixed/20 border border-primary-fixed flex items-center justify-center text-primary-fixed transition-all scale-110">
+<span class="material-symbols-outlined">sentiment_satisfied</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface-container hover:bg-surface-container-highest flex items-center justify-center opacity-40 transition-all">
+<span class="material-symbols-outlined">sentiment_very_satisfied</span>
+</button>
+</div>
+<div class="text-center mb-8">
+<p class="font-headline-md text-primary-fixed">Motivated</p>
+</div>
+<div class="mt-auto">
+<div class="flex justify-between font-label-caps text-[10px] mb-2 opacity-60">
+<span>ENERGY LEVEL</span>
+<span>7 / 10</span>
+</div>
+<input class="w-full" max="10" min="1" type="range" value="7"/>
+</div>
+</div>
+<!-- Identity Card -->
+<div class="col-span-4 bento-card p-container-padding rounded-2xl overflow-hidden relative">
+<h4 class="font-label-caps text-label-caps opacity-60 mb-6">IDENTITY</h4>
+<div class="space-y-4">
+<div class="flex items-center gap-3">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-fixed shadow-[0_0_8px_#c3f400]"></span>
+<span class="font-headline-md text-headline-md">Disciplined</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-fixed shadow-[0_0_8px_#c3f400]"></span>
+<span class="font-headline-md text-headline-md">Focused</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-fixed shadow-[0_0_8px_#c3f400]"></span>
+<span class="font-headline-md text-headline-md">Unstoppable</span>
+</div>
+</div>
+<div class="absolute -right-10 -bottom-10 opacity-10">
+<span class="material-symbols-outlined text-[160px] text-primary-fixed">psychology</span>
+</div>
+</div>
+<!-- Daily Quote ( James Clear) -->
+<div class="col-span-8 bento-card rounded-2xl overflow-hidden relative min-h-[220px]">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A silhouette of a lone climber on a rugged mountain peak overlooking a vast canyon under a dramatic orange and purple twilight sky. High-contrast, cinematic lighting, emphasizing solitude, strength, and achievement. Wide lens, professional nature photography style." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCmtoqUndThDMlXQrgovb0ROGbry5RwQPkjG3S1TPDa0NR9ZlnFqN_s3RybZDJGTa8PZDaux1IXFiomw9VOnTQU378zvhOsIgiHdxToKQuiTo2gxsfq29DMAvNBzhReeF0fY46Vud7luR7iD-JceHv6llmb--OA8XjLOkYHPzAh3iGDF2xhhPHu3rwKPN22qzdQV3UJtEgW4MCukTLW0YYUo3HkLWT40UigXiNNFSy6n12xnXVXUCXwt3-Q_nZGmrL4HwfOMHxTI-46')"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent"></div>
+<div class="relative z-10 p-container-padding flex flex-col justify-center h-full max-w-lg">
+<p class="font-label-caps text-label-caps text-primary-fixed mb-4">DAILY QUOTE</p>
+<h3 class="font-headline-md text-headline-md leading-relaxed mb-4">"You don't rise to the level of your goals, you fall to the level of your systems."</h3>
+<p class="font-label-caps text-xs opacity-60 tracking-widest">– JAMES CLEAR</p>
+</div>
+</div>
+</div>
+<!-- Secondary Row -->
+<div class="grid grid-cols-12 gap-bento-gap">
+<!-- Progress Overview -->
+<div class="col-span-5 bento-card p-container-padding rounded-2xl">
+<div class="flex justify-between items-center mb-8">
+<h4 class="font-headline-md text-headline-md">Progress Overview</h4>
+<div class="bg-surface-container px-3 py-1 rounded-lg flex items-center gap-2 text-xs opacity-70">
+<span>This Week</span>
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</div>
+</div>
+<div class="flex items-end justify-between h-40 gap-4 mb-8">
+<!-- Simple CSS Bars -->
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-surface-container-highest rounded-full h-[60%] relative overflow-hidden">
+<div class="absolute bottom-0 left-0 right-0 bg-primary-fixed group-hover:brightness-125 transition-all" style="height: 100%"></div>
+</div>
+<span class="text-[10px] opacity-40">M</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-surface-container-highest rounded-full h-[80%] relative overflow-hidden">
+<div class="absolute bottom-0 left-0 right-0 bg-primary-fixed group-hover:brightness-125 transition-all" style="height: 100%"></div>
+</div>
+<span class="text-[10px] opacity-40">T</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-surface-container-highest rounded-full h-[95%] relative overflow-hidden">
+<div class="absolute bottom-0 left-0 right-0 bg-primary-fixed group-hover:brightness-125 transition-all" style="height: 100%"></div>
+</div>
+<span class="text-[10px] opacity-40">W</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-surface-container-highest rounded-full h-[85%] relative overflow-hidden">
+<div class="absolute bottom-0 left-0 right-0 bg-primary-fixed group-hover:brightness-125 transition-all" style="height: 100%"></div>
+</div>
+<span class="text-[10px] opacity-40">T</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-surface-container-highest rounded-full h-[100%] relative overflow-hidden">
+<div class="absolute bottom-0 left-0 right-0 bg-primary-fixed group-hover:brightness-125 transition-all" style="height: 100%"></div>
+</div>
+<span class="text-[10px] opacity-40">F</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-surface-container-highest rounded-full h-[40%] relative overflow-hidden">
+<div class="absolute bottom-0 left-0 right-0 bg-primary-fixed group-hover:brightness-125 transition-all" style="height: 100%"></div>
+</div>
+<span class="text-[10px] opacity-40">S</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-surface-container-highest rounded-full h-[70%] relative overflow-hidden">
+<div class="absolute bottom-0 left-0 right-0 bg-primary-fixed group-hover:brightness-125 transition-all" style="height: 100%"></div>
+</div>
+<span class="text-[10px] opacity-40">S</span>
+</div>
+</div>
+<div class="flex justify-between items-center px-4">
+<div class="text-center">
+<p class="font-headline-md text-primary-fixed">90%</p>
+<p class="text-[10px] opacity-50 uppercase">Consistency</p>
+</div>
+<div class="w-px h-8 bg-white/5"></div>
+<div class="text-center">
+<p class="font-headline-md">6 / 7</p>
+<p class="text-[10px] opacity-50 uppercase">Rituals Completed</p>
+</div>
+<div class="w-px h-8 bg-white/5"></div>
+<div class="text-center">
+<p class="font-headline-md">3</p>
+<p class="text-[10px] opacity-50 uppercase">Urges Overcome</p>
+</div>
+</div>
+</div>
+<!-- Today's Focus -->
+<div class="col-span-3 bento-card p-container-padding rounded-2xl">
+<h4 class="font-headline-md text-headline-md mb-6">Today's Focus</h4>
+<ul class="space-y-4">
+<li class="flex items-start gap-4 p-4 rounded-xl bg-surface-container/30 border border-white/5 group hover:border-primary-fixed/30 transition-all">
+<span class="material-symbols-outlined text-primary-fixed">target</span>
+<div>
+<p class="text-sm font-bold">Stay disciplined</p>
+<p class="text-[11px] opacity-50">Avoid all distractions</p>
+</div>
+</li>
+<li class="flex items-start gap-4 p-4 rounded-xl bg-surface-container/30 border border-white/5 group hover:border-primary-fixed/30 transition-all">
+<span class="material-symbols-outlined text-primary-fixed">verified</span>
+<div>
+<p class="text-sm font-bold">Protect commitment</p>
+<p class="text-[11px] opacity-50">Keep the streak alive</p>
+</div>
+</li>
+<li class="flex items-start gap-4 p-4 rounded-xl bg-surface-container/30 border border-white/5 group hover:border-primary-fixed/30 transition-all">
+<span class="material-symbols-outlined text-primary-fixed">rocket_launch</span>
+<div>
+<p class="text-sm font-bold">Build better version</p>
+<p class="text-[11px] opacity-50">Focus on the process</p>
+</div>
+</li>
+</ul>
+</div>
+<!-- Recent Journal -->
+<div class="col-span-4 bento-card p-container-padding rounded-2xl flex flex-col">
+<h4 class="font-headline-md text-headline-md mb-2">Recent Journal Entry</h4>
+<p class="text-[11px] opacity-50 mb-6 uppercase tracking-widest">This is your latest reflection.</p>
+<div class="flex-1 bg-surface-container-low rounded-xl p-5 border border-white/5 relative mb-4">
+<div class="flex justify-between items-center mb-4">
+<p class="font-bold text-sm">April 21, 2025 – Day 42</p>
+<span class="material-symbols-outlined text-xs opacity-30">sticky_note_2</span>
+</div>
+<p class="text-sm opacity-70 italic leading-relaxed line-clamp-4">
+                            "Today was challenging. I faced strong urges in the afternoon, but I stayed committed to my walk and cold shower. I feel proud of myself for not giving in. I'm becoming the man I decided to be."
+                        </p>
+<div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-surface-container-low to-transparent"></div>
+</div>
+<button class="w-full border border-white/10 py-3 rounded-xl text-xs font-label-caps hover:bg-white/5 transition-all">VIEW ALL ENTRIES</button>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="w-full flex justify-center items-center py-8 opacity-60 italic text-[10px] tracking-widest border-t border-white/5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[12px]">eco</span>
+<span>YOU ARE NOT YOUR URGES. YOU ARE YOUR DECISIONS.</span>
+</div>
+</footer>
+</main>
+<!-- Right Panel (Contextual Widgets) -->
+<aside class="w-80 h-screen bg-surface-container-lowest border-l border-white/5 p-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar">
+<!-- Upcoming Ritual -->
+<div class="bento-card p-5 rounded-2xl">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h5 class="font-label-caps text-[11px] opacity-50 mb-1 uppercase">UPCOMING RITUAL</h5>
+<p class="font-bold text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-xs text-primary-fixed">nightlight</span>
+                        Evening Reflection
+                    </p>
+</div>
+<span class="text-primary-fixed text-[10px] font-mono-data bg-primary-fixed/10 px-2 py-0.5 rounded">in 2h 15m</span>
+</div>
+<div class="relative h-28 rounded-xl overflow-hidden mb-4">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A peaceful lakeside view at dusk with a setting sun casting a warm glow over still water. A single small dock extends into the lake. The colors are deep blues, purples, and warm oranges. Atmospheric, quiet, and perfect for end-of-day reflection." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAREAmxTnDd6kkle5P7A_OldPPTh4KaffqVXSTf2J244c6Qv5w4cTUNIVENmFi4aRhSrIvQksRNRTq8ZSY_fFPCpRb8kA_oMkmbrp5xEDKw5m68S10EjbTgN2QzTUfatb4WhLQbYRacmaUhGLeebcopgM88xSy6zdcINfDYzFDlWKbcs4vOcS4zfr28jL0U5u2ce7EH3XPz7K5OZgmonTO7p0i4vkeOTsWslgbkl-bpQTPcF04Z49mtrE2z7qFJjKQsLefiI__8BwE3')"></div>
+<div class="absolute inset-0 bg-black/30"></div>
+<div class="relative h-full flex flex-col items-center justify-center">
+<div class="flex gap-4 font-mono-data text-2xl font-bold tracking-widest">
+<div class="text-center"><p>02</p><p class="text-[8px] opacity-50 font-sans">HRS</p></div>
+<span>:</span>
+<div class="text-center"><p>15</p><p class="text-[8px] opacity-50 font-sans">MIN</p></div>
+<span>:</span>
+<div class="text-center"><p>30</p><p class="text-[8px] opacity-50 font-sans">SEC</p></div>
+</div>
+</div>
+</div>
+<button class="w-full py-2 bg-surface-container rounded-lg text-xs font-bold hover:bg-surface-container-highest transition-all">Start Early</button>
+</div>
+<!-- Recent Memoir -->
+<div class="bento-card p-5 rounded-2xl flex flex-col flex-1 overflow-hidden">
+<h5 class="font-label-caps text-[11px] opacity-50 mb-4 uppercase">RECENT MEMOIR PAGE</h5>
+<div class="relative flex-1 rounded-xl overflow-hidden mb-4 group cursor-pointer">
+<div class="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-1000" data-alt="A textured, high-quality photograph of a rugged forest trail winding through ancient trees. Dappled sunlight filters through the canopy. The style is moody, earthy, and profound, looking like a page from a premium print magazine." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAYhXip4emCclxAmeTp2DgHxWlOQkapIdeH7KsDoNVZ412yuTS7lU9StNx3b0qpogpmFLNEFpdj8VxmkATX17EgLVRGyv0nHzQ5a0gCWMBrfW4ef-XIUrVRcijdKO6cCv99Ql90lG-DLtVgjk97YMXNJAvO9rlzACdGifaKeZTmzQFYJIvh4eItmS7WaRsSM3WtG_GwZsjI6nsTL4zZycWTck8ykhsm8UP8rzlu6TDjYR3orm-lPv8D4a-JFlH2fzBoVQtSwo9mTtxk')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+<div class="absolute bottom-4 left-4 right-4">
+<p class="text-[10px] font-mono-data opacity-60 mb-1">Day 42 • April 21, 2025</p>
+<p class="text-xs italic leading-snug">"I'm learning that discipline isn't about motivation. It's about remembering my reasons when motivation fades."</p>
+</div>
+</div>
+<button class="w-full border border-white/10 py-2 rounded-lg text-xs font-bold hover:bg-white/5 transition-all">Open Memoir</button>
+</div>
+<!-- AI Companion -->
+<div class="bento-card p-5 rounded-2xl min-h-[320px] flex flex-col">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-8 h-8 rounded-full bg-primary-fixed/20 flex items-center justify-center border border-primary-fixed/30">
+<span class="material-symbols-outlined text-primary-fixed text-lg">psychology</span>
+</div>
+<div>
+<h5 class="font-bold text-sm">AI Companion</h5>
+<p class="text-[10px] opacity-50">Always here to support you.</p>
+</div>
+<div class="ml-auto w-2 h-2 bg-primary-fixed rounded-full animate-pulse"></div>
+</div>
+<div class="flex-1 space-y-3 overflow-y-auto custom-scrollbar pr-1 mb-4">
+<div class="bg-surface-container/50 p-3 rounded-tr-xl rounded-bl-xl rounded-br-xl text-xs">
+                    How are you feeling today, Arjun?
+                </div>
+<div class="bg-primary-fixed/10 p-3 rounded-tl-xl rounded-bl-xl rounded-br-xl text-xs ml-4 border-r-2 border-primary-fixed">
+                    I feel a bit distracted and tired.
+                </div>
+<div class="bg-surface-container/50 p-3 rounded-tr-xl rounded-bl-xl rounded-br-xl text-xs">
+                    That's okay. Let's reset together. What's the one thing you can do right now that aligns with your commitment?
+                </div>
+</div>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border border-white/10 rounded-full px-4 py-2 text-xs focus:ring-1 focus:ring-primary-fixed focus:border-transparent" placeholder="Type your message..." type="text"/>
+<button class="absolute right-3 top-1.5 text-primary-fixed">
+<span class="material-symbols-outlined text-lg">send</span>
+</button>
+</div>
+</div>
+</aside>
+<script>
+        // Micro-interaction for range slider
+        const slider = document.querySelector('input[type="range"]');
+        if (slider) {
+            slider.addEventListener('input', (e) => {
+                const val = e.target.value;
+                const energyLabel = e.target.parentElement.querySelector('span:last-child');
+                if (energyLabel) energyLabel.textContent = `${val} / 10`;
+            });
+        }
+
+        // Search shortcut feedback
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                document.querySelector('header input').focus();
+            }
+        });
+
+        // Simple button hover sound mimic/effect (visual)
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mouseenter', () => {
+                btn.style.filter = 'brightness(1.1)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.filter = 'brightness(1.0)';
+            });
+        });
+    </script>
+</body></html>

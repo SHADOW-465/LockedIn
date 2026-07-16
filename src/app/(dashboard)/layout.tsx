@@ -1,15 +1,9 @@
-import { GuideFab } from '@/components/features/guide/guide-fab'
-import { ThemeProvider } from '@/lib/contexts/theme-context'
+import { AppShell } from '@/components/layout/app-shell'
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <ThemeProvider>
-      {children}
-      <GuideFab />
-    </ThemeProvider>
-  )
+/**
+ * Dashboard chrome — Stitch workbench shell.
+ * Auth is handled by root RouteGuard; do not add guards here.
+ */
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return <AppShell>{children}</AppShell>
 }

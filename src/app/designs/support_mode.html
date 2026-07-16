@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LOCKEDIN-X | Support Mode</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&amp;family=Geist:wght@400;500;600&amp;family=Manrope:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@100..900&amp;family=Geist:wght@100..900&amp;family=Manrope:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: #0D110C;
+            color: #e0e4db;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        
+        .glass-card {
+            background: rgba(22, 27, 21, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .breathing-circle {
+            animation: breathe 8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.5); opacity: 0.7; }
+        }
+
+        .timer-glow {
+            text-shadow: 0 0 20px rgba(171, 214, 0, 0.2);
+        }
+
+        .pulse-soft {
+            animation: pulse-soft 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<!-- Tailwind Config from Source of Truth -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#323630",
+                    "background": "#10140f",
+                    "secondary-container": "#444b41",
+                    "surface-dim": "#10140f",
+                    "primary-fixed-dim": "#abd600",
+                    "inverse-on-surface": "#2d322c",
+                    "inverse-surface": "#e0e4db",
+                    "on-surface": "#e0e4db",
+                    "secondary-fixed": "#dde5d7",
+                    "tertiary-fixed": "#dee5d8",
+                    "on-error-container": "#ffdad6",
+                    "secondary-fixed-dim": "#c1c9bc",
+                    "surface": "#10140f",
+                    "surface-container-low": "#191d17",
+                    "outline-variant": "#444933",
+                    "on-secondary-fixed-variant": "#42493f",
+                    "inverse-primary": "#506600",
+                    "on-tertiary-fixed-variant": "#424940",
+                    "on-tertiary-container": "#5f665c",
+                    "primary": "#ffffff",
+                    "surface-container-highest": "#323630",
+                    "surface-container-high": "#272b25",
+                    "on-primary-container": "#556d00",
+                    "outline": "#8e9379",
+                    "on-tertiary-fixed": "#171d16",
+                    "on-background": "#e0e4db",
+                    "secondary": "#c1c9bc",
+                    "on-tertiary": "#2b322a",
+                    "on-secondary-fixed": "#171d15",
+                    "surface-tint": "#abd600",
+                    "tertiary-container": "#dee5d8",
+                    "error": "#ffb4ab",
+                    "on-primary": "#283500",
+                    "tertiary-fixed-dim": "#c1c9bd",
+                    "surface-container": "#1d211b",
+                    "on-surface-variant": "#c4c9ac",
+                    "surface-bright": "#363a34",
+                    "surface-container-lowest": "#0b0f0a",
+                    "tertiary": "#ffffff",
+                    "on-primary-fixed": "#161e00",
+                    "on-error": "#690005",
+                    "primary-fixed": "#c3f400",
+                    "on-primary-fixed-variant": "#3c4d00",
+                    "on-secondary-container": "#b3bbae",
+                    "error-container": "#93000a",
+                    "on-secondary": "#2b3229",
+                    "primary-container": "#c3f400"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "section-margin": "48px",
+                    "gutter": "16px",
+                    "bento-gap": "12px",
+                    "base": "8px",
+                    "container-padding": "24px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Epilogue"],
+                    "label-caps": ["Geist"],
+                    "body-lg": ["Manrope"],
+                    "display-lg": ["Epilogue"],
+                    "body-md": ["Manrope"],
+                    "mono-data": ["Geist"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                    "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                    "body-lg": ["18px", { "lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "400" }],
+                    "display-lg": ["48px", { "lineHeight": "52px", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                    "body-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }],
+                    "mono-data": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500" }]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Top Navigation (Shell suppressed for transactional mode, but brand remains) -->
+<header class="bg-surface/80 backdrop-blur-xl border-b border-white/5 flex justify-between items-center px-container-padding py-4 w-full fixed top-0 z-50">
+<div class="text-headline-md font-headline-md font-bold tracking-tighter text-primary-fixed-dim">LOCKEDIN-X</div>
+<div class="flex items-center gap-4">
+<span class="text-label-caps font-label-caps text-on-surface-variant uppercase">Support Mode Active</span>
+<button class="material-symbols-outlined text-primary-fixed-dim scale-95 active:duration-150" onclick="window.history.back()">close</button>
+</div>
+</header>
+<main class="pt-24 pb-32 px-container-padding max-w-4xl mx-auto space-y-12">
+<!-- Hero Section: Breathing & Grounding -->
+<section class="relative h-[400px] flex items-center justify-center overflow-hidden rounded-3xl bg-surface-container-low">
+<!-- Atmospheric Shader Placeholder -->
+
+<!-- Breathing Exercise UI -->
+<div class="relative z-10 flex flex-col items-center">
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="breathing-circle w-64 h-64 border-2 border-primary-fixed-dim/20 rounded-full"></div>
+<div class="breathing-circle w-48 h-48 border-2 border-primary-fixed-dim/40 rounded-full" style="animation-delay: -2s;"></div>
+<div class="breathing-circle w-32 h-32 border-2 border-primary-fixed-dim/60 rounded-full" style="animation-delay: -4s;"></div>
+</div>
+<div class="text-center space-y-4">
+<h2 class="text-display-lg font-display-lg text-primary timer-glow" id="breath-text">Inhale</h2>
+<p class="text-label-caps font-label-caps text-on-surface-variant tracking-widest uppercase">Focus on the center</p>
+</div>
+</div>
+</section>
+<!-- Countdown / Walk Timer -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-bento-gap">
+<div class="glass-card p-container-padding rounded-3xl flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="text-label-caps font-label-caps text-on-surface-variant">Cool Down Period</span>
+<span class="material-symbols-outlined text-primary-fixed-dim">timer</span>
+</div>
+<div class="py-8">
+<div class="text-[64px] font-headline-md font-bold text-primary tracking-tight leading-none" id="countdown">14:59</div>
+<p class="text-body-md font-body-md text-on-surface-variant mt-2">Before making any decisions.</p>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary-fixed-dim w-3/4 rounded-full shadow-[0_0_15px_rgba(171,214,0,0.3)]"></div>
+</div>
+</div>
+<!-- Emergency Action / Beautiful Redirection -->
+<div class="bg-primary-fixed text-on-primary-fixed p-container-padding rounded-3xl flex flex-col justify-between group cursor-pointer transition-all hover:scale-[1.01]">
+<div class="flex items-center justify-between">
+<span class="text-label-caps font-label-caps font-bold">Emergency Interface</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+</div>
+<div class="py-8">
+<h3 class="text-headline-md font-headline-md">Seek Guidance</h3>
+<p class="text-body-md font-body-md opacity-80">Connected to your safety network.</p>
+</div>
+<div class="flex justify-between items-center">
+<button class="bg-on-primary-fixed text-primary-fixed px-6 py-3 rounded-full font-label-caps text-label-caps uppercase transition-transform active:scale-95">Open Safe-Line</button>
+<span class="material-symbols-outlined text-3xl transition-transform group-hover:translate-x-2">arrow_forward</span>
+</div>
+</div>
+</section>
+<!-- Main Bento Content -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-bento-gap">
+<!-- Read My Reason -->
+<div class="glass-card p-container-padding rounded-3xl col-span-1 md:col-span-2 flex flex-col gap-6 group hover:border-primary-fixed-dim/20 transition-all">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed-dim">import_contacts</span>
+</div>
+<div>
+<h4 class="text-body-lg font-body-lg font-bold">Read My Reason</h4>
+<p class="text-label-caps font-label-caps text-on-surface-variant">Authored by you on Day 1</p>
+</div>
+</div>
+<blockquote class="text-body-lg font-body-lg italic text-on-surface-variant border-l-2 border-primary-fixed-dim/30 pl-4 py-2">
+                    "I am building a life where I am in control of my impulses, not the other way around. Every moment of resistance is a brick in the temple of my freedom..."
+                </blockquote>
+<button class="text-primary-fixed-dim font-label-caps text-label-caps text-left uppercase flex items-center gap-2 group-hover:gap-4 transition-all">
+                    Read Full Manifesto <span class="material-symbols-outlined text-sm">north_east</span>
+</button>
+</div>
+<!-- Journaling Bento -->
+<div class="glass-card p-container-padding rounded-3xl flex flex-col gap-4">
+<div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed-dim">edit_note</span>
+</div>
+<h4 class="text-body-lg font-body-lg font-bold">Quick Journal</h4>
+<p class="text-body-md font-body-md text-on-surface-variant">Dump your thoughts here. No judgment.</p>
+<div class="mt-auto">
+<button class="w-full py-4 border border-white/10 rounded-2xl font-label-caps text-label-caps uppercase hover:bg-white/5 transition-colors">Begin entry</button>
+</div>
+</div>
+<!-- Talk to AI Companion -->
+<div class="glass-card p-container-padding rounded-3xl flex flex-col gap-4 border-primary-fixed-dim/10">
+<div class="w-12 h-12 rounded-full overflow-hidden mb-2">
+<img class="w-full h-full object-cover" data-alt="A sophisticated, high-tech minimalist profile avatar for a digital AI companion. The image features soft glowing circuit patterns in neon lime on a deep matte black ceramic texture. The aesthetic is clean, calming, and futuristic, following a luxury tech branding style with soft volumetric lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC16P6hVRaa9dgrma1AR6FJ3Derf1paEeeuJQDeWz5TUGiE0RDOjhlbqG8CsLodsTOqPR0Nw6iZNv13sZcIv_vhd6atnQW0-CHXQ1bD45e_IB_GN2ZyLOrdOhMuhSZI3YmLN1Poowez5JOVoYyD_HCCwViRpb87p9wPFL1oWeanU8YbxgrfUf-Ulq3eAyDCT6yRfP2iSOsof2xXW_dO0WlEK71M2ZBH4hL1iXeWnzw6fhTMAx-bzYRb93qWM9fWL5E2Gi2jlN5GFKyh"/>
+</div>
+<h4 class="text-body-lg font-body-lg font-bold">AI Companion</h4>
+<p class="text-body-md font-body-md text-on-surface-variant">Speak or type. Your companion is ready to listen.</p>
+<div class="flex gap-2 mt-auto">
+<button class="flex-1 bg-surface-container-highest p-3 rounded-xl flex justify-center items-center hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined">mic</span>
+</button>
+<button class="flex-[3] bg-primary-fixed-dim text-on-primary-fixed p-3 rounded-xl font-label-caps text-label-caps uppercase font-bold text-center">Chat Now</button>
+</div>
+</div>
+<!-- Grounding Image / Mood -->
+<div class="col-span-1 md:col-span-2 relative h-48 rounded-3xl overflow-hidden glass-card">
+<div class="absolute inset-0 bg-cover bg-center opacity-60" data-alt="A serene, wide-angle cinematic shot of a dense pine forest at dawn, shrouded in heavy mist and deep shadows. The color palette is composed of moody dark greens and charcoal grays, with a single ethereal ray of morning light piercing through the canopy. The mood is exceptionally grounding, quiet, and reflective, evoking a sense of calm resilience." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuATNBKOuQAceqBj87U0NvBDIX7PVpoR3gnjIVgpq26QwCxY8TuJ4FlQB107kJqBM4jYqiVqBx2178oCUIpjfufZexn6CliBnaPnSNqUhf4PsgpkkzwwZHdpOzTOILdfr7kH0VeJ7zaNQvvFi5aZwBc_ADRglO9Ekj-HBV6BETTSvgARLyfWAGp3x_xivJ1CWtCPR-FEmZDsn5tKr-noQHjl-n_XTaqxFxKb7abZW1NQWCT2SIbTzGU_6NCDHAc9orpNRCcwbJJxa01L')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+<div class="absolute bottom-6 left-6">
+<h5 class="text-headline-md font-headline-md text-primary">Stay Grounded.</h5>
+<p class="text-body-md font-body-md text-on-surface-variant">This feeling is temporary. Your progress is permanent.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Shell (Contextual Support Version) -->
+<nav class="fixed bottom-8 left-0 right-0 mx-auto z-50 flex justify-around items-center px-4 py-2 max-w-md bg-surface-container/60 backdrop-blur-2xl border border-white/10 rounded-full shadow-2xl shadow-primary-fixed-dim/5">
+<!-- Dashboard (Inactive) -->
+<a class="text-on-surface-variant p-3 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">home</span>
+</a>
+<!-- Rituals (Inactive) -->
+<a class="text-on-surface-variant p-3 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">rebase_edit</span>
+</a>
+<!-- Support Mode (Active) -->
+<a class="bg-primary-fixed text-on-primary-fixed rounded-full p-3 shadow-[0_0_15px_rgba(171,214,0,0.3)] Active: scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+</a>
+<!-- Memoir (Inactive) -->
+<a class="text-on-surface-variant p-3 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+</a>
+<!-- AI (Inactive) -->
+<a class="text-on-surface-variant p-3 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+</a>
+</nav>
+<script>
+        // Micro-interactions for breathing text
+        const breathText = document.getElementById('breath-text');
+        const states = ['Inhale', 'Hold', 'Exhale', 'Hold'];
+        let currentIndex = 0;
+
+        setInterval(() => {
+            currentIndex = (currentIndex + 1) % states.length;
+            breathText.style.opacity = '0';
+            setTimeout(() => {
+                breathText.textContent = states[currentIndex];
+                breathText.style.opacity = '1';
+            }, 500);
+        }, 2000);
+
+        // Simple Countdown logic
+        let time = 899; // 14:59 in seconds
+        const countdownElement = document.getElementById('countdown');
+
+        setInterval(() => {
+            const minutes = Math.floor(time / 60);
+            let seconds = time % 60;
+            seconds = seconds < 10 ? '0' + seconds : seconds;
+            countdownElement.textContent = `${minutes}:${seconds}`;
+            if (time > 0) time--;
+        }, 1000);
+
+        // Transition logic for UI
+        document.addEventListener('DOMContentLoaded', () => {
+            const main = document.querySelector('main');
+            main.classList.add('opacity-0', 'translate-y-4');
+            setTimeout(() => {
+                main.style.transition = 'all 1s cubic-bezier(0.4, 0, 0.2, 1)';
+                main.classList.remove('opacity-0', 'translate-y-4');
+            }, 100);
+        });
+    </script>
+</body></html>

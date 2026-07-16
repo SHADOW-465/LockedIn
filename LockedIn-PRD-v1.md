@@ -296,7 +296,7 @@ Users select one persona during onboarding. Sample messages are shown for each p
 | 6 | **Goddess/Deity** | Worship-focused; submission framed in religious/devotional terms |
 | 7 | **Dommy Mommy** | Warm and cruel mix; maternal dominance with sudden cruelty |
 | 8 | **Bratty Keyholder** | Teasing, childish cruelty; delights in petty torment |
-| 9 | **Psychological Manipulator** | Gaslighting, mind games, emotional torture, false intimacy |
+| 9 | **Psychological Manipulator** | AURA: Seductive & logical dominant, bends arrogant wills, 60% clinical cold, 30% devotional, 10% mocking |
 | 10 | **Extreme Sadist** | Pure cruelty; available only at Tier 4 and above |
 
 ### 4.5 Communication Rules & Punishments

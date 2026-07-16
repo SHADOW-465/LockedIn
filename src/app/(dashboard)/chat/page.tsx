@@ -1,454 +1,422 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { TopBar } from '@/components/layout/top-bar'
-import { BottomNav } from '@/components/layout/bottom-nav'
-import { Send, Loader2, Heart, Shield, ArrowRight, ClipboardList, Clock, Star } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/contexts/auth-context'
-import { getSupabase } from '@/lib/supabase/client'
-import { getActiveSession } from '@/lib/supabase/sessions'
-import { buildProfileSummary } from '@/lib/ai/context-builder'
-import { PrefUpdateSheet } from '@/components/features/chat/pref-update-sheet'
+import { getLiveSession } from '@/lib/supabase/sessions'
 import type { Session } from '@/lib/supabase/schema'
-import type { PrefUpdate } from '@/lib/ai/pref-update-parser'
+import {
+  fetchChatHistory,
+  sendChatMessage,
+} from '@/lib/chat-client'
+import { Icon } from '@/components/ui/icon'
+import { cn } from '@/lib/utils'
 
-interface MasterTaskCard {
-    id: string
-    title: string
-    deadline: string
-    difficulty: number
+type UiMessage = {
+  id: string
+  role: 'user' | 'ai'
+  content: string
+  messageType?: string
+  createdAt: string
 }
 
-interface DisplayMessage {
-    id: string
-    sender: 'user' | 'ai'
-    content: string
-    message_type: string
-    created_at: string
-    masterTask?: MasterTaskCard | null
-}
-
+/**
+ * Companion — Stitch dual-pane.
+ * History is server-authoritative via GET /api/chat/history.
+ */
 export default function ChatPage() {
-    const { user, profile, refreshProfile } = useAuth()
-    const [inputValue, setInputValue] = useState('')
-    const [isLoading, setIsLoading] = useState(false)
-    const [session, setSession] = useState<Session | null>(null)
-    const [careMode, setCareMode] = useState(false)
-    const [messages, setMessages] = useState<DisplayMessage[]>([])
-    const [initialLoading, setInitialLoading] = useState(true)
-    const [profileSummary, setProfileSummary] = useState('')
-    const [pendingPrefUpdates, setPendingPrefUpdates] = useState<PrefUpdate[] | null>(null)
-    const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { user, profile, refreshProfile } = useAuth()
+  const [session, setSession] = useState<Session | null>(null)
+  const [messages, setMessages] = useState<UiMessage[]>([])
+  const [input, setInput] = useState('')
+  const [sending, setSending] = useState(false)
+  const [loadingHistory, setLoadingHistory] = useState(true)
+  const [error, setError] = useState('')
+  const [careMode, setCareMode] = useState(false)
+  const [lastTask, setLastTask] = useState<string | null>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const sessionRef = useRef<Session | null>(null)
+  /** Bumps on each load/send so stale history responses cannot wipe newer UI. */
+  const historyGen = useRef(0)
 
-    // Load existing messages from DB on mount
-    useEffect(() => {
-        if (!user) return
+  const mapRows = useCallback(
+    (
+      rows: {
+        id: string
+        sender: string
+        content: string
+        message_type?: string
+        created_at: string
+      }[],
+    ): UiMessage[] =>
+      rows.map((r) => ({
+        id: r.id,
+        role: r.sender === 'user' ? 'user' : 'ai',
+        content: r.content,
+        messageType: r.message_type,
+        createdAt: r.created_at,
+      })),
+    [],
+  )
 
-        const loadMessages = async () => {
-            const supabase = getSupabase()
-            const { data, error } = await supabase
-                .from('chat_messages')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: true })
+  const loadHistory = useCallback(async () => {
+    if (!user) return
+    const gen = ++historyGen.current
+    setLoadingHistory(true)
+    setError('')
 
-            if (!error && data) {
-                setMessages(data.map((m: Record<string, unknown>) => ({
-                    id: m.id as string,
-                    sender: m.sender as 'user' | 'ai',
-                    content: m.content as string,
-                    message_type: (m.message_type as string) || 'normal',
-                    created_at: m.created_at as string,
-                })))
+    // Live session (active | extending | completing) — not just 'active'
+    const live = await getLiveSession(user.id)
+    if (gen !== historyGen.current) return
 
-                // Detect if last AI message was care_mode
-                const lastAi = [...data].reverse().find((m: Record<string, unknown>) => m.sender === 'ai')
-                if (lastAi && (lastAi as Record<string, unknown>).message_type === 'care_mode') {
-                    setCareMode(true)
-                }
-            }
-            setInitialLoading(false)
-        }
+    sessionRef.current = live
+    setSession(live)
 
-        loadMessages()
-    }, [user])
+    const { messages: rows, error: histErr } = await fetchChatHistory({
+      userId: user.id,
+      sessionId: live?.id ?? null,
+      limit: 100,
+    })
 
-    // Load active session
-    useEffect(() => {
-        if (user) {
-            getActiveSession(user.id).then(setSession)
-        }
-    }, [user])
+    if (gen !== historyGen.current) return
 
-    // Build compact profile summary — includes recent journal entries and self-assigned tasks for AI context
-    useEffect(() => {
-        if (!profile || !user) return
-        const supabase = getSupabase()
-        Promise.all([
-            supabase.from('tasks').select('title').eq('user_id', user.id).eq('task_type', 'journal').order('created_at', { ascending: false }).limit(5),
-            supabase.from('tasks').select('title').eq('user_id', user.id).eq('source', 'user').neq('task_type', 'journal').order('created_at', { ascending: false }).limit(3),
-        ]).then(([journalRes, selfRes]) => {
-            const journalTitles = (journalRes.data || []).map((t: { title: string }) => t.title)
-            const userTaskTitles = (selfRes.data || []).map((t: { title: string }) => t.title)
-            setProfileSummary(buildProfileSummary(profile, { journalTitles, userTaskTitles }))
-        }).catch(() => {
-            setProfileSummary(buildProfileSummary(profile))
-        })
-    }, [profile, user])
-
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, [messages])
-
-    const handleSend = useCallback(async () => {
-        if (!inputValue.trim() || isLoading || !user) return
-
-        const message = inputValue
-        setInputValue('')
-        setIsLoading(true)
-
-        // Check if user is resuming training
-        if (message.toLowerCase().includes('resume training')) {
-            setCareMode(false)
-        }
-
-        // Optimistically add user message to local state
-        const userMsg: DisplayMessage = {
-            id: `temp-${Date.now()}`,
-            sender: 'user',
-            content: message,
-            message_type: 'normal',
-            created_at: new Date().toISOString(),
-        }
-        setMessages(prev => [...prev, userMsg])
-
-        // ── GOAL: API handles all DB writes ──────────────────
-        // We no longer write to Supabase from the client.
-        // This prevents double-writes and race conditions.
-
-        try {
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message,
-                    userId: user.id,
-                    sessionId: session?.id,
-                    safeword: 'MERCY',
-                    // skipDbWrite removed - API always writes
-                    profileSummary: profileSummary || undefined,
-                    // Fallback full context if summary not yet built
-                    context: profileSummary ? undefined : {
-                        persona: profile?.ai_personality ?? 'Cruel Mistress',
-                        tier: profile?.tier ?? 'Newbie',
-                        willpower: profile?.willpower_score ?? 50,
-                        fetishes: profile?.interests ?? [],
-                        hardLimits: profile?.hard_limits ?? [],
-                    },
-                }),
-            })
-
-            if (res.ok) {
-                const data = await res.json()
-                if (data.careMode) {
-                    setCareMode(true)
-                }
-
-                // Handle Care Mode preference updates
-                if (data.prefUpdates && data.prefUpdates.length > 0) {
-                    setPendingPrefUpdates(data.prefUpdates)
-                }
-
-                // Add AI reply to local state
-                const aiMsg: DisplayMessage = {
-                    id: `ai-${Date.now()}`,
-                    sender: 'ai',
-                    content: data.reply,
-                    message_type: data.messageType || 'normal',
-                    created_at: new Date().toISOString(),
-                    masterTask: data.masterTask ?? null,
-                }
-                setMessages(prev => [...prev, aiMsg])
-
-                // No client-side cleanup needed; DB is consistent via API
-            } else {
-                // Show error message
-                const aiMsg: DisplayMessage = {
-                    id: `err-${Date.now()}`,
-                    sender: 'ai',
-                    content: 'I couldn\'t process your message. Try again.',
-                    message_type: 'normal',
-                    created_at: new Date().toISOString(),
-                }
-                setMessages(prev => [...prev, aiMsg])
-            }
-        } catch (err) {
-            console.error('Chat error:', err)
-            const aiMsg: DisplayMessage = {
-                id: `err-${Date.now()}`,
-                sender: 'ai',
-                content: 'Connection error. Please try again.',
-                message_type: 'normal',
-                created_at: new Date().toISOString(),
-            }
-            setMessages(prev => [...prev, aiMsg])
-        }
-
-        setIsLoading(false)
-    }, [inputValue, isLoading, user, session, profile, profileSummary])
-
-    const handlePrefUpdateConfirm = async () => {
-        if (!pendingPrefUpdates || !user) return
-
-        // Build the update object — for 'set', replace; for 'append', we just set (server stores it)
-        const updateBody: Record<string, unknown> = { userId: user.id }
-        for (const update of pendingPrefUpdates) {
-            updateBody[update.field] = update.value
-        }
-
-        try {
-            await fetch('/api/profile/update', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updateBody),
-            })
-            await refreshProfile()
-        } catch {
-            // Silently fail — preference update is best-effort
-        } finally {
-            setPendingPrefUpdates(null)
-        }
+    if (histErr) {
+      console.error('[Chat] History load failed:', histErr)
+      setError(`Could not load history: ${histErr}`)
+      // Keep any in-flight optimistic bubbles — never blank the thread on a race
+    } else {
+      setMessages(mapRows(rows))
     }
 
-    const handlePrefUpdateDismiss = () => {
-        setPendingPrefUpdates(null)
+    if (live && 'care_mode_active' in live) {
+      setCareMode(Boolean((live as Session & { care_mode_active?: boolean }).care_mode_active))
+    }
+    setLoadingHistory(false)
+  }, [user, mapRows])
+
+  useEffect(() => {
+    void loadHistory()
+  }, [loadHistory])
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, sending])
+
+  async function handleSend(e?: React.FormEvent) {
+    e?.preventDefault()
+    if (!user || !input.trim() || sending) return
+    if (!profile) {
+      setError('Profile still loading — try again in a moment.')
+      return
     }
 
-    const formatTime = (timestamp: string) =>
-        new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const text = input.trim()
+    setInput('')
+    setError('')
+    setSending(true)
 
-    const personality = profile?.ai_personality ?? 'Cruel Mistress'
+    // Optimistic bubble FIRST — never wait on session lookup / network
+    const optimistic: UiMessage = {
+      id: `local-${Date.now()}`,
+      role: 'user',
+      content: text,
+      createdAt: new Date().toISOString(),
+    }
+    setMessages((m) => [...m, optimistic])
 
-    return (
-        <>
-            <TopBar />
+    // Invalidate in-flight loadHistory so it cannot clobber this send
+    const sendGen = ++historyGen.current
 
-            <div className="min-h-screen pb-24 lg:pb-8 flex flex-col bg-black">
-                {/* Chat Sub-Header */}
-                <div className={`px-4 py-2 border-b transition-colors ${careMode
-                    ? 'border-teal-500/30 bg-teal-900/10'
-                    : 'border-zinc-800 bg-zinc-900/50'
-                    }`}>
-                    <div className="flex items-center justify-between max-w-2xl mx-auto">
-                        <div>
-                            <h2 className="text-sm font-semibold">
-                                {careMode ? '💚 Care Mode' : personality}
-                            </h2>
-                            <p className="text-xs text-white/30">
-                                {careMode
-                                    ? 'Safe space — no punishments active'
-                                    : `Tier: ${profile?.tier ?? 'Newbie'}`
-                                }
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {careMode ? (
-                                <>
-                                    <Shield size={14} className="text-teal-400" />
-                                    <Badge variant="info">SAFE</Badge>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="w-2 h-2 rounded-full bg-tier-newbie animate-pulse" />
-                                    <Badge variant="tier2">ACTIVE</Badge>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
+    try {
+      // Re-resolve session at send time (state may be stale; cache helps)
+      let live = sessionRef.current
+      if (!live) {
+        live = await getLiveSession(user.id)
+        sessionRef.current = live
+        if (live) setSession(live)
+      }
 
-                {/* Care Mode Banner */}
-                {careMode && (
-                    <div className="mx-4 mt-3 bg-teal-900/30 border border-teal-500/40 rounded-xl p-4 flex items-start gap-3">
-                        <Heart size={20} className="text-teal-300 shrink-0 mt-0.5" />
-                        <div className="flex-1">
-                            <p className="text-sm font-semibold text-teal-300">Care Mode Active</p>
-                            <p className="text-xs text-white/85 mt-1">
-                                All training and punishments are paused. You are safe and in control.
-                            </p>
-                            <button
-                                onClick={() => {
-                                    setInputValue('resume training')
-                                }}
-                                className="mt-2 text-xs text-teal-400 hover:text-teal-300 flex items-center gap-1 transition-colors"
-                            >
-                                <ArrowRight size={12} /> Resume Training when ready
-                            </button>
-                        </div>
-                    </div>
+      const result = await sendChatMessage({
+        message: text,
+        profile,
+        userId: user.id,
+        sessionId: live?.id ?? session?.id ?? null,
+      })
+
+      if (sendGen !== historyGen.current) return
+
+      if (result.error) {
+        setError(result.error)
+        // Keep the user bubble so the send is still visible; mark it failed
+        setMessages((m) =>
+          m.map((x) =>
+            x.id === optimistic.id
+              ? { ...x, content: `${x.content}\n\n(failed to send)` }
+              : x,
+          ),
+        )
+        return
+      }
+
+      if (result.persistError) {
+        console.warn('[Chat] Persist warning:', result.persistError)
+        setError(`Saved with warning: ${result.persistError}`)
+      }
+
+      if (result.careMode) setCareMode(true)
+      if (text.toLowerCase().includes('resume training')) setCareMode(false)
+      if (result.masterTask) setLastTask(result.masterTask.title)
+
+      // Always surface the AI reply from the POST body first (authoritative for this turn)
+      const aiLocal: UiMessage = {
+        id: `ai-${Date.now()}`,
+        role: 'ai',
+        content: result.reply || '…',
+        messageType: result.messageType,
+        createdAt: new Date().toISOString(),
+      }
+      setMessages((m) => [...m, aiLocal])
+
+      // Background revalidate — only adopt server history if it includes this turn
+      const sid = result.sessionId || live?.id || session?.id || null
+      const { messages: rows, error: histErr } = await fetchChatHistory({
+        userId: user.id,
+        sessionId: sid,
+        limit: 100,
+      })
+
+      if (sendGen !== historyGen.current) return
+
+      if (!histErr && rows.length > 0) {
+        const mapped = mapRows(rows)
+        const hasUser = mapped.some((r) => r.role === 'user' && r.content === text)
+        const hasAi =
+          !result.reply ||
+          mapped.some((r) => r.role === 'ai' && r.content === result.reply)
+        // Only replace local bubbles when server history actually contains this exchange
+        if (hasUser && hasAi) {
+          setMessages(mapped)
+        } else {
+          console.warn(
+            '[Chat] Post-send history missing this turn — keeping local bubbles',
+            { hasUser, hasAi, histCount: rows.length },
+          )
+        }
+      } else if (histErr) {
+        console.warn('[Chat] Post-send history refresh failed:', histErr)
+      }
+
+      void refreshProfile()
+    } catch (err) {
+      console.error('[Chat] Send failed:', err)
+      setError(err instanceof Error ? err.message : 'Failed to send message')
+    } finally {
+      if (sendGen === historyGen.current) setSending(false)
+    }
+  }
+
+  const persona = profile?.ai_personality || 'Master'
+  const willpower = profile?.willpower_score ?? 0
+  const streak = profile?.compliance_streak ?? 0
+  const xp = profile?.xp_total ?? 0
+
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <header className="flex shrink-0 items-center justify-between border-b border-white/5 px-6 py-4 xl:px-8">
+        <div>
+          <p className="font-label-caps text-[10px] tracking-widest text-primary-fixed">COMPANION</p>
+          <h1 className="font-headline-md text-xl font-semibold text-on-surface">{persona}</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          {careMode && (
+            <span className="rounded-full bg-teal-500/15 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-teal-300">
+              Care mode
+            </span>
+          )}
+          <span className="hidden rounded-full border border-white/10 px-3 py-1 font-mono-data text-[10px] text-on-surface-variant sm:inline">
+            Safeword {profile?.safeword || 'MERCY'}
+          </span>
+        </div>
+      </header>
+
+      <div className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-12">
+        <section className="flex min-h-0 flex-col xl:col-span-7">
+          <div className="custom-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto overflow-x-hidden px-6 py-6 xl:px-8">
+            {loadingHistory && (
+              <p className="font-label-caps text-xs tracking-widest text-on-surface-variant animate-pulse">
+                Loading history…
+              </p>
+            )}
+
+            {!loadingHistory && messages.length === 0 && (
+              <div className="rounded-2xl border border-white/5 bg-[#161B15] p-6">
+                <p className="font-display-lg text-lg italic text-primary-fixed-dim">
+                  Report in. Speak carefully.
+                </p>
+                <p className="mt-3 text-sm text-on-surface-variant">
+                  Type freely. Say <strong className="text-on-surface">MERCY</strong> for Care Mode.
+                  Say <strong className="text-on-surface">resume training</strong> to leave it.
+                </p>
+                {!session && (
+                  <p className="mt-3 text-xs text-on-surface-variant opacity-70">
+                    No active lock — messages still save to your account.
+                  </p>
                 )}
+              </div>
+            )}
 
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {initialLoading ? (
-                        <div className="text-center py-12">
-                            <Loader2 size={24} className="animate-spin mx-auto text-white/30" />
-                        </div>
-                    ) : messages.length === 0 ? (
-                        <div className="text-center py-12 text-white/30">
-                            <p className="text-sm">Start the conversation. Address your Master respectfully.</p>
-                        </div>
-                    ) : null}
-
-                    {messages.map((message, index) => {
-                        const isCareMode = message.message_type === 'care_mode'
-                        const isPunishment = message.message_type === 'punishment'
-                        const isSafeword = message.message_type === 'safeword_detected'
-
-                        return (
-                            <div
-                                key={message.id}
-                                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
-                            >
-                                <div
-                                    className={`max-w-[85%] ${message.sender === 'ai'
-                                        ? isCareMode
-                                            ? 'bg-teal-900/20 border border-teal-500/30 rounded-2xl rounded-tl-sm px-4 py-3 animate-bubble-in'
-                                            : isPunishment
-                                                ? 'bg-zinc-900 border border-orange-500/40 rounded-2xl rounded-tl-sm px-4 py-3 animate-bubble-in'
-                                                : 'bg-zinc-900 border border-zinc-800 rounded-2xl rounded-tl-sm px-4 py-3 animate-bubble-in'
-                                        : isSafeword
-                                            ? 'bg-teal-900/20 border border-teal-500/30 rounded-2xl rounded-tr-sm px-4 py-3 animate-bubble-in'
-                                            : 'rounded-2xl rounded-tr-sm px-4 py-3 text-white animate-bubble-in'
-                                        }`}
-                                    style={message.sender === 'user' && !isSafeword
-                                        ? { backgroundColor: 'var(--accent)', animationDelay: `${Math.min(index * 0.04, 0.4)}s` }
-                                        : { animationDelay: `${Math.min(index * 0.04, 0.4)}s` }
-                                    }
-                                >
-                                    {message.sender === 'ai' && (
-                                        <p className={`text-xs font-semibold mb-1.5 ${isCareMode
-                                            ? 'text-teal-300'
-                                            : isPunishment
-                                                ? 'text-red-500'
-                                                : 'text-[var(--accent)]'
-                                            }`}>
-                                            {isCareMode ? '💚 Care Mode' : personality}
-                                            {isPunishment && ' ⚠️'}
-                                        </p>
-                                    )}
-                                    {isSafeword && message.sender === 'user' && (
-                                        <p className="text-xs font-semibold mb-1.5 text-teal-300">
-                                            Safeword Used
-                                        </p>
-                                    )}
-                                    <p className="text-sm whitespace-pre-line leading-relaxed">
-                                        {message.content}
-                                    </p>
-                                    <span className="text-[10px] text-white/30 mt-2 block text-right">
-                                        {formatTime(message.created_at)}
-                                    </span>
-                                </div>
-
-                                {/* Task assigned card */}
-                                {message.masterTask && (
-                                    <Link
-                                        href="/tasks"
-                                        className="mt-2 block max-w-[85%] bg-zinc-900 border border-[var(--accent)]/30 rounded-xl p-3 hover:opacity-90 transition-opacity group"
-                                    >
-                                        <div className="flex items-center gap-1.5 mb-2">
-                                            <ClipboardList size={12} className="text-[var(--accent)] shrink-0" />
-                                            <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wide">
-                                                ⚔ Task Assigned
-                                            </span>
-                                        </div>
-                                        <p className="text-sm font-semibold text-white leading-snug">
-                                            {message.masterTask.title}
-                                        </p>
-                                        <div className="flex items-center gap-3 mt-2 text-xs text-white/30">
-                                            <span className="flex items-center gap-1">
-                                                <Star size={10} />
-                                                {'★'.repeat(message.masterTask.difficulty)}{'☆'.repeat(5 - message.masterTask.difficulty)}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <Clock size={10} />
-                                                Due {new Date(message.masterTask.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-1 mt-2 text-[10px] text-[var(--accent)]/70 group-hover:text-[var(--accent)] transition-colors">
-                                            Go to Tasks <ArrowRight size={10} />
-                                        </div>
-                                    </Link>
-                                )}
-                            </div>
-                        )
-                    })}
-
-                    {isLoading && (
-                        <div className="flex justify-start">
-                            <div className={`rounded-2xl px-4 py-3 ${careMode
-                                ? 'bg-teal-900/20 border border-teal-500/30'
-                                : 'bg-zinc-900 border border-zinc-800'
-                                }`}>
-                                <div className="flex gap-1.5">
-                                    <div className={`w-2 h-2 rounded-full animate-bounce ${careMode ? 'bg-teal-400/50' : 'bg-white/20'}`} style={{ animationDelay: '0ms' }} />
-                                    <div className={`w-2 h-2 rounded-full animate-bounce ${careMode ? 'bg-teal-400/50' : 'bg-white/20'}`} style={{ animationDelay: '150ms' }} />
-                                    <div className={`w-2 h-2 rounded-full animate-bounce ${careMode ? 'bg-teal-400/50' : 'bg-white/20'}`} style={{ animationDelay: '300ms' }} />
-                                </div>
-                            </div>
-                        </div>
+            {messages.map((msg) =>
+              msg.role === 'user' ? (
+                <div key={msg.id} className="flex justify-end">
+                  <div
+                    className={cn(
+                      'max-w-[85%] rounded-2xl rounded-tr-none border bg-[#161B15]/80 p-5 backdrop-blur',
+                      msg.messageType === 'safeword_detected'
+                        ? 'border-teal-400/40'
+                        : 'border-primary-fixed/20',
                     )}
-
-                    <div ref={messagesEndRef} />
-                </div>
-
-                {/* Input */}
-                <div className={`sticky bottom-20 lg:bottom-0 transition-colors ${careMode
-                    ? 'bg-zinc-900 border-t border-teal-500/20 px-4 py-3'
-                    : 'bg-zinc-900 border-t border-zinc-800 px-4 py-3'
-                    }`}>
-                    <div className="flex gap-2">
-                        <textarea
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && handleSend()}
-                            placeholder={careMode ? 'You are safe here...' : 'Address Master respectfully...'}
-                            className="bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-zinc-600 flex-1 resize-none text-sm"
-                            rows={1}
-                            disabled={isLoading}
-                        />
-                        <button
-                            type="button"
-                            aria-label="Send message"
-                            onClick={handleSend}
-                            disabled={isLoading || !inputValue.trim()}
-                            className="p-3 rounded-xl text-white disabled:opacity-40 transition-opacity shrink-0"
-                            style={{ backgroundColor: 'var(--accent)' }}
-                        >
-                            {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-                        </button>
-                    </div>
-                    <p className="text-[10px] text-white/30 mt-2 text-center">
-                        {careMode
-                            ? 'Type "resume training" when you\'re ready to continue'
-                            : 'Type "MERCY" at any time to activate Care Mode'
-                        }
+                  >
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-on-surface">
+                      {msg.content}
                     </p>
+                    <p className="mt-3 border-t border-white/5 pt-2 font-label-caps text-[10px] text-on-surface-variant">
+                      {new Date(msg.createdAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
                 </div>
+              ) : (
+                <div key={msg.id} className="flex justify-start">
+                  <div
+                    className={cn(
+                      'max-w-[90%] space-y-3',
+                      msg.messageType === 'care_mode' && 'text-teal-100',
+                      msg.messageType === 'punishment' && 'text-error',
+                    )}
+                  >
+                    <p className="whitespace-pre-wrap text-base leading-relaxed text-on-surface/90">
+                      {msg.content}
+                    </p>
+                  </div>
+                </div>
+              ),
+            )}
+
+            {sending && (
+              <p className="animate-pulse font-label-caps text-xs tracking-widest text-on-surface-variant">
+                Master is considering…
+              </p>
+            )}
+            {error && <p className="text-sm text-error">{error}</p>}
+            {lastTask && (
+              <div className="rounded-xl border border-primary-fixed/30 bg-primary-fixed/10 p-4 text-sm">
+                Task assigned: <strong>{lastTask}</strong>{' '}
+                <Link href="/tasks" className="text-primary-fixed underline">
+                  Open Tasks
+                </Link>
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+
+          <form
+            onSubmit={(e) => void handleSend(e)}
+            className="shrink-0 border-t border-white/5 px-6 py-4 xl:px-8"
+          >
+            <div className="relative">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Reflect on your decisions…"
+                disabled={sending || !user}
+                className="w-full rounded-xl border-none bg-surface-container-high px-6 py-4 pr-14 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-1 focus:ring-primary-fixed"
+              />
+              <button
+                type="submit"
+                disabled={sending || !input.trim()}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg bg-primary-fixed p-2 text-on-primary-fixed transition hover:scale-105 disabled:opacity-40"
+                aria-label="Send"
+              >
+                <Icon name="north_east" className="text-[20px]" />
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <aside className="custom-scrollbar hidden min-h-0 overflow-y-auto overscroll-contain border-l border-white/5 p-6 xl:col-span-5 xl:block">
+          <div className="space-y-3">
+            <div className="rounded-xl border border-white/5 bg-[#161B15]/80 p-6 backdrop-blur">
+              <p className="font-label-caps text-[11px] tracking-[0.2em] text-primary-fixed">
+                CORE METRIC
+              </p>
+              <h3 className="mt-1 font-headline-md text-lg font-semibold">Willpower</h3>
+              <div className="mt-6 flex items-center justify-center">
+                <div className="relative flex h-40 w-40 items-center justify-center">
+                  <svg className="absolute h-full w-full -rotate-90" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="52" fill="none" stroke="#1A1F19" strokeWidth="10" />
+                    <circle
+                      cx="60"
+                      cy="60"
+                      r="52"
+                      fill="none"
+                      stroke="#c3f400"
+                      strokeWidth="10"
+                      strokeLinecap="round"
+                      strokeDasharray={`${(willpower / 100) * 327} 327`}
+                    />
+                  </svg>
+                  <div className="text-center">
+                    <span className="text-4xl font-bold text-on-surface">{willpower}</span>
+                    <p className="font-label-caps text-[10px] text-on-surface-variant">SCORE</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="font-mono-data text-sm">{streak}d</p>
+                  <p className="font-label-caps text-[9px] text-on-surface-variant opacity-60">
+                    Streak
+                  </p>
+                </div>
+                <div className="border-x border-white/5">
+                  <p className="font-mono-data text-sm">{xp}</p>
+                  <p className="font-label-caps text-[9px] text-on-surface-variant opacity-60">XP</p>
+                </div>
+                <div>
+                  <p className="font-mono-data text-sm">{profile?.tier?.slice(0, 6) || '—'}</p>
+                  <p className="font-label-caps text-[9px] text-on-surface-variant opacity-60">
+                    Tier
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <BottomNav />
-
-            {pendingPrefUpdates && (
-                <PrefUpdateSheet
-                    updates={pendingPrefUpdates}
-                    onConfirm={handlePrefUpdateConfirm}
-                    onDismiss={handlePrefUpdateDismiss}
-                />
-            )}
-        </>
-    )
+            <div className="rounded-xl border border-white/5 bg-[#161B15]/80 p-6">
+              <p className="font-label-caps text-[11px] tracking-[0.2em] text-primary-fixed">
+                SESSION
+              </p>
+              <h3 className="mt-1 text-lg font-semibold">
+                {session ? 'Locked in' : 'No active lock'}
+              </h3>
+              <p className="mt-2 text-sm text-on-surface-variant">
+                {session
+                  ? `Ends ${new Date(session.scheduled_end_time).toLocaleString()}`
+                  : 'Start a session from Home — chat still saves to your profile.'}
+              </p>
+              {!session && (
+                <Link
+                  href="/home"
+                  className="mt-4 inline-flex text-xs font-bold text-primary-fixed hover:underline"
+                >
+                  Go to Home →
+                </Link>
+              )}
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  )
 }

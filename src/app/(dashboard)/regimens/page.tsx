@@ -1,358 +1,210 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { TopBar } from '@/components/layout/top-bar'
-import { BottomNav } from '@/components/layout/bottom-nav'
-import { Dumbbell, Plus, ChevronRight, Pause, Play, X, CheckCircle, Loader2, AlertTriangle } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '@/lib/contexts/auth-context'
-import { getUserRegimens, createRegimen, pauseRegimen, abandonRegimen } from '@/lib/supabase/regimens'
+import { getUserRegimens, createRegimen } from '@/lib/supabase/regimens'
+import { REGIMEN_OPTIONS } from '@/lib/stores/onboarding-store'
 import type { Regimen } from '@/lib/supabase/schema'
+import { Icon } from '@/components/ui/icon'
+import { cn } from '@/lib/utils'
 
-const TEMPLATES = [
-    { name: 'Endurance Protocol', description: 'Build tolerance through progressive denial training', days: 14 },
-    { name: 'Obedience Bootcamp', description: 'Strict daily task completion with escalating difficulty', days: 7 },
-    { name: 'Edge Control Mastery', description: 'Practice edge control with increasing session durations', days: 21 },
-    { name: 'Mental Fortitude', description: 'Psychological conditioning through daily challenges', days: 30 },
-    { name: 'Submission Training', description: 'Learn to accept and comply with any command given', days: 10 },
-]
-
-interface NextDayTask {
-    title: string
-    description: string
-    difficulty?: number
-}
-
-interface AdvanceState {
-    [regimenId: string]: {
-        advancing: boolean
-        error: string | null
-        nextDayTask: NextDayTask | null
-    }
-}
-
+/**
+ * Training regimens — enroll + advance day via /api/regimens/complete-day.
+ */
 export default function RegimensPage() {
-    const { user } = useAuth()
-    const [regimens, setRegimens] = useState<Regimen[]>([])
-    const [loading, setLoading] = useState(true)
-    const [showCreate, setShowCreate] = useState(false)
-    const [creating, setCreating] = useState(false)
-    const [advanceState, setAdvanceState] = useState<AdvanceState>({})
+  const { user, profile } = useAuth()
+  const [regimens, setRegimens] = useState<Regimen[]>([])
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const [showCatalog, setShowCatalog] = useState(false)
 
-    useEffect(() => {
-        if (user) loadRegimens()
-    }, [user])
+  const refresh = useCallback(async () => {
+    if (!user?.id) return
+    setLoading(true)
+    const list = await getUserRegimens(user.id)
+    setRegimens(list)
+    setLoading(false)
+  }, [user?.id])
 
-    async function loadRegimens() {
-        if (!user) return
-        const data = await getUserRegimens(user.id)
-        setRegimens(data)
-        setLoading(false)
+  useEffect(() => {
+    void refresh()
+  }, [refresh])
+
+  async function enroll(opt: (typeof REGIMEN_OPTIONS)[number]) {
+    if (!user) return
+    setBusy(opt.id)
+    setError('')
+    setMessage('')
+    try {
+      const existing = regimens.find((r) => r.name === opt.name && r.status === 'active')
+      if (existing) {
+        setError('Already enrolled in this regimen')
+        return
+      }
+      const created = await createRegimen(user.id, opt.name, opt.description, 14)
+      if (!created) {
+        setError('Could not create regimen')
+        return
+      }
+      setMessage(`Enrolled: ${opt.name}`)
+      setShowCatalog(false)
+      await refresh()
+    } finally {
+      setBusy(null)
     }
+  }
 
-    async function handleCreate(template: typeof TEMPLATES[number]) {
-        if (!user) return
-        setCreating(true)
-        await createRegimen(user.id, template.name, template.description, template.days)
-        await loadRegimens()
-        setCreating(false)
-        setShowCreate(false)
+  async function completeDay(r: Regimen) {
+    if (!user) return
+    setBusy(r.id)
+    setError('')
+    setMessage('')
+    try {
+      const res = await fetch('/api/regimens/complete-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          regimenId: r.id,
+          userId: user.id,
+          currentDay: r.current_day,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Advance failed')
+        return
+      }
+      if (data.allowed === false) {
+        setError(data.reason || 'Not enough tasks completed today')
+        return
+      }
+      setMessage(
+        data.nextDayTask
+          ? `Day advanced. Next focus: ${data.nextDayTask.title || data.nextDayTask}`
+          : data.message || 'Day complete',
+      )
+      await refresh()
+    } finally {
+      setBusy(null)
     }
+  }
 
-    async function handleAdvance(regimen: Regimen) {
-        if (!user) return
+  const preferred = profile?.preferred_regimens || []
 
-        setAdvanceState(prev => ({
-            ...prev,
-            [regimen.id]: { advancing: true, error: null, nextDayTask: null },
-        }))
-
-        try {
-            const res = await fetch('/api/regimens/complete-day', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    regimenId: regimen.id,
-                    userId: user.id,
-                    currentDay: regimen.current_day,
-                }),
-            })
-
-            const data = await res.json()
-
-            if (!res.ok || !data.advanced) {
-                setAdvanceState(prev => ({
-                    ...prev,
-                    [regimen.id]: {
-                        advancing: false,
-                        error: data.reason || 'Failed to advance regimen.',
-                        nextDayTask: null,
-                    },
-                }))
-            } else {
-                setAdvanceState(prev => ({
-                    ...prev,
-                    [regimen.id]: {
-                        advancing: false,
-                        error: null,
-                        nextDayTask: data.nextDayTask || null,
-                    },
-                }))
-                await loadRegimens()
-            }
-        } catch {
-            setAdvanceState(prev => ({
-                ...prev,
-                [regimen.id]: {
-                    advancing: false,
-                    error: 'Connection error. Please try again.',
-                    nextDayTask: null,
-                },
-            }))
-        }
-    }
-
-    async function handlePause(regimenId: string) {
-        await pauseRegimen(regimenId)
-        await loadRegimens()
-    }
-
-    async function handleAbandon(regimenId: string) {
-        await abandonRegimen(regimenId)
-        await loadRegimens()
-    }
-
-    const active = regimens.filter((r) => r.status === 'active')
-    const paused = regimens.filter((r) => r.status === 'paused')
-    const completed = regimens.filter((r) => r.status === 'completed' || r.status === 'abandoned')
-
-    return (
-        <>
-            <TopBar />
-
-            <div className="min-h-screen bg-black pb-24 lg:pb-8 p-4">
-                <div className="max-w-2xl mx-auto space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-                            <Dumbbell size={28} className="text-[var(--accent)]" />
-                            Regimens
-                        </h1>
-                        <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>
-                            <Plus size={14} className="mr-1" /> New
-                        </Button>
-                    </div>
-
-                    {/* Template Picker */}
-                    {showCreate && (
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-                            <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">
-                                Choose a Training Program
-                            </h3>
-                            <div className="space-y-2">
-                                {TEMPLATES.map((t) => (
-                                    <button
-                                        key={t.name}
-                                        onClick={() => handleCreate(t)}
-                                        disabled={creating}
-                                        className="w-full text-left p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl border border-zinc-700 transition-colors cursor-pointer flex items-center justify-between"
-                                    >
-                                        <div>
-                                            <p className="text-sm font-medium text-white">{t.name}</p>
-                                            <p className="text-xs text-white/30">{t.description}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <Badge variant="info">{t.days}d</Badge>
-                                            <ChevronRight size={14} className="text-white/30" />
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                            {creating && (
-                                <div className="flex items-center gap-2 text-sm text-white/30">
-                                    <Loader2 size={14} className="animate-spin" /> Creating regimen...
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Active Regimens */}
-                    {active.length > 0 && (
-                        <div className="space-y-3">
-                            <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">Active</h3>
-                            {active.map((r) => (
-                                <RegimenCard
-                                    key={r.id}
-                                    regimen={r}
-                                    onAdvance={handleAdvance}
-                                    onPause={handlePause}
-                                    onAbandon={handleAbandon}
-                                    advancing={advanceState[r.id]?.advancing ?? false}
-                                    error={advanceState[r.id]?.error ?? null}
-                                    nextDayTask={advanceState[r.id]?.nextDayTask ?? null}
-                                />
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Paused */}
-                    {paused.length > 0 && (
-                        <div className="space-y-3">
-                            <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">Paused</h3>
-                            {paused.map((r) => (
-                                <RegimenCard
-                                    key={r.id}
-                                    regimen={r}
-                                    onAdvance={handleAdvance}
-                                    onPause={handlePause}
-                                    onAbandon={handleAbandon}
-                                    advancing={advanceState[r.id]?.advancing ?? false}
-                                    error={advanceState[r.id]?.error ?? null}
-                                    nextDayTask={advanceState[r.id]?.nextDayTask ?? null}
-                                />
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Completed / Abandoned */}
-                    {completed.length > 0 && (
-                        <div className="space-y-3">
-                            <h3 className="text-sm font-semibold text-white/30 uppercase tracking-wide">History</h3>
-                            {completed.map((r) => (
-                                <Card key={r.id} variant="flat" size="sm" className="!min-h-0 opacity-60">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-medium text-white">{r.name}</p>
-                                            <p className="text-xs text-white/30">
-                                                {r.status === 'completed' ? 'Completed' : 'Abandoned'} — Day {r.current_day}/{r.total_days}
-                                            </p>
-                                        </div>
-                                        <Badge variant={r.status === 'completed' ? 'info' : 'locked'}>{r.status}</Badge>
-                                    </div>
-                                </Card>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Empty State */}
-                    {!loading && regimens.length === 0 && !showCreate && (
-                        <Card variant="flat" className="text-center py-12">
-                            <Dumbbell size={40} className="mx-auto text-white/30 mb-3" />
-                            <p className="text-white/30 text-sm mb-4">No training regimens yet.</p>
-                            <Button variant="primary" onClick={() => setShowCreate(true)}>
-                                <Plus size={14} className="mr-1" /> Start a Regimen
-                            </Button>
-                        </Card>
-                    )}
-
-                    {loading && (
-                        <div className="text-center py-8 text-white/30 text-sm">Loading...</div>
-                    )}
-                </div>
-            </div>
-
-            <BottomNav />
-        </>
-    )
-}
-
-function RegimenCard({
-    regimen,
-    onAdvance,
-    onPause,
-    onAbandon,
-    advancing,
-    error,
-    nextDayTask,
-}: {
-    regimen: Regimen
-    onAdvance: (r: Regimen) => void
-    onPause: (id: string) => void
-    onAbandon: (id: string) => void
-    advancing: boolean
-    error: string | null
-    nextDayTask: NextDayTask | null
-}) {
-    const progress = Math.round((regimen.current_day / regimen.total_days) * 100)
-    const isActive = regimen.status === 'active'
-
-    return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl card-hover p-4 space-y-4">
-            <div className="flex items-start justify-between">
-                <div>
-                    <h4 className="text-lg font-semibold text-white">{regimen.name}</h4>
-                    {regimen.description && (
-                        <p className="text-xs text-white/30 mt-1">{regimen.description}</p>
-                    )}
-                </div>
-                <Badge variant={isActive ? 'tier2' : 'warning'}>
-                    {isActive ? 'ACTIVE' : 'PAUSED'}
-                </Badge>
-            </div>
-
-            {/* Progress bar */}
-            <div className="space-y-2">
-                <div className="flex justify-between text-xs text-white/30">
-                    <span>Day {regimen.current_day} of {regimen.total_days}</span>
-                    <span className="font-mono">{progress}%</span>
-                </div>
-                <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
-                    <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${progress}%`, backgroundColor: 'var(--accent)' }}
-                    />
-                </div>
-            </div>
-
-            {/* Task quota gate message */}
-            {error && (
-                <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                    <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />
-                    <p className="text-xs text-red-500">{error}</p>
-                </div>
-            )}
-
-            {/* AI-generated next day task preview */}
-            {nextDayTask && (
-                <div className="p-3 bg-[var(--accent)]/5 border border-[var(--accent)]/20 rounded-xl space-y-1">
-                    <p className="text-xs font-semibold text-[var(--accent)]">Tomorrow&apos;s Task</p>
-                    <p className="text-xs font-medium text-white">{nextDayTask.title}</p>
-                    <p className="text-xs text-white/30 line-clamp-2">{nextDayTask.description}</p>
-                </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex items-center gap-2 pt-2 border-t border-zinc-800">
-                {isActive ? (
-                    <>
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            className="flex-1"
-                            disabled={advancing}
-                            onClick={() => onAdvance(regimen)}
-                        >
-                            {advancing ? (
-                                <><Loader2 size={14} className="mr-1 animate-spin" /> Checking...</>
-                            ) : (
-                                <><CheckCircle size={14} className="mr-1" />
-                                    {regimen.current_day >= regimen.total_days ? 'Complete' : 'Day Done'}</>
-                            )}
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => onPause(regimen.id)}>
-                            <Pause size={14} />
-                        </Button>
-                    </>
-                ) : (
-                    <Button variant="secondary" size="sm" className="flex-1" onClick={() => onAdvance(regimen)}>
-                        <Play size={14} className="mr-1" /> Resume
-                    </Button>
-                )}
-                <Button variant="ghost" size="sm" className="text-red-500" onClick={() => onAbandon(regimen.id)}>
-                    <X size={14} />
-                </Button>
-            </div>
+  return (
+    <div className="px-6 py-6 xl:px-8 xl:py-8">
+      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="font-label-caps text-[10px] tracking-widest text-primary-fixed">TRAINING</p>
+          <h1 className="font-headline-md text-2xl font-semibold">Regimens</h1>
+          <p className="mt-1 text-sm text-on-surface-variant">
+            Multi-day programs. Advance requires daily task quota for your tier.
+          </p>
         </div>
-    )
+        <button
+          type="button"
+          onClick={() => setShowCatalog((v) => !v)}
+          className="min-h-11 rounded-full bg-primary-fixed px-5 py-2 text-xs font-bold text-on-primary-fixed"
+        >
+          {showCatalog ? 'Hide catalog' : 'Enroll'}
+        </button>
+      </header>
+
+      {preferred.length > 0 && (
+        <p className="mb-4 text-xs text-on-surface-variant">
+          Onboarding prefs: {preferred.join(', ')}
+        </p>
+      )}
+
+      {error && (
+        <p className="mb-4 rounded-xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p className="mb-4 rounded-xl border border-primary-fixed/30 bg-primary-fixed/10 px-4 py-3 text-sm">
+          {message}
+        </p>
+      )}
+
+      {showCatalog && (
+        <div className="mb-8 grid max-h-96 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">
+          {REGIMEN_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              disabled={busy === opt.id}
+              onClick={() => void enroll(opt)}
+              className="bento-card rounded-xl p-4 text-left transition hover:border-primary-fixed/30"
+            >
+              <p className="text-sm font-semibold">{opt.name}</p>
+              <p className="mt-1 text-xs text-on-surface-variant">{opt.description}</p>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {loading ? (
+        <p className="text-sm text-on-surface-variant">Loading…</p>
+      ) : regimens.length === 0 ? (
+        <div className="bento-card rounded-2xl p-8 text-sm text-on-surface-variant">
+          No regimens yet. Enroll from the catalog to start a 14-day track.
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {regimens.map((r) => {
+            const pct = Math.min(100, Math.round((r.current_day / Math.max(1, r.total_days)) * 100))
+            return (
+              <li key={r.id} className="bento-card rounded-2xl p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <h3 className="font-semibold">{r.name}</h3>
+                      <span
+                        className={cn(
+                          'rounded-full px-2 py-0.5 font-label-caps text-[10px]',
+                          r.status === 'active' && 'bg-primary-fixed/15 text-primary-fixed',
+                          r.status === 'completed' && 'bg-white/10 text-on-surface-variant',
+                          r.status === 'paused' && 'bg-white/5 text-on-surface-variant',
+                        )}
+                      >
+                        {r.status}
+                      </span>
+                    </div>
+                    {r.description && (
+                      <p className="text-sm text-on-surface-variant">{r.description}</p>
+                    )}
+                    <p className="mt-2 font-mono-data text-xs text-on-surface-variant">
+                      Day {r.current_day} / {r.total_days}
+                    </p>
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-container-highest">
+                      <div
+                        className="h-full rounded-full bg-primary-fixed"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                  {r.status === 'active' && (
+                    <button
+                      type="button"
+                      disabled={busy === r.id}
+                      onClick={() => void completeDay(r)}
+                      className="min-h-11 shrink-0 rounded-full bg-primary-fixed px-4 py-2 text-xs font-bold text-on-primary-fixed disabled:opacity-50"
+                    >
+                      {busy === r.id ? '…' : 'Complete day'}
+                    </button>
+                  )}
+                  {r.status === 'completed' && (
+                    <Icon name="check_circle" filled className="text-primary-fixed" />
+                  )}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
 }
