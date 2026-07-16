@@ -146,7 +146,8 @@ export function Icon({
       strokeWidth={filled ? 2.25 : 1.75}
       absoluteStrokeWidth
       className={cn(
-        'inline-block shrink-0',
+        // text-current: stroke/fill follow parent ink (black on lime CTAs, light on dark)
+        'inline-block shrink-0 text-current',
         numericSize == null && 'h-[1.25em] w-[1.25em]',
         className,
       )}

@@ -45,6 +45,7 @@
   --color-on-tertiary-fixed-variant: #424940;
   --color-outline-variant: #3C423A;
   --color-primary-fixed: #c3f400;
+  /* Ink on solid lime (#c3f400 / #abd600) — near-black for WCAG contrast */
   --color-on-primary-fixed: #161e00;
   --color-on-surface: #e0e4db;
   --spacing-bento-gap: 12px;

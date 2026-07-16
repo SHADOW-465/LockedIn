@@ -88,9 +88,31 @@ select {
   font: inherit;
 }
 
+/*
+  Do NOT set `color: inherit` on anchors here.
+  This file is unlayered; unlayered rules beat Tailwind @layer utilities,
+  so `a { color: inherit }` was wiping `text-on-primary-fixed` on lime Links
+  (nav pill, CTA buttons) and leaving white/light ink on #c3f400.
+*/
 a {
-  color: inherit;
   text-decoration: none;
+}
+
+/* ── Accent surface ink (dynamic black-on-lime) ─────────────────
+   Solid lime fills use near-black ink so text + Lucide icons (currentColor)
+   stay readable. Opacity tints (`bg-primary-fixed/10`) are separate classes
+   and keep the default light on-surface ink.
+*/
+.bg-primary-fixed,
+.bg-primary-fixed-dim,
+.bg-primary-container {
+  color: var(--color-on-primary-fixed, #161e00);
+}
+
+.bg-primary-fixed svg,
+.bg-primary-fixed-dim svg,
+.bg-primary-container svg {
+  color: inherit;
 }
 
 /* Icons use Lucide via <Icon /> — do not rely on Material Symbols CDN. */
