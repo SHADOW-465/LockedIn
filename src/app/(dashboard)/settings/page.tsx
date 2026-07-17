@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/contexts/auth-context'
 import { getActiveSession } from '@/lib/supabase/sessions'
 import { TIERS, PERSONAS, FETISH_GENRES } from '@/lib/stores/onboarding-store'
+import { MOBILE_HUB_LINKS } from '@/lib/nav'
 import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/lib/supabase/auth'
@@ -121,6 +122,34 @@ export default function SettingsPage() {
           Settings freeze during lock. Emergency release is on Support / Home.
         </div>
       )}
+
+      {/* Mobile hub — secondary destinations kept off the 5-slot pill */}
+      <section className="mb-8 xl:hidden">
+        <p className="mb-3 font-label-caps text-[10px] tracking-[0.18em] text-on-surface-variant">
+          MORE
+        </p>
+        <ul className="space-y-2">
+          {MOBILE_HUB_LINKS.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className="flex min-h-14 items-center gap-3 rounded-2xl border border-white/5 bg-surface-container/80 px-4 py-3 transition active:bg-surface-variant"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-fixed/15 text-primary-fixed">
+                  <Icon name={item.icon} className="text-xl" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-on-surface">{item.label}</span>
+                  {item.description && (
+                    <span className="block text-xs text-on-surface-variant">{item.description}</span>
+                  )}
+                </span>
+                <Icon name="chevron_right" className="shrink-0 text-on-surface-variant opacity-50" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <div className="mx-auto max-w-2xl space-y-6">
         <section className="bento-card space-y-4 rounded-2xl p-6">

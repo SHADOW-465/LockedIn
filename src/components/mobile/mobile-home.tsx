@@ -1,8 +1,13 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { Session, Task } from '@/lib/supabase/schema'
 import type { BehaviorCounts, ProofScheduleRow } from '@/lib/hooks/use-session-hub'
+import {
+  BehaviorLogPanel,
+  type BehaviorType,
+} from '@/components/features/behavior/behavior-log-panel'
 import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +34,42 @@ function lockDayLabel(session: Session | null): string {
   return `Day ${day}. Your commitment is the foundation.`
 }
 
+/** Remaining time as H:M:S or multi-day compact. */
+function formatRemaining(ms: number): { primary: string; secondary: string } {
+  if (ms <= 0) return { primary: '00:00:00', secondary: 'COMPLETE' }
+  const totalSec = Math.floor(ms / 1000)
+  const days = Math.floor(totalSec / 86400)
+  const h = Math.floor((totalSec % 86400) / 3600)
+  const m = Math.floor((totalSec % 3600) / 60)
+  const s = totalSec % 60
+  const pad = (n: number) => String(n).padStart(2, '0')
+  if (days > 0) {
+    return {
+      primary: `${days}d ${pad(h)}h`,
+      secondary: `${pad(m)}m ${pad(s)}s`,
+    }
+  }
+  return {
+    primary: `${pad(h)}:${pad(m)}:${pad(s)}`,
+    secondary: 'REMAINING',
+  }
+}
+
+const LOCK_AFFIRMATIONS = [
+  'Locked is baseline. Freedom is the exception you earn.',
+  'Your hands are free. Your cock is not. Use that focus.',
+  'Every hour you stay sealed rewires the craving.',
+  'Urges pass. The cage remains. So do you.',
+  'Discipline is remembering what you want most.',
+  'You chose this key. Don’t negotiate with the old self.',
+  'Denial is not emptiness — it is training.',
+  'Stay sealed. Stay sharp. Stay mine to the mission.',
+  'The device is not a joke. It is your identity today.',
+  'One more hour. Then another. That is how keys stay lost.',
+  'Touch the thought, not the metal. Breathe. Hold the frame.',
+  'You are not waiting to unlock. You are becoming locked.',
+]
+
 type Props = {
   name: string
   session: Session | null
@@ -37,17 +78,23 @@ type Props = {
   morning?: Task
   night?: Task
   primaryTask?: Task
+  /** Open non-checkin tasks — powers Tasks hub CTA */
+  openTaskCount?: number
   behavior: BehaviorCounts
   nextProof?: ProofScheduleRow
   onStartSession: () => void
-  onLogBehavior: (type: 'touch' | 'urge' | 'removal') => void
+  onLogBehavior: (payload: {
+    type: BehaviorType
+    intensity?: number
+    reason?: string
+  }) => void
   logging: string | null
   startError?: string
 }
 
 /**
- * Stitch mobile Home Dashboard — hero lock, rituals, willpower, memoir peek, support FAB.
- * Live data only (no fake Day 42).
+ * Stitch mobile Home — live ring timer, affirmations, Tasks hub, ritual queue.
+ * 5-slot nav purity: no Support FAB / bottom quick row; Companion = top bar only.
  */
 export function MobileHome({
   name,
@@ -57,6 +104,7 @@ export function MobileHome({
   morning,
   night,
   primaryTask,
+  openTaskCount = 0,
   behavior,
   nextProof,
   onStartSession,
@@ -64,9 +112,59 @@ export function MobileHome({
   logging,
   startError,
 }: Props) {
-  const ringPct = Math.min(100, Math.max(0, willpower))
-  const circ = 2 * Math.PI * 88
-  const offset = circ * (1 - ringPct / 100)
+  const [now, setNow] = useState(() => Date.now())
+  const [affirmIdx, setAffirmIdx] = useState(0)
+  const [affirmVisible, setAffirmVisible] = useState(true)
+
+  // Live clock for countdown ring
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(id)
+  }, [])
+
+  // Rotate affirmations — fade out → swap → fade in
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setAffirmVisible(false)
+      window.setTimeout(() => {
+        setAffirmIdx((i) => (i + 1) % LOCK_AFFIRMATIONS.length)
+        setAffirmVisible(true)
+      }, 400)
+    }, 7000)
+    return () => window.clearInterval(id)
+  }, [])
+
+  const timer = useMemo(() => {
+    if (!session?.scheduled_end_time || !session.start_time) {
+      return {
+        remainingMs: 0,
+        remainingFrac: 0,
+        label: formatRemaining(0),
+        live: false,
+      }
+    }
+    const end = new Date(session.scheduled_end_time).getTime()
+    const start = new Date(session.start_time).getTime()
+    const total = Math.max(1, end - start)
+    const remainingMs = Math.max(0, end - now)
+    // Ring like a battery: full when lots of time left, empties as deadline nears
+    const remainingFrac = Math.min(1, Math.max(0, remainingMs / total))
+    return {
+      remainingMs,
+      remainingFrac,
+      label: formatRemaining(remainingMs),
+      live: remainingMs > 0 && ['active', 'extending', 'completing'].includes(session.status),
+    }
+  }, [session, now])
+
+  // Willpower ring (separate card)
+  const wpCirc = 2 * Math.PI * 88
+  const wpOffset = wpCirc * (1 - Math.min(100, Math.max(0, willpower)) / 100)
+
+  // Session timer ring geometry
+  const R = 100
+  const timerCirc = 2 * Math.PI * R
+  const timerOffset = timerCirc * (1 - (session ? timer.remainingFrac : 0))
 
   const ritualItems = [
     { key: 'm', title: morning?.title || 'Morning Check-in', done: isDone(morning), href: '/tasks' },
@@ -77,27 +175,96 @@ export function MobileHome({
   const doneCount = ritualItems.filter((r) => r.done).length
   const eff = Math.round((doneCount / ritualItems.length) * 100)
 
+  const affirmation = LOCK_AFFIRMATIONS[affirmIdx]
+
   return (
     <div className="space-y-6 px-6 pb-4 pt-2 xl:hidden">
-      {/* Hero lock card */}
+      {/* Hero — live session ring timer */}
       <section className="relative">
-        <div className="glass-card inner-glow animate-breathe relative flex h-[min(420px,70dvh)] flex-col items-center justify-center overflow-hidden rounded-[2rem] p-8 text-center">
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary-fixed-dim/10 via-transparent to-background/40" />
-          <div className="relative z-10 flex flex-col items-center">
-            <div className="mb-6 rounded-full border border-primary-fixed-dim/20 bg-primary-fixed-dim/10 p-6 shadow-[0_0_40px_rgba(171,214,0,0.12)]">
-              <Icon
-                name={session ? 'lock' : 'lock_open'}
-                filled
-                className="text-[56px] text-primary-fixed-dim"
-              />
+        <div className="glass-card inner-glow relative flex min-h-[min(460px,78dvh)] flex-col items-center justify-center overflow-hidden rounded-[2rem] px-6 py-10 text-center">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary-fixed-dim/12 via-transparent to-background/50" />
+          <div className="pointer-events-none absolute inset-0 animate-breathe bg-[radial-gradient(ellipse_at_center,rgba(195,244,0,0.08)_0%,transparent_65%)]" />
+
+          <div className="relative z-10 flex w-full flex-col items-center">
+            {/* Motorola-style remaining-time ring */}
+            <div className="relative mb-5 flex h-56 w-56 items-center justify-center sm:h-64 sm:w-64">
+              <svg className="absolute h-full w-full -rotate-90" viewBox="0 0 224 224" aria-hidden>
+                {/* Track */}
+                <circle
+                  cx="112"
+                  cy="112"
+                  r={R}
+                  fill="none"
+                  stroke="#1A1F19"
+                  strokeWidth="10"
+                />
+                {/* Remaining charge (time left) */}
+                <circle
+                  cx="112"
+                  cy="112"
+                  r={R}
+                  fill="none"
+                  stroke={session ? '#c3f400' : '#3c423a'}
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  strokeDasharray={timerCirc}
+                  strokeDashoffset={session ? timerOffset : timerCirc * 0.92}
+                  className="transition-[stroke-dashoffset] duration-1000 ease-linear"
+                  style={{
+                    filter: session ? 'drop-shadow(0 0 8px rgba(195,244,0,0.35))' : undefined,
+                  }}
+                />
+              </svg>
+
+              <div className="relative z-10 flex flex-col items-center justify-center px-4">
+                {session ? (
+                  <>
+                    <span className="font-mono-data text-[1.65rem] font-bold tracking-tight text-primary tabular-nums sm:text-3xl">
+                      {timer.label.primary}
+                    </span>
+                    <span className="mt-1 font-label-caps text-[10px] tracking-[0.18em] text-primary-fixed-dim">
+                      {timer.label.secondary}
+                    </span>
+                    <span className="mt-2 flex items-center gap-1.5 font-label-caps text-[9px] tracking-widest text-on-surface-variant">
+                      <span
+                        className={cn(
+                          'inline-block h-1.5 w-1.5 rounded-full',
+                          timer.live ? 'animate-pulse bg-primary-fixed' : 'bg-outline-variant',
+                        )}
+                      />
+                      {timer.live ? 'LOCKED LIVE' : 'SESSION'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Icon name="lock_open" className="mb-2 text-4xl text-on-surface-variant/50" />
+                    <span className="font-label-caps text-[10px] tracking-[0.2em] text-on-surface-variant">
+                      NO ACTIVE LOCK
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
-            <h1 className="mb-2 text-3xl font-bold leading-tight tracking-tight text-primary">
+
+            <h1 className="mb-1 text-2xl font-bold leading-tight tracking-tight text-primary sm:text-3xl">
               {session ? session.tier || 'Locked in' : 'Ready to lock'}
             </h1>
-            <p className="max-w-sm text-base text-on-surface-variant">
+            <p className="max-w-sm text-sm text-on-surface-variant sm:text-base">
               {session ? lockDayLabel(session) : `Hi ${name}. Start a session when you are ready.`}
             </p>
-            <div className="mt-8 flex gap-6">
+
+            {/* Rotating lock affirmations */}
+            <p
+              className={cn(
+                'mt-5 max-w-[20rem] min-h-[2.75rem] text-sm font-medium italic leading-snug text-primary-fixed-dim transition-opacity duration-300',
+                affirmVisible ? 'opacity-100' : 'opacity-0',
+              )}
+              aria-live="polite"
+            >
+              {affirmation}
+            </p>
+
+            <div className="mt-7 flex gap-6">
               <div className="flex flex-col items-center">
                 <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">
                   Streak
@@ -112,6 +279,7 @@ export function MobileHome({
                 <span className="text-xl font-semibold text-primary">{formatTarget(session)}</span>
               </div>
             </div>
+
             {!session && (
               <button
                 type="button"
@@ -125,6 +293,59 @@ export function MobileHome({
           </div>
         </div>
       </section>
+
+      {/* Tasks hub — primary discovery path (not in 5-slot pill) */}
+      <Link
+        href="/tasks"
+        className="glass-card inner-glow group relative block overflow-hidden rounded-3xl border border-primary-fixed/20 p-5 active:scale-[0.99]"
+      >
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary-fixed/10 via-transparent to-transparent" />
+        <div className="relative z-10 flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-fixed text-on-primary-fixed">
+            <Icon name="task_alt" className="text-2xl" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-label-caps text-[10px] tracking-[0.18em] text-primary-fixed">
+                TASKS
+              </p>
+              {openTaskCount > 0 && (
+                <span className="rounded-full bg-primary-fixed px-2.5 py-0.5 font-mono-data text-[11px] font-bold text-on-primary-fixed">
+                  {openTaskCount} open
+                </span>
+              )}
+            </div>
+            <h2 className="mt-1 text-lg font-semibold text-on-surface">
+              {primaryTask?.title || 'Task queue & proof'}
+            </h2>
+            <p className="mt-1 text-sm text-on-surface-variant">
+              {primaryTask
+                ? 'Tap to complete, fail, or submit proof.'
+                : openTaskCount === 0
+                  ? 'No open tasks — check-ins and Master work land here.'
+                  : `${openTaskCount} waiting in the queue.`}
+            </p>
+            {nextProof && (
+              <p className="mt-2 font-mono-data text-[11px] text-primary-fixed-dim">
+                Proof window{' '}
+                {new Date(nextProof.window_start).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+                –
+                {new Date(nextProof.window_end).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            )}
+            <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-primary-fixed">
+              Open tasks
+              <Icon name="chevron_right" className="text-sm" />
+            </span>
+          </div>
+        </div>
+      </Link>
 
       {/* Today's ritual */}
       <section className="glass-card inner-glow flex flex-col gap-5 rounded-3xl p-6">
@@ -141,7 +362,7 @@ export function MobileHome({
         </div>
         <div className="space-y-2">
           <span className="font-label-caps text-[10px] tracking-widest text-on-surface-variant/60">
-            CHECK-INS &amp; TASKS
+            CHECK-INS &amp; RITUAL
           </span>
           {ritualItems.map((item) => (
             <Link
@@ -189,8 +410,8 @@ export function MobileHome({
               stroke="#c3f400"
               strokeWidth="12"
               strokeLinecap="round"
-              strokeDasharray={circ}
-              strokeDashoffset={offset}
+              strokeDasharray={wpCirc}
+              strokeDashoffset={wpOffset}
               className="transition-all duration-700"
             />
           </svg>
@@ -199,33 +420,27 @@ export function MobileHome({
             <span className="font-label-caps text-[10px] text-primary-fixed-dim">SCORE</span>
           </div>
         </div>
-        <p className="relative z-10 border-t border-white/5 pt-4 text-sm italic text-on-surface-variant">
-          &ldquo;Identity is formed by the evidence of small wins.&rdquo;
+        <p
+          className={cn(
+            'relative z-10 border-t border-white/5 pt-4 text-sm italic text-on-surface-variant transition-opacity duration-300',
+            affirmVisible ? 'opacity-100' : 'opacity-0',
+          )}
+        >
+          &ldquo;{affirmation}&rdquo;
         </p>
       </section>
 
       {/* Behavior quick log */}
-      <section className="glass-card inner-glow rounded-3xl p-6">
-        <h2 className="mb-1 text-lg font-semibold text-primary">Behavior log</h2>
-        <p className="mb-4 text-xs text-on-surface-variant">
-          Today · U{behavior.urge} T{behavior.touch} R{behavior.removal}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {(['urge', 'touch', 'removal'] as const).map((type) => (
-            <button
-              key={type}
-              type="button"
-              disabled={logging === type}
-              onClick={() => onLogBehavior(type)}
-              className="min-h-11 flex-1 rounded-full border border-white/10 px-3 py-2 text-xs font-bold capitalize text-on-surface active:bg-white/5 disabled:opacity-40"
-            >
-              {logging === type ? '…' : `+ ${type}`}
-            </button>
-          ))}
-        </div>
+      <section className="glass-card inner-glow rounded-3xl p-5 sm:p-6">
+        <BehaviorLogPanel
+          counts={behavior}
+          logging={logging}
+          density="compact"
+          onLog={(payload) => onLogBehavior(payload)}
+        />
         {nextProof && (
-          <p className="mt-4 font-mono-data text-[11px] text-primary-fixed-dim">
-            Proof window{' '}
+          <p className="mt-4 border-t border-white/5 pt-4 font-mono-data text-[11px] text-primary-fixed-dim">
+            Next proof window{' '}
             {new Date(nextProof.window_start).toLocaleTimeString([], {
               hour: '2-digit',
               minute: '2-digit',
@@ -237,12 +452,6 @@ export function MobileHome({
             })}
           </p>
         )}
-        <Link
-          href="/tasks"
-          className="mt-3 inline-flex text-xs font-bold text-primary-fixed-dim"
-        >
-          Tasks &amp; proof →
-        </Link>
       </section>
 
       {/* Memoir peek */}
@@ -266,47 +475,6 @@ export function MobileHome({
             OPEN LIBRARY <Icon name="chevron_right" className="text-sm" />
           </span>
         </div>
-      </Link>
-
-      {/* Quote */}
-      <section className="glass-card inner-glow flex items-center justify-center rounded-3xl bg-surface-variant/30 p-8">
-        <div className="max-w-[280px] text-center">
-          <span className="mb-[-28px] block text-[72px] leading-none text-primary-fixed-dim/20">
-            “
-          </span>
-          <h2 className="text-lg font-semibold italic leading-snug text-primary">
-            Discipline is remembering what you{' '}
-            <span className="not-italic text-primary-fixed-dim">want most</span>.
-          </h2>
-        </div>
-      </section>
-
-      {/* Quick row */}
-      <div className="grid grid-cols-2 gap-3">
-        <Link
-          href="/chat"
-          className="glass-card flex min-h-20 flex-col justify-center rounded-2xl p-4 active:scale-[0.99]"
-        >
-          <Icon name="psychology" className="mb-2 text-primary-fixed" />
-          <span className="text-sm font-semibold">Companion</span>
-        </Link>
-        <Link
-          href="/support"
-          className="glass-card flex min-h-20 flex-col justify-center rounded-2xl p-4 active:scale-[0.99]"
-        >
-          <Icon name="shield_with_heart" className="mb-2 text-primary-fixed" />
-          <span className="text-sm font-semibold">Support</span>
-        </Link>
-      </div>
-
-      {/* Support FAB — Stitch */}
-      <Link
-        href="/support"
-        className="fixed bottom-24 right-5 z-[55] flex items-center gap-2 rounded-2xl bg-primary-fixed-dim px-4 py-3.5 text-on-primary-fixed shadow-[0_0_30px_rgba(171,214,0,0.3)] active:scale-95 xl:hidden"
-        style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      >
-        <Icon name="psychology" className="text-[22px]" />
-        <span className="font-label-caps text-[11px] font-bold tracking-wide">SUPPORT</span>
       </Link>
     </div>
   )

@@ -14,6 +14,10 @@ import { finalizeSession } from '@/lib/session-finalize'
 import { invalidateSessionCache } from '@/lib/supabase/sessions'
 import { invalidateHubCache } from '@/lib/hooks/use-session-hub'
 import { MobileHome } from '@/components/mobile/mobile-home'
+import {
+  BehaviorLogPanel,
+  type BehaviorType,
+} from '@/components/features/behavior/behavior-log-panel'
 import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 
@@ -126,9 +130,13 @@ export default function HomePage() {
     await refreshProfile()
   }
 
-  async function logBehavior(type: 'touch' | 'urge' | 'removal') {
+  async function logBehavior(payload: {
+    type: BehaviorType
+    intensity?: number
+    reason?: string
+  }) {
     if (!user) return
-    setLogging(type)
+    setLogging(payload.type)
     try {
       await fetch('/api/behavior/log', {
         method: 'POST',
@@ -136,9 +144,13 @@ export default function HomePage() {
         body: JSON.stringify({
           userId: user.id,
           sessionId: session?.id,
-          type,
-          intensity: type === 'urge' ? 5 : undefined,
-          reason: type === 'removal' ? 'Self-reported' : undefined,
+          type: payload.type,
+          intensity:
+            payload.type === 'urge' ? (payload.intensity ?? 5) : undefined,
+          reason:
+            payload.type === 'removal'
+              ? payload.reason || 'Self-reported'
+              : undefined,
         }),
       })
       await refresh()
@@ -158,10 +170,11 @@ export default function HomePage() {
         morning={morning}
         night={night}
         primaryTask={primaryTask}
+        openTaskCount={openTasks.length}
         behavior={behavior}
         nextProof={nextProof}
         onStartSession={() => setWizardOpen(true)}
-        onLogBehavior={(t) => void logBehavior(t)}
+        onLogBehavior={(p) => void logBehavior(p)}
         logging={logging}
         startError={startError}
       />
@@ -366,29 +379,13 @@ export default function HomePage() {
 
         {/* Behavior quick log */}
         <section className="bento-card rounded-2xl p-6 xl:col-span-4">
-          <h3 className="mb-4 font-headline-md text-lg font-semibold">Behavior log</h3>
-          <p className="mb-4 text-xs text-on-surface-variant">
-            Today: {behavior.urge} urges · {behavior.touch} touches · {behavior.removal} removals
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {(
-              [
-                ['urge', 'Urge'],
-                ['touch', 'Touch'],
-                ['removal', 'Removal'],
-              ] as const
-            ).map(([type, label]) => (
-              <button
-                key={type}
-                type="button"
-                disabled={!user || logging === type}
-                onClick={() => void logBehavior(type)}
-                className="min-h-11 rounded-full border border-white/10 px-4 py-2 text-xs font-bold text-on-surface transition hover:border-primary-fixed/40 hover:bg-primary-fixed/5 disabled:opacity-40"
-              >
-                {logging === type ? '…' : `+ ${label}`}
-              </button>
-            ))}
-          </div>
+          <BehaviorLogPanel
+            counts={behavior}
+            logging={logging}
+            disabled={!user}
+            density="comfortable"
+            onLog={(p) => void logBehavior(p)}
+          />
         </section>
 
         {/* Random proof */}
