@@ -31,6 +31,12 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     if (loading) return
 
     const isPublic = PUBLIC_PATHS.includes(pathname)
+    const localCompleted = typeof window !== 'undefined' && localStorage.getItem('lockedin_onboarding_completed') === 'true'
+    const isOnboarded = Boolean(profile?.onboarding_completed || localCompleted)
+
+    if (profile?.onboarding_completed && typeof window !== 'undefined' && !localCompleted) {
+      localStorage.setItem('lockedin_onboarding_completed', 'true')
+    }
 
     const clearLogoutTimer = () => {
       if (logoutTimer.current) {
@@ -42,7 +48,7 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     if (pathname === '/') {
       clearLogoutTimer()
       if (user) {
-        router.replace(profile?.onboarding_completed ? '/home' : '/onboarding')
+        router.replace(isOnboarded ? '/home' : '/onboarding')
       }
       return
     }
@@ -66,11 +72,11 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     clearLogoutTimer()
 
     if (user && isPublic) {
-      router.replace(profile?.onboarding_completed ? '/home' : '/onboarding')
+      router.replace(isOnboarded ? '/home' : '/onboarding')
       return
     }
 
-    if (user && profile && !profile.onboarding_completed && pathname !== '/onboarding') {
+    if (user && profile && !isOnboarded && pathname !== '/onboarding') {
       router.replace('/onboarding')
     }
   }, [user, profile, loading, pathname, router])

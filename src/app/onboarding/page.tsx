@@ -192,6 +192,12 @@ export default function OnboardingPage() {
       { onConflict: 'user_id' },
     )
 
+    try {
+      localStorage.setItem('lockedin_onboarding_completed', 'true')
+    } catch {
+      // non-fatal
+    }
+
     store.reset()
     await refreshProfile()
     router.replace('/home')

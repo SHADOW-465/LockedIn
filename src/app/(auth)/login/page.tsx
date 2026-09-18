@@ -25,7 +25,18 @@ export default function LoginPage() {
       setLoading(false)
       return
     }
-    if (user) router.replace('/home')
+    if (user) {
+      try {
+        const supabase = (await import('@/lib/supabase/client')).getSupabase()
+        const { data: prof } = await supabase.from('profiles').select('onboarding_completed').eq('id', user.id).single()
+        if (prof?.onboarding_completed) {
+          localStorage.setItem('lockedin_onboarding_completed', 'true')
+        }
+      } catch {
+        // non-fatal
+      }
+      router.replace('/home')
+    }
   }
 
   return (

@@ -40,7 +40,7 @@ export const DESKTOP_NAV: NavItem[] = [
 export const MOBILE_NAV: NavItem[] = [
   { href: '/home', label: 'Home', icon: 'home' },
   { href: '/ritual', label: 'Rituals', icon: 'rebase_edit' },
-  { href: '/support', label: 'Support', icon: 'shield_with_heart' },
+  { href: '/calendar', label: 'Calendar', icon: 'calendar_today' },
   { href: '/memoir', label: 'Memoir', icon: 'menu_book' },
   { href: '/achievements', label: 'Insights', icon: 'leaderboard' },
 ]
@@ -50,6 +50,12 @@ export const MOBILE_NAV: NavItem[] = [
  * Keep regimens out until product re-enables them.
  */
 export const MOBILE_HUB_LINKS: NavItem[] = [
+  {
+    href: '/support',
+    label: 'Support Mode',
+    icon: 'shield_with_heart',
+    description: 'Crisis lines, care protocols, ground rules',
+  },
   {
     href: '/tasks',
     label: 'Tasks & proof',

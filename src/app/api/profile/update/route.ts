@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase/server'
-import { getActiveSessionId } from '@/lib/supabase/session-guard'
 import type { PrivacyConstraints, CommunicationStyle, Availability, UserProfile } from '@/lib/supabase/schema'
 import { THEMES } from '@/lib/themes'
-
-// Fields allowed to update even during an active session (set via Care Mode chat)
-const SESSION_EXEMPT_FIELDS = new Set(['master_preference', 'session_intent', 'privacy_constraints'])
 
 const VALID_THEMES = new Set(Object.keys(THEMES))
 
@@ -51,21 +47,6 @@ export async function PATCH(request: NextRequest) {
         }
 
         if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
-
-        // Determine which fields are being updated
-        const updatedKeys = Object.keys(body).filter(k => k !== 'userId')
-        const allExempt = updatedKeys.every(k => SESSION_EXEMPT_FIELDS.has(k))
-
-        // Block during active session unless all updated fields are exempt
-        if (!allExempt) {
-            const activeSessionId = await getActiveSessionId(userId)
-            if (activeSessionId) {
-                return NextResponse.json(
-                    { error: 'Settings locked during active session' },
-                    { status: 403 }
-                )
-            }
-        }
 
         const supabase = getServerSupabase()
         const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }

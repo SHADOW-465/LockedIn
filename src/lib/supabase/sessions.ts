@@ -12,12 +12,13 @@ export async function createSession(
     userId: string,
     tier: string,
     durationHours: number = 168,
-    aiPersonality: string | null = null
+    aiPersonality: string | null = null,
+    customStartTime?: string
 ): Promise<Session | null> {
     const supabase = getSupabase()
-    const now = new Date()
-    const endTime = new Date(now.getTime() + durationHours * 60 * 60 * 1000).toISOString()
-    const startTime = now.toISOString()
+    const startDate = customStartTime ? new Date(customStartTime) : new Date()
+    const endTime = new Date(startDate.getTime() + durationHours * 60 * 60 * 1000).toISOString()
+    const startTime = startDate.toISOString()
 
     // Check for existing active session first to prevent constraint violations
     const existingSession = await getActiveSession(userId)

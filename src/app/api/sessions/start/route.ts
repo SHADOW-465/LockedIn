@@ -8,6 +8,10 @@ interface SessionConfig {
   soft_limits?: string[]
   regimens?: string[]
   desired_duration_minutes: number
+  startTime?: string
+  isCompleted?: boolean
+  device?: string
+  notes?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -21,33 +25,42 @@ export async function POST(request: NextRequest) {
 
     const supabase = getServerSupabase()
 
-    const { data: existing } = await supabase
-      .from('sessions')
-      .select('id')
-      .eq('user_id', userId)
-      .in('status', ['active', 'extending', 'completing'])
-      .maybeSingle()
+    // If starting an active session (not logging a past completed one), ensure only 1 active session exists
+    if (!config.isCompleted) {
+      const { data: existing } = await supabase
+        .from('sessions')
+        .select('id')
+        .eq('user_id', userId)
+        .in('status', ['active', 'extending', 'completing'])
+        .maybeSingle()
 
-    if (existing) {
-      return NextResponse.json({ error: 'active_session_exists', sessionId: existing.id }, { status: 409 })
+      if (existing) {
+        return NextResponse.json({ error: 'active_session_exists', sessionId: existing.id }, { status: 409 })
+      }
     }
 
-    const now = new Date()
-    const scheduledEnd = new Date(now.getTime() + config.desired_duration_minutes * 60 * 1000)
+    const startTimeDate = config.startTime ? new Date(config.startTime) : new Date()
+    const scheduledEnd = new Date(startTimeDate.getTime() + config.desired_duration_minutes * 60 * 1000)
+
+    const insertData: Record<string, unknown> = {
+      user_id: userId,
+      status: config.isCompleted ? 'completed' : 'active',
+      tier: config.tier || 'Newbie',
+      ai_personality: config.ai_personality || null,
+      start_time: startTimeDate.toISOString(),
+      scheduled_end_time: scheduledEnd.toISOString(),
+      total_duration_minutes: config.desired_duration_minutes,
+      session_config: config,
+      extension_count: 0,
+    }
+
+    if (config.isCompleted) {
+      insertData.actual_end_time = scheduledEnd.toISOString()
+    }
 
     const { data: session, error } = await supabase
       .from('sessions')
-      .insert({
-        user_id: userId,
-        status: 'active',
-        tier: config.tier || 'Newbie',
-        ai_personality: config.ai_personality || null,
-        start_time: now.toISOString(),
-        scheduled_end_time: scheduledEnd.toISOString(),
-        total_duration_minutes: config.desired_duration_minutes,
-        session_config: config,
-        extension_count: 0,
-      })
+      .insert(insertData)
       .select()
       .single()
 
